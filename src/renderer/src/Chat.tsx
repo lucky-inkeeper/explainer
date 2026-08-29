@@ -349,7 +349,9 @@ export function ChatPanel({ chat }: { chat: Chat }) {
           {running ? <button className="stop" onClick={chat.stop} title="Interrupt the agent">Stop</button> : <button className="enter" onClick={submit} title="Send (Enter)">↵</button>}
         </div>
         <div className="composer-foot">
-          <button className="plain plus" onClick={() => fileRef.current?.click()} title="Attach an image">+</button>
+          <button className="plain plus" onClick={() => fileRef.current?.click()} title="Attach an image" aria-label="Attach an image">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.5l-8.5 8.5a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.8-2.8l8-8" /></svg>
+          </button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addImage(f); e.target.value = ""; }} />
           <Picker title="Permission mode" value={mode} options={MODES.map((m) => [m, MODE_LABELS[m]])} onChange={(v) => chat.setMode(v as PermissionMode)} />
           <span className="spacer" />

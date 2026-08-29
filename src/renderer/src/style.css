@@ -77,7 +77,7 @@ button.chip:hover { background: var(--button-hover-bg); }
 .pick svg { opacity: .6; }
 .pick:hover { color: var(--color-primary); }
 .pick select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.composer-foot .plus { font-size: 16px; line-height: 1; padding: 0 4px; opacity: .8; }
+.composer-foot .plus { display: inline-flex; padding: 0 2px; opacity: .8; }
 .composer-foot .new { display: inline-flex; opacity: .8; padding: 0 2px; }
 .composer-foot .new:hover, .composer-foot .plus:hover { opacity: 1; color: var(--color-primary); }
 .popup { position: absolute; bottom: 100%; left: 10px; right: 10px; max-height: 240px; overflow: auto; background: var(--island-bg-color); border: 1px solid var(--default-border-color); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 10; }

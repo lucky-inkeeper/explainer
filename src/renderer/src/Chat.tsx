@@ -22,8 +22,18 @@ const MODE_LABELS: Record<PermissionMode, string> = { default: "Ask", acceptEdit
 let n = 0;
 const uid = () => `i${++n}`;
 const shortModel = (m: string) => (m ? m.replace(/^claude-/, "") : "model");
-/** A select is as wide as its widest option; size it to the chosen label so the chevron hugs the text. */
-const fit = (label: string) => ({ width: `calc(${label.length}ch + 10px)` });
+
+/** Text + chevron sized by the current label; the real <select> sits invisibly on top for clicks and keyboard. */
+function Picker({ value, options, onChange, title }: { value: string; options: [string, string][]; onChange: (v: string) => void; title: string }) {
+  const label = options.find(([v]) => v === value)?.[1] ?? value;
+  return (
+    <span className="picker" title={title}>
+      <span>{label}</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
+      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={title}>{options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+    </span>
+  );
+}
 const stripAttach = (t: string) => t.replace(/\n*<selected_elements>[\s\S]*?<\/selected_elements>/g, "").trim();
 
 export function useChat({ xapi, file, state, setState, attached, setAttached }: {
@@ -282,7 +292,6 @@ export function ChatPanel({ chat }: { chat: Chat }) {
   };
   const openSessions = async () => setSessions(sessions ? null : await api.invoke("sessions:list", state!.workspace));
   const mode = session.mode ?? state?.permissionMode ?? "default";
-  const modelLabel = shortModel(session.model ?? state?.model ?? "");
 
   return (
     <div className="chat">
@@ -338,16 +347,10 @@ export function ChatPanel({ chat }: { chat: Chat }) {
         <div className="composer-foot">
           <button className="plain plus" onClick={() => fileRef.current?.click()} title="Attach an image">+</button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addImage(f); e.target.value = ""; }} />
-          <select className="plain" style={fit(MODE_LABELS[mode])} value={mode} onChange={(e) => chat.setMode(e.target.value as PermissionMode)} title="Permission mode">
-            {MODES.map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
-          </select>
+          <Picker title="Permission mode" value={mode} options={MODES.map((m) => [m, MODE_LABELS[m]])} onChange={(v) => chat.setMode(v as PermissionMode)} />
           <span className="spacer" />
-          <select className="plain" style={fit(modelLabel)} value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)} title="Model">
-            {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{shortModel(m)}</option>)}
-          </select>
-          <select className="plain" style={fit(state?.effort || "effort")} value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)} title="Effort">
-            {EFFORTS.map((m) => <option key={m} value={m}>{m || "effort"}</option>)}
-          </select>
+          <Picker title="Model" value={session.model ?? state?.model ?? ""} options={[...new Set([...MODELS, session.model ?? ""])].map((m) => [m, shortModel(m)])} onChange={chat.setModel} />
+          <Picker title="Effort" value={state?.effort ?? ""} options={EFFORTS.map((m) => [m, m || "effort"])} onChange={chat.setEffort} />
           <span className={"dot " + (running ? "running" : "ok")} title={`${status ?? (running ? "working" : "idle")} · $${cost.toFixed(2)} this session`} />
         </div>
       </div>

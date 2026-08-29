@@ -149,6 +149,16 @@ function spaceForLabels(skeleton: El[]): El[] {
   return els;
 }
 
+/** Wrap a converted batch in one frame named `name` (top-level elements only; nested frames keep their children). */
+function wrapInFrame(els: El[], name: string): El[] {
+  const top = els.filter((e) => !e.frameId && Number.isFinite(e.x));
+  if (!top.length) return els;
+  const [x1, y1, x2, y2] = getCommonBounds(top);
+  const pad = 32;
+  const [frame] = convertToExcalidrawElements([{ type: "frame", name, children: [], x: x1 - pad, y: y1 - pad, width: x2 - x1 + 2 * pad, height: y2 - y1 + 2 * pad } as any], { regenerateIds: true });
+  return [frame, ...els.map((e) => (e.frameId ? e : { ...e, frameId: frame.id }))];
+}
+
 /** Labels that still intersect a shape they are not bound to - reported back so the agent can fix them. */
 function overlapWarnings(els: El[]) {
   const out: string[] = [];
@@ -165,7 +175,8 @@ function overlapWarnings(els: El[]) {
 export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, args: any, selectedIds: string[]) {
   switch (tool) {
     case "draw_elements": {
-      const els = spaceForLabels(withDefaultFont(args.elements));
+      let els = spaceForLabels(withDefaultFont(args.elements));
+      if (args.frame) els = wrapInFrame(els, String(args.frame));
       const res = add(api, els, args.placement ?? "auto", selectedIds);
       const warnings = overlapWarnings(api.getSceneElements().filter((e) => res.created.some((c) => c.id === e.id)));
       return warnings.length ? { ...res, warnings, hint: "Fix with update_elements (move/shrink/reword) or delete_elements + redraw." } : res;
@@ -175,7 +186,8 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
       // extra keys reach mermaid.initialize(): wider ranks so edge labels fit between nodes
       const { elements, files } = await parseMermaidToExcalidraw(args.definition, { flowchart: { curve: "linear", rankSpacing: 150, nodeSpacing: 70 } } as any);
       if (files) api.addFiles(Object.values(files) as any);
-      const els = convertToExcalidrawElements(withDefaultFont(elements as any), { regenerateIds: true });
+      let els = convertToExcalidrawElements(withDefaultFont(elements as any), { regenerateIds: true });
+      if (args.frame) els = wrapInFrame(els, String(args.frame));
       return add(api, els, args.placement ?? "auto", selectedIds);
     }
     case "read_canvas": {

@@ -15,7 +15,7 @@ Explainer is a Mac app: the Excalidraw editor with a Claude agent in a side pane
 - **Placement** - where a batch of new elements lands: `auto` (free space right of content), `selection` (next to the user's selected elements), `exact`.
 - **Attach** - the Figma-style flow: select elements, press "Ask agent", the selection is sent with the next message as `<selected_elements>` JSON.
 - **Share link** - `https://excalidraw.com/#json=<id>,<key>`, produced by posting the encrypted scene to Excalidraw's public share backend.
-- **Notation** - fixed shape + color per kind (user action, system step, decision, data, DB, external service, note) Lives in the agent system prompt (`src/shared/tools.ts`), colors also in its `KINDS` table.
+- **Notation** - fixed shape + color per kind (user action, system step, decision, data, DB, external service, note). One table, `NOTATION` in `src/shared/tools.ts`; the prompt block, the legend strip, the layout checks and the eval metrics read it.
 - **Legend strip** - built by the app under every framed diagram: the kinds and arrow styles the batch uses. The agent never draws one.
 - **Elbowed arrow** - `elbowed: true` on a bound arrow; the spacing pass gives it a right-angle route (facing sides, one bend pair).
 - **Layout** - the diagram math the app runs on a batch before it lands on the canvas: arrow routes, label spacing, note parking, the legend strip, the frame, and the overlap warnings. It works on the batch alone and does not read or write the scene.

@@ -4,7 +4,7 @@
  * Entry points: layout() for a skeleton batch, inspect() for converted elements. In dev both hang on window.__layout; test/layout.test.mjs replays fixtures through them.
  */
 import { FONT_FAMILY, convertToExcalidrawElements, getCommonBounds, newElementWith } from "@excalidraw/excalidraw";
-import { FOCAL, KINDS } from "../../shared/tools";
+import { KINDS, NOTATION, classify, isFocal } from "../../shared/tools";
 
 /** Web fonts (Google Fonts, loaded in index.html) registered as extra Excalidraw font ids. Excalidraw resolves the id to the family name for canvas drawing and measuring. */
 export const FONTS = { "Playpen Sans": 101, Inter: 102 } as const;
@@ -72,7 +72,7 @@ function geometry(r: Route) {
   return { x: r.p1[0], y: r.p1[1], width: Math.abs(dx), height: Math.abs(dy), points: [[0, 0], ...mid.filter((m, i, all) => i === 0 || m[0] !== all[i - 1][0] || m[1] !== all[i - 1][1]), [dx, dy]] };
 }
 
-const isSection = (e: El) => (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa";
+const isSection = (e: El) => classify(e) === "section";
 
 /** Where Excalidraw puts an arrow label: the middle point of an odd path (the corner), else the midpoint of the middle segment. */
 function labelCenter(pts: number[][]): number[] {
@@ -330,18 +330,16 @@ function spaceForLabels(skeleton: El[]): El[] {
  * ponytail: label widths come from textWidth; the 40 px item gap absorbs the error.
  */
 export function legendFor(els: El[]): El[] {
-  const lc = (c?: string) => (c ?? "").toLowerCase();
   const items: El[] = [];
-  // match on color only: Mermaid renders a stadium as a rounded rectangle, not an ellipse
-  for (const k of KINDS) if (els.some((e) => SHAPES.has(e.type) && lc(e.backgroundColor) === k.color)) items.push({ label: k.label, swatch: { type: k.type, backgroundColor: k.color, strokeStyle: k.strokeStyle ?? "solid", strokeWidth: k.strokeWidth ?? 1, ...(k.rounded && { roundness: { type: 3 } }) } });
-  if (els.some((e) => SHAPES.has(e.type) && lc(e.strokeColor) === FOCAL)) items.push({ label: "Focal", swatch: { type: "rectangle", backgroundColor: "transparent", strokeColor: FOCAL, strokeWidth: 2 } });
+  for (const k of KINDS) if (els.some((e) => classify(e) === k.label)) items.push({ label: k.label, swatch: { type: k.type, backgroundColor: k.color, strokeStyle: k.strokeStyle ?? "solid", strokeWidth: k.strokeWidth ?? 1, ...(k.rounded && { roundness: { type: 3 } }) } });
+  if (els.some(isFocal)) items.push({ label: "Focal", swatch: { type: "rectangle", backgroundColor: "transparent", strokeColor: NOTATION.focal.color, strokeWidth: NOTATION.focal.strokeWidth } });
   const arrows = els.filter((e) => e.type === "arrow");
   if (arrows.some((a) => a.strokeStyle === "solid" || !a.strokeStyle)) items.push({ label: "Flow / call", arrow: { strokeStyle: "solid" } });
   if (arrows.some((a) => a.strokeStyle === "dashed" || a.strokeStyle === "dotted")) items.push({ label: "Async / optional / return", arrow: { strokeStyle: "dashed" } });
   if (!items.length) return [];
   const top = els.filter((e) => !e.frameId && !e.containerId && Number.isFinite(e.x));
   const [x1, , x2, y2] = getCommonBounds(top);
-  const groupIds = [`legend-${Date.now().toString(36)}`];
+  const groupIds = [`${NOTATION.legendGroup}${Date.now().toString(36)}`];
   const text = (x: number, y: number, t: string, fontSize = 14, strokeColor = "#495057") => ({ type: "text", x, y, text: t, fontSize, fontFamily: FONTS.Inter, strokeColor, groupIds });
   const out: El[] = [
     { type: "line", x: x1, y: y2 + 28, width: x2 - x1, height: 0, points: [[0, 0], [x2 - x1, 0]], strokeColor: "#dee2e6", strokeWidth: 1, roughness: 0, groupIds },

@@ -29,7 +29,7 @@ test("layout fixtures", async (t) => {
           // an arrow's points may run left or up from x,y: take the point extents, not width/height
           const bb = (e) => e.points ? [e.x + Math.min(...e.points.map((p) => p[0])), e.y + Math.min(...e.points.map((p) => p[1])), e.x + Math.max(...e.points.map((p) => p[0])), e.y + Math.max(...e.points.map((p) => p[1]))] : [e.x, e.y, e.x + e.width, e.y + e.height];
           const inside = (e) => { const [x1, y1, x2, y2] = bb(e); return x1 >= fr.x && y1 >= fr.y && x2 <= fr.x + fr.width && y2 <= fr.y + fr.height; };
-          return { warnings: o.warnings, outside: o.elements.filter((e) => e.type !== "frame" && !inside(e)).map((e) => e.id), legend: o.elements.some((e) => (e.groupIds?.[0] ?? "").startsWith("legend-")), count: o.elements.length };
+          return { warnings: o.warnings, outside: o.elements.filter((e) => e.type !== "frame" && !inside(e)).map((e) => e.id), legend: o.elements.some((e) => (e.groupIds?.[0] ?? "").startsWith(window.__layout.NOTATION.legendGroup)), count: o.elements.length };
         })()`);
         if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
         const v = r.result.value;

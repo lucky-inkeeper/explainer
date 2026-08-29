@@ -323,13 +323,5 @@
    "strokeColor": "#868e96",
    "endArrowhead": "dot"
   }
- ],
- "todo": [
-  "text \"TLS, routing\" (s3) overlaps text \"Load balancer\" (wLlSCNdCtc9S840ED_5DH)",
-  "text \"Browser\" (8GaeJIaTVWkoyWiKJwcHN) overlaps text \"parse, render, paint\" (s1)",
-  "text \"CDN / Edge\" (K3PPkbWifTjYr1xHrfK25) overlaps text \"cache hit ends here\" (s2)",
-  "text \"App server\" (OtdKxfALfhyVk1SoHZfOo) overlaps text \"business logic\" (s4)",
-  "text \"ORM\" (OSuWmI6jJ2pfL7RvVyuG4) overlaps text \"query build, N+1 risk\" (s5)",
-  "text \"DB: Postgres\" (ju0lkyQGJoi7aH8gCoFQq) overlaps text \"disk I/O, locks\" (s6)"
  ]
 }

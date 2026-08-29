@@ -1,9 +1,8 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 export type MinimapHandle = { draw: (elements: readonly any[], appState: any) => void };
-const W = 220, H = 150, PAD = 40;
-const KEY = "explainer-minimap";
+const W = 160, H = 110, PAD = 40;
 
 /** Overview of the scene: every element as a block, the viewport as a rectangle. Click or drag to pan. */
 export const Minimap = forwardRef<MinimapHandle, { api: ExcalidrawImperativeAPI | null }>(function Minimap({ api }, ref) {
@@ -11,7 +10,6 @@ export const Minimap = forwardRef<MinimapHandle, { api: ExcalidrawImperativeAPI 
   const last = useRef<{ elements: readonly any[]; appState: any } | null>(null);
   const frame = useRef(0);
   const view = useRef({ x: 0, y: 0, k: 1 }); // scene -> map transform
-  const [open, setOpen] = useState(() => { try { return localStorage.getItem(KEY) !== "closed"; } catch { return true; } });
   const dark = useRef(false);
 
   const paint = () => {
@@ -57,15 +55,11 @@ export const Minimap = forwardRef<MinimapHandle, { api: ExcalidrawImperativeAPI 
     const { width, height, zoom } = d.appState;
     api.updateScene({ appState: { scrollX: width / (2 * zoom.value) - sx, scrollY: height / (2 * zoom.value) - sy } });
   };
-  const toggle = (v: boolean) => { setOpen(v); try { localStorage.setItem(KEY, v ? "open" : "closed"); } catch {} };
-
-  if (!open) return <button className="minimap-toggle" onClick={() => toggle(true)} title="Show minimap">Map</button>;
   return (
-    <div className="minimap">
+    <div className="minimap" title="Minimap: click or drag to pan">
       <canvas ref={canvas} style={{ width: W, height: H }}
         onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture(e.pointerId); panTo(e); }}
         onPointerMove={(e) => { if (e.buttons & 1) panTo(e); }} />
-      <div className="minimap-bar"><span>MINIMAP</span><button onClick={() => toggle(false)} title="Hide minimap">×</button></div>
     </div>
   );
 });

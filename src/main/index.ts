@@ -75,7 +75,29 @@ ipcMain.handle("state:set", (_e, patch: Partial<AppState>) => {
   return next;
 });
 ipcMain.handle("file:read", (_e, p: string) => (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : null));
-ipcMain.handle("file:write", (_e, p: string, text: string) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, text); });
+const liveCount = (text: string) => { try { return (JSON.parse(text).elements ?? []).filter((e: any) => !e.isDeleted).length; } catch { return -1; } };
+const lastBackup = new Map<string, number>();
+/** Atomic write; the previous version is kept in .history when the scene is about to be emptied, and at most every 5 min otherwise. */
+ipcMain.handle("file:write", (_e, p: string, text: string) => {
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  if (fs.existsSync(p)) {
+    const prev = fs.readFileSync(p, "utf8");
+    const prevLive = liveCount(prev), now = Date.now();
+    const emptying = prevLive > 0 && liveCount(text) === 0;
+    if (prev !== text && prevLive > 0 && (emptying || now - (lastBackup.get(p) ?? 0) > 5 * 60_000)) {
+      const dir = path.join(path.dirname(p), ".history");
+      fs.mkdirSync(dir, { recursive: true });
+      const stamp = new Date(now).toISOString().replace(/[:.]/g, "-");
+      fs.writeFileSync(path.join(dir, `${path.basename(p, ".excalidraw")}-${stamp}${emptying ? "-before-clear" : ""}.excalidraw`), prev);
+      lastBackup.set(p, now);
+      const old = fs.readdirSync(dir).filter((f) => f.startsWith(path.basename(p, ".excalidraw") + "-")).sort();
+      for (const f of old.slice(0, Math.max(0, old.length - 30))) fs.unlinkSync(path.join(dir, f));
+    }
+  }
+  const tmp = `${p}.tmp`;
+  fs.writeFileSync(tmp, text);
+  fs.renameSync(tmp, p);
+});
 ipcMain.handle("file:new", () => {
   let p = "", i = 0;
   do { p = path.join(DIRS.drawings, `Untitled${i ? "-" + i : ""}.excalidraw`); i++; } while (fs.existsSync(p));

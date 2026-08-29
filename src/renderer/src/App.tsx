@@ -31,9 +31,18 @@ export function App() {
   const chat = useChat({ xapi, file, state, setState, attached, setAttached });
 
   const openFile = useCallback(async (path: string) => {
-    const text = await api.invoke("file:read", path);
+    let text = await api.invoke("file:read", path);
     let data: ExcalidrawInitialDataState = { elements: [], appState: {} };
-    if (text) { try { data = (await loadFromBlob(new Blob([text], { type: "application/json" }), null, null)) as any; } catch (e) { console.error("load failed", e); } }
+    if (text) {
+      try { data = (await loadFromBlob(new Blob([text], { type: "application/json" }), null, null)) as any; }
+      catch (e) {
+        // never let an unreadable file become an empty scene that autosaves over it: leave it alone, open a fresh drawing
+        console.error("load failed", e);
+        path = await api.invoke("file:new");
+        text = null;
+        setTimeout(() => xapiRef.current?.setToast({ message: "Could not read the last drawing; opened a new one. The file was left untouched.", closable: true, duration: 10000 }), 1500);
+      }
+    }
     let libraryItems: any[] = [];
     try { libraryItems = JSON.parse(localStorage.getItem(LIB_KEY) ?? "[]"); } catch {}
     lastSaved.current = "";

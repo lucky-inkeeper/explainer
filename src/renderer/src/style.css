@@ -103,11 +103,5 @@ button.chip:hover { background: var(--button-hover-bg); }
 /* minimap: outside .excalidraw, so plain colors */
 .minimap { position: absolute; right: 12px; bottom: 12px; z-index: 4; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.92); border: 1px solid #d5d6dd; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
 .minimap canvas { display: block; cursor: crosshair; }
-.minimap-bar { display: flex; justify-content: space-between; align-items: center; padding: 2px 8px 2px 12px; font: 11px/1.6 ui-monospace, Menlo, monospace; letter-spacing: .18em; color: #888; border-top: 1px solid #e3e4ea; }
-.minimap-bar span { flex: 1; text-align: center; }
-.minimap-bar button { border: none; background: transparent; color: #888; font-size: 14px; cursor: pointer; padding: 0 2px; }
-.minimap-bar button:hover { color: #333; }
-.minimap-toggle { position: absolute; right: 12px; bottom: 12px; z-index: 4; font: 12px system-ui; padding: 5px 10px; border-radius: 8px; border: 1px solid #d5d6dd; background: rgba(255,255,255,.92); color: #444; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-.app.sidebar-open .minimap, .app.sidebar-open .minimap-toggle { right: 314px; }
-.app.dark .minimap, .app.dark .minimap-toggle { background: rgba(35,35,41,.94); border-color: #3a3a44; color: #bbb; }
-.app.dark .minimap-bar { border-top-color: #3a3a44; }
+.app.sidebar-open .minimap { right: 314px; }
+.app.dark .minimap { background: rgba(35,35,41,.94); border-color: #3a3a44; }

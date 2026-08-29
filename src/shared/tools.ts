@@ -16,7 +16,7 @@ export const FOCAL = "#e8590c";
 const skeletonDoc = `Element skeleton (Excalidraw convertToExcalidrawElements format). Types: rectangle, ellipse, diamond, text, arrow, line, frame.
 Common props: id (string, give one so you can bind/update later), x, y, width, height, strokeColor (hex), backgroundColor (hex or "transparent"), fillStyle ("hachure"|"solid"|"cross-hatch"), strokeWidth (1|2|4), strokeStyle ("solid"|"dashed"|"dotted"), roughness (0|1|2), opacity (0-100), groupIds (string[]), frameId, link.
 rectangle/ellipse/diamond: label: {text, fontSize?, textAlign?, verticalAlign?}. Text inside a shape auto-centers.
-text: text, fontSize (16-28 typical), textAlign ("left"|"center"|"right"). Omit fontFamily for hand-drawn font.
+text: text, fontSize (16-28 typical), textAlign ("left"|"center"|"right"), width (the text wraps to it; x stays the left edge whatever the alignment). Omit fontFamily for hand-drawn font.
 arrow: start: {id: "<shape id>"} and end: {id: "<shape id>"} to bind to shapes (no x/y/points needed), or x, y, points: [[0,0],[dx,dy]]. label: {text}. endArrowhead ("arrow"|"triangle"|"bar"|"dot"|null), startArrowhead. elbowed: true on a bound arrow = right-angle connector (the app routes it: leaves and enters through the facing sides, one bend pair).
 line: x, y, points: [[0,0],[dx,dy],...].
 frame: children: ["<id>", ...], name: "title".

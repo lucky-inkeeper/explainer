@@ -37,6 +37,10 @@ const box = (e: El): Box => {
 const contains = (outer: Box, inner: Box) => inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.w <= outer.x + outer.w && inner.y + inner.h <= outer.y + outer.h;
 const hit = (a: Box, b: Box, pad = 2) => a.x + a.w > b.x + pad && b.x + b.w > a.x + pad && a.y + a.h > b.y + pad && b.y + b.h > a.y + pad;
 const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
+/** What an arrow must not run through: a node, or a free text (a note, a title) with a known box. Sections are transparent. */
+const isObstacle = (e: El) => e.x != null && ((SHAPES.has(e.type) && !isSection(e)) || (e.type === "text" && !e.containerId && Number.isFinite(e.width) && Number.isFinite(e.height)));
+/** Greedy word wrap to about `maxChars` per line; the converter does not wrap a free text at the width the agent gives. */
+const wrap = (text: string, maxChars: number) => text.split("\n").map((para) => { const lines: string[] = []; let line = ""; for (const word of para.split(" ")) { if (line && line.length + 1 + word.length > maxChars) { lines.push(line); line = word; } else line = line ? `${line} ${word}` : word; } lines.push(line); return lines.join("\n"); }).join("\n");
 
 /**
  * Bound arrow labels overlap shapes when the arrow is shorter than the label.
@@ -206,7 +210,7 @@ export function followBindings(els: El[], touched: Set<string>): El[] {
   }
   const live = els.filter((e) => !e.isDeleted);
   const labels = new Map<string, El>(live.filter((e) => e.type === "text" && e.containerId).map((e) => [e.containerId, e]));
-  const field: Field = { obstacles: live.filter((e) => SHAPES.has(e.type) && !isSection(e)), sections: live.filter((e) => SHAPES.has(e.type) && isSection(e)), placed: [] };
+  const field: Field = { obstacles: live.filter(isObstacle), sections: live.filter((e) => SHAPES.has(e.type) && isSection(e)), placed: [] };
   const arrows = live.filter((a) => a.type === "arrow");
   const redo = arrows.filter((a) => endIds(a).some((id) => id && touched.has(id)));
   for (const a of arrows) if (!redo.includes(a) && a.points) field.placed.push(...segsOf(a));
@@ -242,7 +246,7 @@ function spaceForLabels(skeleton: El[]): El[] {
     const sk: El[] = structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) }));
     const byId = new Map(sk.map((e) => [e.id, e]));
     // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
-    const field: Field = { obstacles: sk.filter((e) => SHAPES.has(e.type) && e.x != null && !isSection(e)), sections: sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e)), placed: [] };
+    const field: Field = { obstacles: sk.filter(isObstacle), sections: sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e)), placed: [] };
     const routed: { e: Edge; r: Route }[] = [];
     for (const a of sk) {
       if (a.type !== "arrow") continue;
@@ -257,15 +261,27 @@ function spaceForLabels(skeleton: El[]): El[] {
     for (const { e, r } of routed) Object.assign(e.a, geometry(r));
     return convertToExcalidrawElements(sk, { regenerateIds: false });
   };
+  // the agent gives a free text as a box: left edge x, optional width. Excalidraw anchors a text at its alignment point (center or right
+  // edge) and never wraps, so the anchor moves by the box width on the first measured pass and a text wider than its box is wrapped.
+  const given = new Map(base.filter((t) => t.type === "text" && !t.containerId && t.width > 0).map((t) => [t.id, t.width as number]));
   let els = build();
-  // texts get their measured size on conversion: copy it back so routes and parking see real boxes, then rebuild once
-  let measured = false;
-  for (const b of base) {
-    if (b.type !== "text" || b.width) continue;
-    const m = (els as El[]).find((e) => e.id === b.id);
-    if (m) { b.width = m.width; b.height = m.height; measured = true; }
+  // texts get their measured size on conversion: copy it back so routes and parking see real boxes, then rebuild (twice when a wrap changes the size)
+  for (let pass = 0; pass < 3; pass++) {
+    let changed = false;
+    for (const b of base) {
+      if (b.type !== "text") continue;
+      const m = (els as El[]).find((e) => e.id === b.id);
+      if (!m) continue;
+      if (pass === 0 && !b.containerId && b.x != null) {
+        const boxW = given.get(b.id) ?? m.width, k = b.textAlign === "right" ? 1 : b.textAlign === "center" ? 0.5 : 0;
+        if (k) { b.x += boxW * k; changed = true; }
+        if (given.has(b.id) && m.width > boxW + 1 && !String(b.text).includes("\n")) { b.text = wrap(String(b.text), Math.max(8, Math.floor((boxW * String(b.text).length) / m.width))); changed = true; }
+      }
+      if (b.width !== m.width || b.height !== m.height) { b.width = m.width; b.height = m.height; changed = true; }
+    }
+    if (!changed) break;
+    els = build();
   }
-  if (measured) els = build();
   for (let iter = 0; iter < 8; iter++) {
     const byId = new Map(els.map((e: El) => [e.id, e]));
     const sects = (els as El[]).filter((e) => SHAPES.has(e.type) && isSection(e));

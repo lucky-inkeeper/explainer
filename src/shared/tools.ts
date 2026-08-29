@@ -90,7 +90,9 @@ NOTATION (mandatory, identical in every diagram so the reader learns it once):
 - Database / storage -> rectangle, roundness {type: 3}, backgroundColor "#b2f2bb" (green), label starts with "DB: "
 - External service   -> rectangle, strokeWidth 2, backgroundColor "#ffc9c9" (red)
 - Note / explanation -> text element, strokeColor "#868e96", no box
-- Module / file / component (code maps) -> rectangle, backgroundColor "#e9ecef" (grey); group related ones inside a frame named after the folder
+- Module / file / component (code maps) -> rectangle, backgroundColor "#e9ecef" (grey)
+- Frame: at most ONE per diagram, around the whole diagram, name = the diagram title. Never one frame per lane, user, module or layer, never nested frames.
+- Section inside a diagram (a user's lane, a swimlane, a module group, a layer, a phase) -> a container rectangle listed BEFORE its members (so they draw on top): backgroundColor "#f8f9fa", strokeStyle "dashed", roughness 0, roundness {type: 3}, plus a small title text at its top-left (fontSize 14, fontFamily 102, strokeColor "#868e96"). Give the container, its title and its members the same groupIds entry so they move together. Leave 24px padding inside.
 - Arrow solid = flow / call; arrow dashed = async, optional or event; label arrows with a short verb when it helps: label: {text, fontSize: 16}. The app widens gaps so labels fit; the tool result lists any remaining overlap ("warnings") - fix those before answering
 - fillStyle "solid" for all shapes.
 - Fonts: the app defaults every text to fontFamily 101 (Playpen Sans, handwritten). Use fontFamily 102 (Inter) for notes, long explanations and code-like labels (paths, endpoints).

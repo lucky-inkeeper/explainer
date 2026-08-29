@@ -39,7 +39,7 @@ const Dots = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="current
 
 type MenuItem = { label: string; onClick: () => void; danger?: boolean; head?: boolean };
 
-export function Gallery({ current, onOpen, onRelocate, onClose }: { current: string | null; onOpen: (path: string) => void; onRelocate: (from: string, to: string | null) => void; onClose?: () => void }) {
+export function Gallery({ current, onOpen, onRelocate }: { current: string | null; onOpen: (path: string) => void; onRelocate: (from: string, to: string | null) => void }) {
   const [list, setList] = useState<DrawingList>({ folders: [], files: [] });
   const [cwd, setCwd] = useState<string | null>(null); // folder name, or null at the root
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
@@ -64,11 +64,11 @@ export function Gallery({ current, onOpen, onRelocate, onClose }: { current: str
 
   useEffect(() => { alive.current = true; reload(); return () => { alive.current = false; }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return; if (menu) setMenu(null); else if (selected.size) setSelected(new Set()); else if (!renaming && !addingFolder) onClose?.(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return; if (menu) setMenu(null); else if (selected.size) setSelected(new Set()); };
     const onClick = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest(".gmenu, .gmore")) setMenu(null); };
     window.addEventListener("keydown", onKey); window.addEventListener("mousedown", onClick);
     return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mousedown", onClick); };
-  }, [onClose, renaming, addingFolder, menu, selected]);
+  }, [menu, selected]);
 
   const act = async (fn: () => Promise<unknown>) => { setMenu(null); setError(null); try { await fn(); await reload(); } catch (e: any) { setError(e?.message?.replace(/^.*Error: /, "") ?? String(e)); } };
   const renameFile = (f: DrawingInfo, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== f.name) act(async () => onRelocate(f.path, await api.invoke("drawings:rename", f.path, name))); };
@@ -108,9 +108,7 @@ export function Gallery({ current, onOpen, onRelocate, onClose }: { current: str
             <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
           ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
           <button className="gprimary" onClick={create}>+ New drawing</button>
-          {onClose && <button className="gclose" onClick={onClose} aria-label="Back to the drawing" title="Back to the drawing (Esc)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>}
+
         </div>
       </header>
       {error && <div className="gerror">{error}</div>}

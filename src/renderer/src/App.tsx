@@ -236,7 +236,7 @@ export function App() {
         </Sidebar>
       </Excalidraw>
       <Minimap ref={minimap} api={xapi} />
-      {home && <Gallery current={file} onOpen={openTab} onRelocate={relocate} onClose={tabs.length ? () => setHome(false) : undefined} />}
+      {home && <Gallery current={file} onOpen={openTab} onRelocate={relocate} />}
       </div>
     </div>
   );

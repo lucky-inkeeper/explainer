@@ -9,17 +9,13 @@ html, body, #root { height: 100%; margin: 0; }
 .ask-btn:hover { background: #5b57d1; }
 
 .chat { display: flex; flex-direction: column; flex: 1; min-height: 0; font: 13px/1.45 system-ui, sans-serif; color: var(--text-primary-color); }
-.chat-head { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--default-border-color); }
-.chat-head .row { display: flex; gap: 6px; align-items: center; }
+.chat-head { display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--default-border-color); }
 .chat-head select, .chat-head button, .chat-foot button, .card button, .chat-input button {
   font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--default-border-color);
   background: var(--island-bg-color); color: var(--text-primary-color); cursor: pointer;
 }
 .chat-head button:hover, .card button:hover { background: var(--button-hover-bg); }
 .chat-head .spacer { flex: 1; }
-.chat-head .folder { display: inline-flex; align-items: center; gap: 5px; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-head label { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; opacity: .75; }
-.chat-head label select { width: 100%; min-width: 0; font-size: 12px; text-transform: none; letter-spacing: 0; }
 .chat-banner { padding: 8px 10px; background: #ffe066; color: #333; display: flex; gap: 8px; align-items: center; font-size: 12px; }
 .chat-log { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .msg { border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
@@ -48,18 +44,31 @@ html, body, #root { height: 100%; margin: 0; }
 .card button.primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 .card button.sel { outline: 2px solid var(--color-primary); }
 .card input { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; flex: 1; }
-.chips { display: flex; gap: 6px; padding: 4px 10px; flex-wrap: wrap; }
-.chip { font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--color-surface-primary-container); display: flex; gap: 6px; align-items: center; }
-.chip img { height: 24px; border-radius: 3px; }
-.chat-input { position: relative; display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--default-border-color); }
-.chat-input textarea { flex: 1; min-width: 0; resize: none; font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; min-height: 38px; max-height: 160px; }
-.chat-input button { flex: none; }
-.chat-input button.stop { background: #e03131; color: #fff; border-color: #e03131; }
+.composer { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 6px; border-top: 1px solid var(--default-border-color); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px; }
+.chip { font: inherit; font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--default-border-color); background: var(--color-surface-low); color: var(--text-primary-color); display: inline-flex; gap: 5px; align-items: center; cursor: default; max-width: 100%; }
+button.chip { cursor: pointer; }
+button.chip:hover { background: var(--button-hover-bg); }
+.chip.active { border-color: var(--color-primary); }
+.chip img { height: 22px; border-radius: 3px; }
+.chip button { border: none; background: transparent; color: inherit; padding: 0 2px; cursor: pointer; font-size: 12px; }
+.chat-input { position: relative; display: flex; }
+.chat-input textarea { flex: 1; min-width: 0; resize: none; font: inherit; padding: 8px 40px 8px 10px; border-radius: 10px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; min-height: 44px; max-height: 160px; }
+.chat-input textarea:focus { outline: none; border-color: var(--color-primary); }
+.chat-input button { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
+.chat-input button.enter { border: 1px solid var(--default-border-color); background: transparent; color: var(--text-primary-color); opacity: .6; }
+.chat-input button.enter:hover { opacity: 1; }
+.chat-input button.stop { background: #e03131; color: #fff; border: 1px solid #e03131; }
+.composer-foot { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.composer-foot .spacer { flex: 1; }
+.composer-foot .plain { border: none; background: transparent; color: var(--text-primary-color); font: inherit; font-size: 12px; padding: 2px 0; cursor: pointer; }
+.composer-foot select.plain { appearance: none; -webkit-appearance: none; padding-right: 14px; background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right center; }
+.composer-foot .plus { font-size: 16px; line-height: 1; padding: 0 4px; opacity: .8; }
+.composer-foot .cost { opacity: .7; }
 .popup { position: absolute; bottom: 100%; left: 10px; right: 10px; max-height: 240px; overflow: auto; background: var(--island-bg-color); border: 1px solid var(--default-border-color); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 10; }
 .popup div { padding: 6px 10px; cursor: pointer; font-size: 12px; display: flex; gap: 8px; }
 .popup div.active, .popup div:hover { background: var(--button-hover-bg); }
 .popup div span { opacity: .6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-foot { font-size: 11px; opacity: .7; padding: 4px 10px; display: flex; gap: 10px; align-items: center; }
 .sessions { position: absolute; top: 44px; left: 10px; right: 10px; z-index: 20; background: var(--island-bg-color); border: 1px solid var(--default-border-color); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.2); max-height: 60%; overflow: auto; }
 .sessions div { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--default-border-color); font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
 .sessions div:hover { background: var(--button-hover-bg); }

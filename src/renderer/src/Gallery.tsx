@@ -34,8 +34,9 @@ async function thumbnail(f: DrawingInfo): Promise<string | null> {
 }
 
 const VIEW_KEY = "explainer-gallery"; // { kind, sort, view }
-type Prefs = { kind: "all" | "files" | "folders"; sort: "modified" | "created" | "name"; view: "grid" | "list" };
-const readPrefs = (): Prefs => { try { return { kind: "all", sort: "modified", view: "grid", ...JSON.parse(localStorage.getItem(VIEW_KEY) ?? "{}") }; } catch { return { kind: "all", sort: "modified", view: "grid" }; } };
+type Prefs = { kind: "all" | "files" | "folders"; sort: "modified" | "created" | "name"; dir: "asc" | "desc"; view: "grid" | "list" };
+const DEFAULT_PREFS: Prefs = { kind: "all", sort: "modified", dir: "desc", view: "grid" };
+const readPrefs = (): Prefs => { try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(VIEW_KEY) ?? "{}") }; } catch { return DEFAULT_PREFS; } };
 
 const FolderIcon = () => (
   <svg viewBox="0 0 64 48" width="72" height="54" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#dcdcff" stroke="#8e8bd6" strokeWidth="2" /><path d="M4 18h56" stroke="#8e8bd6" strokeWidth="2" /></svg>
@@ -90,7 +91,11 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   const bulkMove = (folder: string | null) => act(async () => { for (const f of picked) if (f.folder !== folder) onRelocate(f.path, await api.invoke("drawings:move", f.path, folder)); setSelected(new Set()); });
   const create = () => act(async () => onOpen(await api.invoke("file:new", cwd)));
 
-  const files = list.files.filter((f) => f.folder === cwd && prefs.kind !== "folders").sort((a, b) => (prefs.sort === "name" ? a.name.localeCompare(b.name) : prefs.sort === "created" ? b.ctime - a.ctime : b.mtime - a.mtime));
+  const cmp = (a: DrawingInfo, b: DrawingInfo) => (prefs.sort === "name" ? a.name.localeCompare(b.name) : prefs.sort === "created" ? a.ctime - b.ctime : a.mtime - b.mtime);
+  const files = list.files.filter((f) => f.folder === cwd && prefs.kind !== "folders").sort((a, b) => (prefs.dir === "asc" ? cmp(a, b) : -cmp(a, b)));
+  /** Header click: new column sorts its natural way (names A to Z, times newest first); the same column again flips the direction. */
+  const sortBy = (col: Prefs["sort"]) => setPref(prefs.sort === col ? { dir: prefs.dir === "asc" ? "desc" : "asc" } : { sort: col, dir: col === "name" ? "asc" : "desc" });
+  const arrow = (col: Prefs["sort"]) => prefs.sort === col && <span className="garrow">{prefs.dir === "asc" ? "↑" : "↓"}</span>;
   const folders = cwd === null && prefs.kind !== "files" ? list.folders : [];
   const folderItems = (d: string): MenuItem[] => [
     { label: "Open", onClick: () => { setMenu(null); setCwd(d); } },
@@ -143,7 +148,7 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
             <option value="files">Drawings</option>
             <option value="folders">Folders</option>
           </select>
-          <select className="gselect" value={prefs.sort} onChange={(e) => setPref({ sort: e.target.value as Prefs["sort"] })} title="Sort">
+          <select className="gselect" value={prefs.sort} onChange={(e) => sortBy(e.target.value as Prefs["sort"])} title="Sort">
             <option value="modified">Last modified</option>
             <option value="created">Date created</option>
             <option value="name">Alphabetical</option>
@@ -175,9 +180,9 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
         <div className="glist" role="table">
           <div className="grow head" role="row">
             <span />
-            <button className={"gcol" + (prefs.sort === "name" ? " on" : "")} onClick={() => setPref({ sort: "name" })}>Name{prefs.sort === "name" && <span className="garrow">↓</span>}</button>
-            <button className={"gcol" + (prefs.sort === "modified" ? " on" : "")} onClick={() => setPref({ sort: "modified" })}>Last modified{prefs.sort === "modified" && <span className="garrow">↓</span>}</button>
-            <button className={"gcol" + (prefs.sort === "created" ? " on" : "")} onClick={() => setPref({ sort: "created" })}>Created{prefs.sort === "created" && <span className="garrow">↓</span>}</button>
+            <button className={"gcol" + (prefs.sort === "name" ? " on" : "")} onClick={() => sortBy("name")}>Name{arrow("name")}</button>
+            <button className={"gcol" + (prefs.sort === "modified" ? " on" : "")} onClick={() => sortBy("modified")}>Last modified{arrow("modified")}</button>
+            <button className={"gcol" + (prefs.sort === "created" ? " on" : "")} onClick={() => sortBy("created")}>Created{arrow("created")}</button>
             <span />
           </div>
           {folders.map((d) => {

@@ -8,6 +8,8 @@ export interface AppState {
   permissionMode: PermissionMode;
   /** drawing file path -> claude session id */
   sessions: Record<string, string>;
+  /** drawing file path -> creation time (ms); the atomic save replaces the inode, so the file system's birth time is useless */
+  created?: Record<string, number>;
 }
 
 export interface StartOpts {

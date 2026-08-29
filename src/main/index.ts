@@ -110,6 +110,8 @@ ipcMain.handle("file:new", (_e, folder?: string | null) => {
   let p = "", i = 0;
   do { p = path.join(dir, `Untitled${i ? "-" + i : ""}.excalidraw`); i++; } while (fs.existsSync(p));
   fs.writeFileSync(p, JSON.stringify({ type: "excalidraw", version: 2, source: "explainer", elements: [], appState: {}, files: {} }));
+  const st = readState();
+  writeState({ ...st, created: { ...(st.created ?? {}), [p]: Date.now() } });
   return p;
 });
 
@@ -121,15 +123,29 @@ const thumbFile = (p: string, mtime: number) => path.join(THUMBS, `${createHash(
 /** A drawing moved: its agent session and the last-file pointer follow it. */
 function retarget(from: string, to: string | null) {
   const st = readState();
-  const sessions = { ...st.sessions };
-  const sid = sessions[from];
-  delete sessions[from];
+  const sessions = { ...st.sessions }, created = { ...(st.created ?? {}) };
+  const sid = sessions[from], born = created[from];
+  delete sessions[from]; delete created[from];
   if (to && sid) sessions[to] = sid;
-  writeState({ ...st, sessions, lastFile: st.lastFile === from ? to ?? undefined : st.lastFile });
+  if (to && born) created[to] = born;
+  writeState({ ...st, sessions, created, lastFile: st.lastFile === from ? to ?? undefined : st.lastFile });
+}
+/** Time of the oldest .history copy of a drawing: the atomic save replaces the inode, so this beats the file's birth time. */
+function oldestBackup(p: string): number | null {
+  const dir = path.join(path.dirname(p), ".history"), base = path.basename(p, EXT) + "-";
+  if (!fs.existsSync(dir)) return null;
+  const stamps = fs.readdirSync(dir).filter((f) => f.startsWith(base)).map((f) => Date.parse(f.slice(base.length, base.length + 24).replace(/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, "$1T$2:$3:$4.$5Z"))).filter((t) => !Number.isNaN(t));
+  return stamps.length ? Math.min(...stamps) : null;
 }
 function listDrawings(): DrawingList {
   const st = readState();
-  const info = (p: string, folder: string | null): DrawingInfo => { const st2 = fs.statSync(p); return { path: p, name: path.basename(p, EXT), folder, mtime: st2.mtimeMs, ctime: st2.birthtimeMs || st2.ctimeMs, hasSession: !!st.sessions[p] }; };
+  const created = { ...(st.created ?? {}) };
+  let learned = false;
+  const info = (p: string, folder: string | null): DrawingInfo => {
+    const st2 = fs.statSync(p);
+    if (!created[p]) { created[p] = Math.min(st2.birthtimeMs || st2.mtimeMs, oldestBackup(p) ?? Infinity); learned = true; }
+    return { path: p, name: path.basename(p, EXT), folder, mtime: st2.mtimeMs, ctime: created[p], hasSession: !!st.sessions[p] };
+  };
   const files: DrawingInfo[] = [], folders: string[] = [];
   for (const e of fs.readdirSync(DIRS.drawings, { withFileTypes: true })) {
     if (e.name.startsWith(".")) continue;
@@ -140,6 +156,7 @@ function listDrawings(): DrawingList {
   }
   files.sort((a, b) => b.mtime - a.mtime);
   folders.sort((a, b) => a.localeCompare(b));
+  if (learned) writeState({ ...readState(), created });
   return { folders, files };
 }
 const moveDrawing = (from: string, to: string) => {

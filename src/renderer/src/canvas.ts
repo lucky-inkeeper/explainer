@@ -109,7 +109,7 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
       const { elements, parked, warnings } = layout(args.elements ?? [], { frame: args.frame });
       const res: any = add(api, elements, args.placement ?? "auto", selectedIds);
       if (renamed.length) res.renamed = renamed; // ids that were already on the canvas got a suffix; use the new ids from `created`
-      if (parked.length) res.parked = parked.map((id) => `${id} sat on a node; moved below the diagram (its leader follows)`);
+      if (parked.length) res.parked = parked.map((id) => `${id} was moved by the app (it sat on a node, or its leader crossed something); its leader follows`);
       return withWarnings(res, warnings);
     }
     case "draw_mermaid": {

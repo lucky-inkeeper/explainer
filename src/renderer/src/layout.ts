@@ -357,12 +357,15 @@ export function legendFor(els: El[]): El[] {
   return convertToExcalidrawElements(out, { regenerateIds: true }) as El[];
 }
 
-/** A free text that lands on a node is parked below the content; the agent guesses note positions and cannot always see the scene. */
+/**
+ * Note placement. A free text that lands on a node is parked below the content; a note whose leader would cross a node or a text is
+ * moved to the first free side of its target (right, left, below, above). The agent guesses note positions and cannot always see the scene.
+ */
 function parkNotes(els: El[]): { els: El[]; parked: string[] } {
   const nodes = els.filter((e) => SHAPES.has(e.type) && !isSection(e) && !e.isDeleted);
   const notes = els.filter((t) => t.type === "text" && !t.containerId && !t.isDeleted);
   const placed = els.filter((e) => Number.isFinite(e.x) && !e.isDeleted);
-  if (!nodes.length || !notes.length || !placed.length) return { els, parked: [] };
+  if (!notes.length || !placed.length) return { els, parked: [] };
   let y = getCommonBounds(placed)[3] + 24;
   const moved = new Map<string, El>();
   for (const t of notes) {
@@ -371,8 +374,29 @@ function parkNotes(els: El[]): { els: El[]; parked: string[] } {
     moved.set(t.id, newElementWith(t, { y }));
     y += t.height + 16;
   }
-  if (!moved.size) return { els, parked: [] };
-  const out = followBindings(els.map((e) => moved.get(e.id) ?? e), new Set(moved.keys()));
+  let out = moved.size ? followBindings(els.map((e) => moved.get(e.id) ?? e), new Set(moved.keys())) : els;
+  const solid = out.filter((e) => !e.isDeleted && isObstacle(e));
+  const sections = out.filter((e) => !e.isDeleted && SHAPES.has(e.type) && isSection(e));
+  const crosses = (a: El, skip: Set<string>) => solid.some((o) => !skip.has(o.id) && segsOf(a).some((sg) => segCrosses(sg[0], sg[1], box(o))));
+  // ponytail: four spots at 24 px, no wrapping to fit a lane; a note that fits nowhere keeps its warning for the agent
+  const free = (n: El) => !solid.some((o) => o.id !== n.id && hit(box(n), box(o))) && !sections.some((sc) => hit(box(n), box(sc)) && !contains(box(sc), box(n)));
+  for (const a of out) {
+    if (a.type !== "arrow" || a.endArrowhead !== "dot" || a.isDeleted) continue;
+    const [sid, tid] = endIds(a);
+    const note = sid && out.find((e) => e.id === sid), target = tid && out.find((e) => e.id === tid);
+    if (!note || note.type !== "text" || !target || !crosses(a, new Set([sid, tid]))) continue;
+    const pad = 24;
+    const my = target.y + (target.height - note.height) / 2, mx = target.x + (target.width - note.width) / 2; // centered on the target, so the leader runs straight
+    const spots = [[target.x + target.width + pad, my], [target.x - pad - note.width, my], [mx, target.y + target.height + pad], [mx, target.y - pad - note.height]];
+    for (const [nx, ny] of spots) {
+      const trial = followBindings(out.map((e) => (e.id === note.id ? newElementWith(e, { x: nx, y: ny }) : e)), new Set([note.id]));
+      const n2 = trial.find((e) => e.id === note.id), a2 = trial.find((e) => e.id === a.id);
+      if (!free(n2) || crosses(a2, new Set([sid, tid]))) continue;
+      out = trial;
+      moved.set(note.id, n2);
+      break;
+    }
+  }
   return { els: out, parked: [...moved.keys()] };
 }
 

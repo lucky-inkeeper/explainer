@@ -1,0 +1,89 @@
+{
+ "prompt": "hand-written: a note below a stack of three boxes points at the top box; open space to the right",
+ "frame": "Leader beside its target",
+ "elements": [
+  {
+   "id": "a",
+   "type": "rectangle",
+   "x": 0,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Top"
+   }
+  },
+  {
+   "id": "b",
+   "type": "rectangle",
+   "x": 0,
+   "y": 100,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Middle"
+   }
+  },
+  {
+   "id": "c",
+   "type": "rectangle",
+   "x": 0,
+   "y": 200,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Bottom"
+   }
+  },
+  {
+   "id": "f1",
+   "type": "arrow",
+   "start": {
+    "id": "a"
+   },
+   "end": {
+    "id": "b"
+   }
+  },
+  {
+   "id": "f2",
+   "type": "arrow",
+   "start": {
+    "id": "b"
+   },
+   "end": {
+    "id": "c"
+   }
+  },
+  {
+   "id": "note",
+   "type": "text",
+   "x": 0,
+   "y": 300,
+   "text": "The top box is where the request enters.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "lead",
+   "type": "arrow",
+   "start": {
+    "id": "note"
+   },
+   "end": {
+    "id": "a"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  }
+ ]
+}

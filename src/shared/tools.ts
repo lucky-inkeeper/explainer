@@ -23,6 +23,7 @@ export const TOOLS = [
           enum: ["auto", "selection", "exact"],
           description: "auto (default): free space right of all content. selection: right of the user's selected elements. exact: use your x/y as absolute scene coordinates (use read_canvas first).",
         },
+        frame: { type: "string", description: "Diagram title. The app wraps the whole batch in one frame with this name. Use it for every complete diagram; do not add your own outer frame then." },
       },
       required: ["elements"],
     },
@@ -36,6 +37,7 @@ export const TOOLS = [
       properties: {
         definition: { type: "string", description: "Mermaid source, e.g. 'flowchart LR\\n A[Client] --> B[API]'" },
         placement: { type: "string", enum: ["auto", "selection"] },
+        frame: { type: "string", description: "Diagram title. The app wraps the result in one frame with this name. Use it for every complete diagram." },
       },
       required: ["definition"],
     },
@@ -91,7 +93,7 @@ NOTATION (mandatory, identical in every diagram so the reader learns it once):
 - External service   -> rectangle, strokeWidth 2, backgroundColor "#ffc9c9" (red)
 - Note / explanation -> text element, strokeColor "#868e96", no box
 - Module / file / component (code maps) -> rectangle, backgroundColor "#e9ecef" (grey)
-- Frame: at most ONE per diagram, around the whole diagram, name = the diagram title. Never one frame per lane, user, module or layer, never nested frames.
+- Frame: exactly ONE per complete diagram, around the whole diagram: pass frame: "<diagram title>" to draw_elements or draw_mermaid and the app wraps the batch. Never one frame per lane, user, module or layer, never nested frames, never a frame for a small annotation added next to an existing diagram.
 - Section inside a diagram (a user's lane, a swimlane, a module group, a layer, a phase) -> a container rectangle listed BEFORE its members (so they draw on top): backgroundColor "#f8f9fa", strokeStyle "dashed", roughness 0, roundness {type: 3}, plus a small title text at its top-left (fontSize 14, fontFamily 102, strokeColor "#868e96"). Give the container, its title and its members the same groupIds entry so they move together. Leave 24px padding inside.
 - Arrow solid = flow / call; arrow dashed = async, optional or event; label arrows with a short verb when it helps: label: {text, fontSize: 16}. The app widens gaps so labels fit; the tool result lists any remaining overlap ("warnings") - fix those before answering
 - fillStyle "solid" for all shapes.

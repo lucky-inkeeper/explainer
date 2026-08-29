@@ -5,7 +5,8 @@ Explainer is a Mac app: the Excalidraw editor with a Claude agent in a side pane
 ## Glossary
 
 - **Canvas** - the single Excalidraw scene shown in the window. The user and the agent draw on the same canvas.
-- **Drawing** - a `.excalidraw` file in `data/drawings/`. One drawing is open at a time. It autosaves.
+- **Drawing** - a `.excalidraw` file in `data/drawings/` or in one **folder** below it (one level). One drawing is open at a time. It autosaves. A boot guard skips autosave while Excalidraw still reports fewer elements than the file held (a main-process restart once wrote an empty scene over a full file); `file:write` keeps a `.history` copy before any write that empties or shrinks a file by more than 30 percent.
+- **Gallery** - the drawings list (menu > Drawings…, or the button at the top left): thumbnails, folder tabs, new, open, rename, move to a folder, move to Trash. Thumbnails are cached in `data/drawings/.thumbs/` per file and mtime.
 - **Agent** - one long-lived `claude -p` process (the user's own Claude Code install and login), speaking stream-json over stdin/stdout.
 - **Session** - a Claude Code conversation (`~/.claude/projects/<cwd-slug>/<id>.jsonl`). A drawing remembers its last session (`data/app/state.json`).
 - **Workspace** - the agent's working directory (`data/workspace/` by default). Repos get cloned here.

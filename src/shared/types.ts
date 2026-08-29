@@ -19,6 +19,21 @@ export interface StartOpts {
   permissionMode?: PermissionMode;
 }
 
+export interface DrawingInfo {
+  path: string;
+  /** file name without the .excalidraw extension */
+  name: string;
+  /** subfolder of data/drawings, or null at the root */
+  folder: string | null;
+  mtime: number;
+  hasSession: boolean;
+}
+
+export interface DrawingList {
+  folders: string[];
+  files: DrawingInfo[];
+}
+
 export interface SessionInfo {
   id: string;
   title: string;
@@ -39,7 +54,14 @@ export interface Api {
   invoke(ch: "state:set", patch: Partial<AppState>): Promise<AppState>;
   invoke(ch: "file:read", path: string): Promise<string | null>;
   invoke(ch: "file:write", path: string, text: string): Promise<void>;
-  invoke(ch: "file:new"): Promise<string>;
+  invoke(ch: "file:new", folder?: string | null): Promise<string>;
+  invoke(ch: "drawings:list"): Promise<DrawingList>;
+  invoke(ch: "drawings:rename", path: string, name: string): Promise<string>;
+  invoke(ch: "drawings:move", path: string, folder: string | null): Promise<string>;
+  invoke(ch: "drawings:delete", path: string): Promise<void>;
+  invoke(ch: "drawings:newFolder", name: string): Promise<void>;
+  invoke(ch: "drawings:thumb", path: string, mtime: number): Promise<string | null>;
+  invoke(ch: "drawings:thumbSet", path: string, mtime: number, dataUrl: string): Promise<void>;
   invoke(ch: "file:openDialog"): Promise<string | null>;
   invoke(ch: "file:saveAsDialog", currentPath: string): Promise<string | null>;
   invoke(ch: "file:pickFolder", current: string): Promise<string | null>;

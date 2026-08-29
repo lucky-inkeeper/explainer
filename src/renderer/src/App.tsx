@@ -5,6 +5,7 @@ import { api } from "./api";
 import { DEFAULT_FONT, runCanvasTool } from "./canvas";
 import { ChatPanel, useChat } from "./Chat";
 import { Minimap, type MinimapHandle } from "./Minimap";
+import { Gallery } from "./Gallery";
 import type { AppState } from "../../shared/types";
 
 const LIB_KEY = "explainer-library";
@@ -21,6 +22,7 @@ export function App() {
   const [docked, setDocked] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const [gallery, setGallery] = useState(false);
   const selRef = useRef(selectedIds); selRef.current = selectedIds;
   const xapiRef = useRef(xapi); xapiRef.current = xapi;
   const fileRef = useRef(file); fileRef.current = file;
@@ -42,6 +44,8 @@ export function App() {
     return () => document.removeEventListener("wheel", onWheel, { capture: true } as any);
   }, []);
   const lastSaved = useRef("");
+  // boot guard: Excalidraw can report an empty or partial scene before initialData lands; never autosave that over a fuller file
+  const expected = useRef(0);
 
   const chat = useChat({ xapi, file, state, setState, attached, setAttached });
 
@@ -61,6 +65,8 @@ export function App() {
     let libraryItems: any[] = [];
     try { libraryItems = JSON.parse(localStorage.getItem(LIB_KEY) ?? "[]"); } catch {}
     lastSaved.current = "";
+    expected.current = (data.elements ?? []).filter((e: any) => !e.isDeleted).length;
+    window.setTimeout(() => { expected.current = 0; }, 15_000); // never leave a file unsaveable if Excalidraw drops something on load
     setInitial({ ...data, appState: { ...data.appState, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: true });
     setFile(path);
     setState(await api.invoke("state:set", { lastFile: path }));
@@ -101,6 +107,9 @@ export function App() {
       } else btn.hidden = true;
     }
     // autosave: scene version + the bits of appState worth keeping
+    const live = elements.filter((e) => !e.isDeleted).length;
+    if (live < expected.current) { console.warn(`autosave skipped: ${live} of ${expected.current} elements loaded`); return; }
+    expected.current = 0; // loaded once: from here on every change is the user's or the agent's
     const sig = `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
     if (sig === lastSaved.current) return;
     lastSaved.current = sig;
@@ -117,6 +126,8 @@ export function App() {
   }, []);
 
   const newFile = async () => openFile(await api.invoke("file:new"));
+  const openFromGallery = useCallback((p: string) => { setGallery(false); openFile(p); }, [openFile]);
+  const closeGallery = useCallback(() => setGallery(false), []);
   const open = async () => { const p = await api.invoke("file:openDialog"); if (p) openFile(p); };
   const saveAs = async () => {
     const x = xapiRef.current, p = await api.invoke("file:saveAsDialog", fileRef.current ?? "");
@@ -150,6 +161,7 @@ export function App() {
       >
         <WelcomeScreen />
         <MainMenu>
+          <MainMenu.Item onSelect={() => setGallery(true)}>Drawings…</MainMenu.Item>
           <MainMenu.Item onSelect={newFile}>New drawing</MainMenu.Item>
           <MainMenu.Item onSelect={open}>Open…</MainMenu.Item>
           <MainMenu.Item onSelect={saveAs}>Save as…</MainMenu.Item>
@@ -169,6 +181,11 @@ export function App() {
         </Sidebar>
       </Excalidraw>
       <Minimap ref={minimap} api={xapi} />
+      <button className="gallery-btn" onClick={() => setGallery(true)} title="Drawings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+        {file.split("/").pop()?.replace(/\.excalidraw$/, "")}
+      </button>
+      {gallery && <Gallery current={file} onOpen={openFromGallery} onClose={closeGallery} />}
       <button ref={askBtn} className="ask-btn" hidden aria-label="Ask agent" onClick={() => { setAttached(selRef.current); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>
       </button>

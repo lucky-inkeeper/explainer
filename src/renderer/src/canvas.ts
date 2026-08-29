@@ -146,19 +146,22 @@ function fan(routed: { a: El; r: Route; s: El; t: El }[]) {
     const d: [string, number][] = [["l", Math.abs(p[0] - e.x)], ["r", Math.abs(p[0] - (e.x + (e.width ?? 100)))], ["t", Math.abs(p[1] - e.y)], ["b", Math.abs(p[1] - (e.y + (e.height ?? 100)))]];
     return d.sort((x, y) => x[1] - y[1])[0][0];
   };
-  const groups = new Map<string, { r: Route; key: "p1" | "p2"; e: El; other: [number, number] }[]>();
-  for (const { r, s, t } of routed) {
+  const groups = new Map<string, { r: Route; key: "p1" | "p2"; e: El; other: [number, number]; label: number }[]>();
+  for (const { a, r, s, t } of routed) {
+    const label = a.label?.text ? String(a.label.text).length * 8 + 8 : 0; // estimate; the spacing pass measures the real width later
     for (const [key, e, other] of [["p1", s, r.p2], ["p2", t, r.p1]] as ["p1" | "p2", El, [number, number]][]) {
       const k = `${e.id}:${side(e, r[key])}`;
       if (!groups.has(k)) groups.set(k, []);
-      groups.get(k)!.push({ r, key, e, other });
+      groups.get(k)!.push({ r, key, e, other, label });
     }
   }
   for (const [k, g] of groups) {
     if (g.length < 2) continue;
     const alongY = k.endsWith(":l") || k.endsWith(":r");
     g.sort((m, n) => (alongY ? m.other[1] - n.other[1] : m.other[0] - n.other[0])); // keep lines from crossing each other
-    const e = g[0].e, len = alongY ? e.height ?? 100 : e.width ?? 100, step = Math.min(24, (len - 24) / (g.length - 1));
+    // labels of parallel arrows sit side by side: spread by the widest label when the side is horizontal, else 24 px
+    const want = alongY ? 24 : Math.max(24, ...g.map((m) => m.label));
+    const e = g[0].e, len = alongY ? e.height ?? 100 : e.width ?? 100, step = Math.min(want, (len - 24) / (g.length - 1));
     const center = alongY ? e.y + len / 2 : e.x + len / 2;
     g.forEach((m, i) => { const v = center + (i - (g.length - 1) / 2) * step; m.r[m.key] = alongY ? [m.r[m.key][0], v] : [v, m.r[m.key][1]]; });
   }
@@ -313,8 +316,8 @@ function overlapWarnings(els: El[]) {
     for (const e of els) {
       if (e.isDeleted || e.id === t.id || e.id === t.containerId) continue;
       if (e.type === "text") { if (e.id > t.id && hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps text "${e.text}" (${e.id})`); continue; }
-      if (!SHAPES.has(e.type)) continue;
-      if (contains(box(e), box(t))) continue; // ponytail: a text fully inside a shape is a section title or a note in a zone, not a collision
+      if (!SHAPES.has(e.type) || (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa") continue; // sections are transparent
+      if (contains(box(e), box(t))) continue; // ponytail: a text fully inside a shape is a note in a zone, not a collision
       if (hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps ${e.type} ${e.id}`);
     }
   }

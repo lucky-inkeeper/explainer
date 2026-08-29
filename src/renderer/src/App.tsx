@@ -4,6 +4,7 @@ import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excal
 import { api } from "./api";
 import { DEFAULT_FONT, runCanvasTool } from "./canvas";
 import { ChatPanel, useChat } from "./Chat";
+import { Minimap, type MinimapHandle } from "./Minimap";
 import type { AppState } from "../../shared/types";
 
 const LIB_KEY = "explainer-library";
@@ -19,10 +20,12 @@ export function App() {
   const [attached, setAttached] = useState<string[]>([]);
   const [docked, setDocked] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dark, setDark] = useState(false);
   const selRef = useRef(selectedIds); selRef.current = selectedIds;
   const xapiRef = useRef(xapi); xapiRef.current = xapi;
   const fileRef = useRef(file); fileRef.current = file;
   const saveTimer = useRef<number>(undefined);
+  const minimap = useRef<MinimapHandle>(null);
   const lastSaved = useRef("");
 
   const chat = useChat({ xapi, file, state, setState, attached, setAttached });
@@ -57,6 +60,8 @@ export function App() {
 
   const onChange = useCallback((elements: readonly any[], appState: any, files: any) => {
     setSidebarOpen(!!appState.openSidebar);
+    setDark(appState.theme === "dark");
+    minimap.current?.draw(elements, appState);
     const ids = Object.keys(appState.selectedElementIds).filter((id) => appState.selectedElementIds[id]);
     setSelectedIds((prev) => (same(prev, ids) ? prev : ids));
     if (ids.length) {
@@ -105,7 +110,7 @@ export function App() {
 
   if (!initial || !file) return <div className="app" />;
   return (
-    <div className={"app" + (sidebarOpen ? " sidebar-open" : "")}>
+    <div className={"app" + (sidebarOpen ? " sidebar-open" : "") + (dark ? " dark" : "")}>
       <Excalidraw
         key={file}
         initialData={initial}
@@ -136,6 +141,7 @@ export function App() {
           <ChatPanel chat={chat} />
         </Sidebar>
       </Excalidraw>
+      <Minimap ref={minimap} api={xapi} />
       {askPos && selectedIds.length > 0 && (
         <button className="ask-btn" style={{ left: askPos.x, top: askPos.y }} onClick={() => { setAttached(selectedIds); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }}>
           ✦ Ask agent ({selectedIds.length})

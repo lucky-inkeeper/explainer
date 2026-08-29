@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Excalidraw, MainMenu, Sidebar, WelcomeScreen, getCommonBounds, getSceneVersion, loadFromBlob, sceneCoordsToViewportCoords, serializeAsJSON } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu, Sidebar, WelcomeScreen, getCommonBounds, getSceneVersion, loadFromBlob, sceneCoordsToViewportCoords, serializeAsJSON } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
 import { DEFAULT_FONT, runCanvasTool } from "./canvas";
@@ -92,7 +92,11 @@ export function App() {
   };
 
   const uiOptions = useMemo(() => ({ canvasActions: { loadScene: false, export: { saveFileToDisk: true, onExportToBackend: share as any } } }), [share]);
-  const topRight = useCallback(() => <Button onSelect={() => xapiRef.current?.toggleSidebar({ name: "agent" })} title="Claude agent">✦ Agent</Button>, []);
+  const topRight = useCallback(() => (
+    <Sidebar.Trigger name="agent" title="Claude agent" icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>}>
+      Agent
+    </Sidebar.Trigger>
+  ), []);
   const onLibraryChange = useCallback((items: any) => localStorage.setItem(LIB_KEY, JSON.stringify(items)), []);
   const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) { (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); } }, []);
 

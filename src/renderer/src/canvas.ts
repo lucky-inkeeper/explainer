@@ -139,6 +139,15 @@ function route(a: El, s: El, t: El) {
 function followBindings(els: El[], touched: Set<string>): El[] {
   const byId = new Map(els.map((e) => [e.id, e]));
   const moved = new Map<string, El>();
+  // a shape's own label stays centered in it
+  for (const id of touched) {
+    const c = byId.get(id);
+    if (!c || !SHAPES.has(c.type)) continue;
+    for (const b of c.boundElements ?? []) {
+      const label = b.type === "text" && byId.get(b.id);
+      if (label) moved.set(label.id, newElementWith(label, { x: c.x + (c.width - label.width) / 2, y: c.y + (c.height - label.height) / 2 }));
+    }
+  }
   for (const a of els) {
     if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
     const s = byId.get(a.startBinding.elementId), t = byId.get(a.endBinding.elementId);

@@ -152,5 +152,10 @@ const menu = Menu.buildFromTemplate([
   { role: "windowMenu" },
 ]);
 
+// heartbeat: a stalled event loop in either process shows up in the log with its length
+let beat = Date.now();
+setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
+ipcMain.on("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
+
 app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); });
 app.on("window-all-closed", () => { session?.kill(); app.quit(); });

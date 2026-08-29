@@ -81,6 +81,9 @@ html, body, #root { height: 100%; margin: 0; }
 .card input { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; flex: 1; }
 .composer { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 6px; border-top: 1px solid var(--default-border-color); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px; }
+.chips:empty { display: none; }
+.sessions div.folder span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.sessions div.folder small { flex: 1; min-width: 0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; opacity: .7; }
 .chip { font: inherit; font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--default-border-color); background: var(--color-surface-low); color: var(--text-primary-color); display: inline-flex; gap: 5px; align-items: center; cursor: default; max-width: 100%; }
 button.chip { cursor: pointer; }
 button.chip:hover { background: var(--button-hover-bg); }

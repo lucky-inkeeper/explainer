@@ -311,6 +311,9 @@ export function ChatPanel({ chat }: { chat: Chat }) {
       </Sidebar.Header>
       {sessions && (
         <div className="sessions">
+          <div className="folder" onClick={() => { setSessions(null); chat.pickFolder(); }} title="Change the agent's working folder; the agent restarts in it">
+            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 6h6l2 2h10v11H3z" /></svg> Agent folder: {state?.workspace.split("/").pop()}…</span><small>{state?.workspace}</small>
+          </div>
           {sessions.length === 0 && <div>No sessions in this folder yet</div>}
           {sessions.map((s) => <div key={s.id} className={s.id === session.id ? "cur" : ""} onClick={() => { setSessions(null); chat.start(s.id); }}><span>{s.title}</span><small>{new Date(s.mtime).toLocaleString()}</small></div>)}
         </div>
@@ -341,11 +344,6 @@ export function ChatPanel({ chat }: { chat: Chat }) {
       </div>
       <div className="composer">
         <div className="chips">
-          <button className="chip" onClick={chat.pickFolder} title={`Agent folder: ${state?.workspace}`}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 6h6l2 2h10v11H3z" /></svg>
-            {state?.workspace.split("/").pop()}
-          </button>
-          {session.id && <span className="chip" title={session.id}>#{session.id.slice(0, 8)}</span>}
           {attached.length > 0 && <span className="chip active">{attached.length} elements attached <button onClick={() => setAttached([])}>×</button></span>}
           {images.map((im, i) => <span key={i} className="chip"><img src={`data:${im.source.media_type};base64,${im.source.data}`} /><button onClick={() => setImages(images.filter((_, j) => j !== i))}>×</button></span>)}
         </div>

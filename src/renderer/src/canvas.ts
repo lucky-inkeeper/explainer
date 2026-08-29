@@ -123,6 +123,37 @@ function elbowPorts(s: El, t: El): [[number, number], [number, number], [number,
   return [p1, p2, p1[0] === p2[0] ? [] : [[0, my], [p2[0] - p1[0], my]]];
 }
 
+/** Geometry for an arrow between two shapes: straight edge to edge, or the elbow route. */
+function route(a: El, s: El, t: El) {
+  const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
+  const [sx, sy] = c(s), [tx, ty] = c(t);
+  const [p1, p2, mid] = a.elbowed ? elbowPorts(s, t) : [edgePoint(s, sx, sy, tx, ty), edgePoint(t, tx, ty, sx, sy), null];
+  const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+  return { x: p1[0], y: p1[1], width: Math.abs(dx), height: Math.abs(dy), points: mid ? [[0, 0], ...mid, [dx, dy]] : [[0, 0], [dx, dy]] };
+}
+
+/**
+ * After update_elements moves or resizes shapes, arrows bound to them keep stale endpoints (Excalidraw only re-routes on user drags).
+ * Re-route every arrow bound at both ends to a touched element and recenter its label.
+ */
+function followBindings(els: El[], touched: Set<string>): El[] {
+  const byId = new Map(els.map((e) => [e.id, e]));
+  const moved = new Map<string, El>();
+  for (const a of els) {
+    if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
+    const s = byId.get(a.startBinding.elementId), t = byId.get(a.endBinding.elementId);
+    if (!s || !t || !(touched.has(s.id) || touched.has(t.id))) continue;
+    const next = newElementWith(a, route(a, s, t));
+    moved.set(a.id, next);
+    const label = els.find((e) => e.type === "text" && e.containerId === a.id);
+    if (label) {
+      const pts = next.points, m = pts[Math.floor((pts.length - 1) / 2)], n = pts[Math.ceil((pts.length - 1) / 2)];
+      moved.set(label.id, newElementWith(label, { x: next.x + (m[0] + n[0]) / 2 - label.width / 2, y: next.y + (m[1] + n[1]) / 2 - label.height / 2 }));
+    }
+  }
+  return moved.size ? els.map((e) => moved.get(e.id) ?? e) : els;
+}
+
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass
   const base: El[] = structuredClone(skeleton);
@@ -136,11 +167,7 @@ function spaceForLabels(skeleton: El[]): El[] {
       if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
       const s = byId.get(a.start.id), t = byId.get(a.end.id);
       if (!s || s.x == null || !t || t.x == null) continue;
-      const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
-      const [sx, sy] = c(s), [tx, ty] = c(t);
-      const [p1, p2, mid] = a.elbowed ? elbowPorts(s, t) : [edgePoint(s, sx, sy, tx, ty), edgePoint(t, tx, ty, sx, sy), null];
-      const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
-      Object.assign(a, { x: p1[0], y: p1[1], width: Math.abs(dx), height: Math.abs(dy), points: mid ? [[0, 0], ...mid, [dx, dy]] : [[0, 0], [dx, dy]] });
+      Object.assign(a, route(a, s, t));
     }
     return convertToExcalidrawElements(sk, { regenerateIds: false });
   };
@@ -297,7 +324,8 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
         if (props.text !== undefined && e.type === "text") props.originalText = props.text;
         return newElementWith(e, props);
       });
-      api.updateScene({ elements: restoreElements(next, null, { refreshDimensions: true, repairBindings: true }), captureUpdate: CaptureUpdateAction.IMMEDIATELY });
+      const restored = restoreElements(next, null, { refreshDimensions: true, repairBindings: true }) as El[];
+      api.updateScene({ elements: followBindings(restored, new Set(updates.map((u) => u.id))), captureUpdate: CaptureUpdateAction.IMMEDIATELY });
       return { updated: updates.map((u) => u.id) };
     }
     case "delete_elements": {

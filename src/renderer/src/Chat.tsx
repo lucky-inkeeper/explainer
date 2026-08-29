@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+import { Sidebar } from "@excalidraw/excalidraw";
 import { api } from "./api";
 import { compact } from "./canvas";
 import type { AppState, ImageBlock, PermissionMode, SessionInfo, UserContent } from "../../shared/types";
@@ -27,7 +28,7 @@ const shortModel = (m: string) => (m ? m.replace(/^claude-/, "") : "model");
 function Picker({ value, options, onChange, title }: { value: string; options: [string, string][]; onChange: (v: string) => void; title: string }) {
   const label = options.find(([v]) => v === value)?.[1] ?? value;
   return (
-    <span className="picker" title={title}>
+    <span className="pick" title={title}>
       <span>{label}</span>
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
       <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={title}>{options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
@@ -295,11 +296,13 @@ export function ChatPanel({ chat }: { chat: Chat }) {
 
   return (
     <div className="chat">
-      <div className="chat-head">
-        <button onClick={() => chat.start()} title="Start a new session">New</button>
-        <button onClick={openSessions} title="Switch session">Sessions</button>
-        <button onClick={() => session.id && chat.start(session.id, true)} title="Fork the current session" disabled={!session.id}>Fork</button>
-      </div>
+      <Sidebar.Header>
+        <div className="agent-title">
+          <button onClick={openSessions} title="Switch session">Sessions</button>
+          <span className="title">Claude</span>
+          <button className="new" onClick={() => chat.start()} title="New session">+</button>
+        </div>
+      </Sidebar.Header>
       {sessions && (
         <div className="sessions">
           {sessions.length === 0 && <div>No sessions in this folder yet</div>}

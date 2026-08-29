@@ -8,7 +8,7 @@ html, body, #root { height: 100%; margin: 0; }
 }
 .ask-btn:hover { background: #5b57d1; }
 
-.chat { display: flex; flex-direction: column; height: 100%; font: 13px/1.45 system-ui, sans-serif; color: var(--text-primary-color); }
+.chat { display: flex; flex-direction: column; flex: 1; min-height: 0; font: 13px/1.45 system-ui, sans-serif; color: var(--text-primary-color); }
 .chat-head { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--default-border-color); }
 .chat-head .row { display: flex; gap: 6px; align-items: center; }
 .chat-head select, .chat-head button, .chat-foot button, .card button, .chat-input button {

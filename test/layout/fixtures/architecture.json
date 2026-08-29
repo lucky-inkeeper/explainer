@@ -1,16 +1,16 @@
 {
  "prompt": "Draw the architecture of a URL shortener service: CDN, API, Postgres, Redis cache, and an analytics pipeline. Group by tier.",
- "session": "ab39a155-1fb5-4885-ab55-f3907df8e0d2",
- "at": "2026-08-29T11:15:46.428Z",
+ "session": "a7b98166-2eba-4b05-8fea-266fcd0a233d",
+ "at": "2026-08-29T14:21:07.282Z",
  "frame": "URL shortener architecture",
  "elements": [
   {
    "type": "rectangle",
    "id": "sec-edge",
-   "x": 40,
-   "y": 40,
-   "width": 540,
-   "height": 160,
+   "x": 0,
+   "y": 60,
+   "width": 280,
+   "height": 284,
    "backgroundColor": "#f8f9fa",
    "strokeStyle": "dashed",
    "fillStyle": "solid",
@@ -25,8 +25,8 @@
   {
    "type": "text",
    "id": "t-edge",
-   "x": 64,
-   "y": 52,
+   "x": 24,
+   "y": 76,
    "text": "Edge tier",
    "fontSize": 14,
    "fontFamily": 102,
@@ -37,27 +37,27 @@
   },
   {
    "type": "ellipse",
-   "id": "browser",
-   "x": 100,
-   "y": 100,
-   "width": 160,
-   "height": 60,
+   "id": "user",
+   "x": 40,
+   "y": 120,
+   "width": 200,
+   "height": 72,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
    "groupIds": [
     "g-edge"
    ],
    "label": {
-    "text": "Visit short link"
+    "text": "Open short link"
    }
   },
   {
    "type": "rectangle",
    "id": "cdn",
-   "x": 380,
-   "y": 100,
-   "width": 160,
-   "height": 60,
+   "x": 40,
+   "y": 248,
+   "width": 200,
+   "height": 72,
    "backgroundColor": "#ffc9c9",
    "fillStyle": "solid",
    "strokeWidth": 2,
@@ -71,10 +71,10 @@
   {
    "type": "rectangle",
    "id": "sec-app",
-   "x": 40,
-   "y": 260,
-   "width": 540,
-   "height": 200,
+   "x": 360,
+   "y": 60,
+   "width": 300,
+   "height": 548,
    "backgroundColor": "#f8f9fa",
    "strokeStyle": "dashed",
    "fillStyle": "solid",
@@ -89,8 +89,8 @@
   {
    "type": "text",
    "id": "t-app",
-   "x": 64,
-   "y": 272,
+   "x": 384,
+   "y": 76,
    "text": "Application tier",
    "fontSize": 14,
    "fontFamily": 102,
@@ -101,30 +101,11 @@
   },
   {
    "type": "rectangle",
-   "id": "redis",
-   "x": 100,
-   "y": 320,
-   "width": 160,
-   "height": 60,
-   "backgroundColor": "#b2f2bb",
-   "fillStyle": "solid",
-   "roundness": {
-    "type": 3
-   },
-   "groupIds": [
-    "g-app"
-   ],
-   "label": {
-    "text": "DB: Redis cache"
-   }
-  },
-  {
-   "type": "rectangle",
    "id": "api",
-   "x": 380,
-   "y": 320,
-   "width": 160,
-   "height": 60,
+   "x": 384,
+   "y": 248,
+   "width": 252,
+   "height": 72,
    "backgroundColor": "#a5d8ff",
    "fillStyle": "solid",
    "strokeColor": "#e8590c",
@@ -137,26 +118,28 @@
    }
   },
   {
-   "type": "text",
-   "id": "note-cache",
-   "x": 100,
-   "y": 400,
-   "width": 300,
-   "text": "Cache hit skips Postgres",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
+   "type": "rectangle",
+   "id": "pipeline",
+   "x": 384,
+   "y": 512,
+   "width": 252,
+   "height": 72,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
    "groupIds": [
     "g-app"
-   ]
+   ],
+   "label": {
+    "text": "Analytics pipeline"
+   }
   },
   {
    "type": "rectangle",
    "id": "sec-data",
-   "x": 40,
-   "y": 500,
-   "width": 1244,
-   "height": 220,
+   "x": 720,
+   "y": 60,
+   "width": 300,
+   "height": 548,
    "backgroundColor": "#f8f9fa",
    "strokeStyle": "dashed",
    "fillStyle": "solid",
@@ -171,9 +154,9 @@
   {
    "type": "text",
    "id": "t-data",
-   "x": 64,
-   "y": 512,
-   "text": "Data and analytics tier",
+   "x": 744,
+   "y": 76,
+   "text": "Data tier",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -183,11 +166,11 @@
   },
   {
    "type": "rectangle",
-   "id": "pg",
-   "x": 380,
-   "y": 560,
-   "width": 160,
-   "height": 60,
+   "id": "redis",
+   "x": 744,
+   "y": 248,
+   "width": 252,
+   "height": 72,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
    "roundness": {
@@ -199,48 +182,16 @@
     "g-data"
    ],
    "label": {
-    "text": "DB: Postgres"
+    "text": "DB: Redis cache"
    }
   },
   {
    "type": "rectangle",
-   "id": "queue",
-   "x": 620,
-   "y": 560,
-   "width": 160,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "groupIds": [
-    "g-data"
-   ],
-   "label": {
-    "text": "Event queue"
-   }
-  },
-  {
-   "type": "rectangle",
-   "id": "worker",
-   "x": 860,
-   "y": 560,
-   "width": 160,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "groupIds": [
-    "g-data"
-   ],
-   "label": {
-    "text": "Stream worker"
-   }
-  },
-  {
-   "type": "rectangle",
-   "id": "olap",
-   "x": 1100,
-   "y": 560,
-   "width": 160,
-   "height": 60,
+   "id": "pg",
+   "x": 744,
+   "y": 380,
+   "width": 252,
+   "height": 72,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
    "roundness": {
@@ -250,37 +201,38 @@
     "g-data"
    ],
    "label": {
-    "text": "DB: ClickHouse"
+    "text": "DB: Postgres links"
    }
   },
   {
-   "type": "text",
-   "id": "note-async",
-   "x": 620,
-   "y": 660,
-   "width": 300,
-   "text": "Async: never blocks redirect",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
+   "type": "rectangle",
+   "id": "warehouse",
+   "x": 744,
+   "y": 512,
+   "width": 252,
+   "height": 72,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
    "groupIds": [
     "g-data"
-   ]
+   ],
+   "label": {
+    "text": "DB: Click stats"
+   }
   },
   {
    "type": "arrow",
    "id": "a1",
    "start": {
-    "id": "browser"
+    "id": "user"
    },
    "end": {
     "id": "cdn"
    },
-   "endArrowhead": "triangle",
-   "label": {
-    "text": "GET /abc",
-    "fontSize": 16
-   }
+   "endArrowhead": "triangle"
   },
   {
    "type": "arrow",
@@ -293,7 +245,7 @@
    },
    "endArrowhead": "triangle",
    "label": {
-    "text": "miss",
+    "text": "GET /:slug",
     "fontSize": 16
    }
   },
@@ -308,7 +260,7 @@
    },
    "endArrowhead": "triangle",
    "label": {
-    "text": "lookup",
+    "text": "lookup slug",
     "fontSize": 16
    }
   },
@@ -316,7 +268,7 @@
    "type": "arrow",
    "id": "a4",
    "start": {
-    "id": "api"
+    "id": "redis"
    },
    "end": {
     "id": "pg"
@@ -334,13 +286,12 @@
     "id": "api"
    },
    "end": {
-    "id": "queue"
+    "id": "pipeline"
    },
-   "elbowed": true,
-   "strokeStyle": "dashed",
    "endArrowhead": "arrow",
+   "strokeStyle": "dashed",
    "label": {
-    "text": "click event",
+    "text": "click events",
     "fontSize": 16
    }
   },
@@ -348,40 +299,61 @@
    "type": "arrow",
    "id": "a6",
    "start": {
-    "id": "queue"
+    "id": "pipeline"
    },
    "end": {
-    "id": "worker"
+    "id": "warehouse"
    },
    "endArrowhead": "triangle",
    "label": {
-    "text": "consume",
+    "text": "aggregates",
     "fontSize": 16
    }
   },
   {
-   "type": "arrow",
-   "id": "a7",
-   "start": {
-    "id": "worker"
-   },
-   "end": {
-    "id": "olap"
-   },
-   "endArrowhead": "triangle",
-   "label": {
-    "text": "write",
-    "fontSize": 16
-   }
+   "type": "text",
+   "id": "note-a",
+   "x": 1060,
+   "y": 254,
+   "width": 260,
+   "text": "Hot path: slug lookup hits Redis. Only a miss reads Postgres.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
   },
   {
    "type": "arrow",
-   "id": "a8",
+   "id": "l-a",
    "start": {
-    "id": "note-async"
+    "id": "note-a"
    },
    "end": {
-    "id": "queue"
+    "id": "redis"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  },
+  {
+   "type": "text",
+   "id": "note-b",
+   "x": 24,
+   "y": 520,
+   "width": 300,
+   "text": "Async: the redirect returns before events are written.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "l-b",
+   "start": {
+    "id": "note-b"
+   },
+   "end": {
+    "id": "pipeline"
    },
    "strokeStyle": "dashed",
    "strokeWidth": 1,

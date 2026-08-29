@@ -1,258 +1,267 @@
 {
  "prompt": "Draw the dependency graph of a monorepo: web, api, worker, shared-utils, db-client, logger. web and api depend on shared-utils and db-client; worker depends on db-client and logger; shared-utils depends on logger; logger depends on shared-utils.",
- "session": "ad010b05-85e6-46ab-a561-b6e540a4d9b0",
- "at": "2026-08-29T11:44:23.117Z",
+ "session": "901dad63-892e-44da-9bb9-b37d31061cd9",
+ "at": "2026-08-29T14:43:38.869Z",
  "frame": "Monorepo dependency graph",
  "elements": [
   {
    "type": "rectangle",
    "id": "web",
-   "x": 0,
-   "y": 0,
+   "x": 40,
+   "y": 40,
    "width": 160,
    "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "label": {
-    "text": "web",
-    "fontSize": 18
+    "text": "web"
    }
   },
   {
    "type": "rectangle",
-   "id": "apip",
-   "x": 320,
-   "y": 0,
+   "id": "api",
+   "x": 280,
+   "y": 40,
    "width": 160,
    "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "label": {
-    "text": "api",
-    "fontSize": 18
+    "text": "api"
    }
   },
   {
    "type": "rectangle",
-   "id": "wrk",
-   "x": 680,
-   "y": 0,
+   "id": "worker",
+   "x": 520,
+   "y": 40,
    "width": 160,
    "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "label": {
-    "text": "worker",
-    "fontSize": 18
+    "text": "worker"
    }
   },
   {
    "type": "rectangle",
-   "id": "shu",
-   "x": 0,
-   "y": 240,
+   "id": "shared",
+   "x": 40,
+   "y": 220,
    "width": 160,
    "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "label": {
-    "text": "shared-utils",
-    "fontSize": 18
+    "text": "shared-utils"
    }
   },
   {
    "type": "rectangle",
    "id": "dbc",
-   "x": 760,
-   "y": 320,
+   "x": 280,
+   "y": 220,
    "width": 160,
    "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeWidth": 1,
-   "opacity": 70,
    "label": {
-    "text": "db-client",
-    "fontSize": 18
+    "text": "db-client"
    }
   },
   {
    "type": "rectangle",
-   "id": "log",
-   "x": 320,
-   "y": 600,
+   "id": "logger",
+   "x": 40,
+   "y": 400,
    "width": 160,
    "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "label": {
-    "text": "logger",
-    "fontSize": 18
+    "text": "logger"
    }
   },
   {
    "type": "text",
-   "id": "bweb",
-   "x": 112,
-   "y": -24,
+   "id": "b-web",
+   "x": 152,
+   "y": 16,
+   "width": 48,
    "text": "0 in",
    "fontSize": 14,
    "fontFamily": 102,
+   "textAlign": "right",
    "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "bapi",
-   "x": 432,
-   "y": -24,
+   "id": "b-api",
+   "x": 392,
+   "y": 16,
+   "width": 48,
    "text": "0 in",
    "fontSize": 14,
    "fontFamily": 102,
+   "textAlign": "right",
    "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "bwrk",
-   "x": 792,
-   "y": -24,
+   "id": "b-worker",
+   "x": 632,
+   "y": 16,
+   "width": 48,
    "text": "0 in",
    "fontSize": 14,
    "fontFamily": 102,
+   "textAlign": "right",
    "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "bshu",
-   "x": 112,
-   "y": 216,
+   "id": "b-shared",
+   "x": 152,
+   "y": 196,
+   "width": 48,
    "text": "3 in",
    "fontSize": 14,
    "fontFamily": 102,
+   "textAlign": "right",
    "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "bdbc",
-   "x": 872,
-   "y": 296,
+   "id": "b-dbc",
+   "x": 392,
+   "y": 196,
+   "width": 48,
    "text": "3 in",
    "fontSize": 14,
    "fontFamily": 102,
+   "textAlign": "right",
    "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "blog",
-   "x": 432,
-   "y": 576,
+   "id": "b-logger",
+   "x": 152,
+   "y": 376,
+   "width": 48,
    "text": "2 in",
    "fontSize": 14,
    "fontFamily": 102,
+   "textAlign": "right",
    "strokeColor": "#868e96"
   },
   {
    "type": "arrow",
-   "id": "e1",
+   "id": "a1",
    "start": {
     "id": "web"
    },
    "end": {
-    "id": "shu"
+    "id": "shared"
    },
-   "elbowed": true,
-   "endArrowhead": "triangle"
+   "endArrowhead": "triangle",
+   "strokeWidth": 1
   },
   {
    "type": "arrow",
-   "id": "e2",
+   "id": "a2",
    "start": {
     "id": "web"
    },
    "end": {
     "id": "dbc"
    },
-   "elbowed": true,
-   "endArrowhead": "triangle"
+   "endArrowhead": "triangle",
+   "strokeWidth": 1,
+   "elbowed": true
   },
   {
    "type": "arrow",
-   "id": "e3",
+   "id": "a3",
    "start": {
-    "id": "apip"
+    "id": "api"
    },
    "end": {
-    "id": "shu"
+    "id": "shared"
    },
-   "elbowed": true,
-   "endArrowhead": "triangle"
+   "endArrowhead": "triangle",
+   "strokeWidth": 1,
+   "elbowed": true
   },
   {
    "type": "arrow",
-   "id": "e4",
+   "id": "a4",
    "start": {
-    "id": "apip"
-   },
-   "end": {
-    "id": "dbc"
-   },
-   "elbowed": true,
-   "endArrowhead": "triangle"
-  },
-  {
-   "type": "arrow",
-   "id": "e5",
-   "start": {
-    "id": "wrk"
+    "id": "api"
    },
    "end": {
     "id": "dbc"
    },
-   "elbowed": true,
-   "endArrowhead": "triangle"
+   "endArrowhead": "triangle",
+   "strokeWidth": 1
   },
   {
    "type": "arrow",
-   "id": "e6",
+   "id": "a5",
    "start": {
-    "id": "wrk"
+    "id": "worker"
    },
    "end": {
-    "id": "log"
+    "id": "dbc"
    },
-   "elbowed": true,
-   "endArrowhead": "triangle"
+   "endArrowhead": "triangle",
+   "strokeWidth": 1,
+   "elbowed": true
   },
   {
    "type": "arrow",
-   "id": "e7",
+   "id": "a6",
    "start": {
-    "id": "shu"
+    "id": "worker"
    },
    "end": {
-    "id": "log"
+    "id": "logger"
    },
-   "elbowed": true,
-   "endArrowhead": "triangle"
+   "endArrowhead": "triangle",
+   "strokeWidth": 1,
+   "elbowed": true
   },
   {
    "type": "arrow",
-   "id": "ecyc",
+   "id": "a7",
    "start": {
-    "id": "log"
+    "id": "shared"
    },
    "end": {
-    "id": "shu"
+    "id": "logger"
    },
-   "elbowed": true,
+   "endArrowhead": "triangle",
+   "strokeWidth": 1
+  },
+  {
+   "type": "arrow",
+   "id": "a8",
+   "start": {
+    "id": "logger"
+   },
+   "end": {
+    "id": "shared"
+   },
+   "endArrowhead": "triangle",
+   "strokeWidth": 2,
    "strokeStyle": "dashed",
    "strokeColor": "#e8590c",
-   "strokeWidth": 2,
-   "endArrowhead": "triangle",
+   "elbowed": true,
    "label": {
     "text": "CYCLE",
     "fontSize": 16
@@ -260,28 +269,17 @@
   },
   {
    "type": "text",
-   "id": "nt1",
-   "x": -400,
-   "y": 560,
-   "width": 300,
-   "text": "logger and shared-utils import each other. No valid build order exists.",
+   "id": "n1",
+   "x": 40,
+   "y": 496,
+   "width": 320,
+   "text": "shared-utils and logger import each other. No build order exists.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
-  },
-  {
-   "type": "arrow",
-   "id": "ld1",
-   "start": {
-    "id": "nt1"
-   },
-   "end": {
-    "id": "log"
-   },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
   }
+ ],
+ "todo": [
+  "arrow a2 runs along arrow a3"
  ]
 }

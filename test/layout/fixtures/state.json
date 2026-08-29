@@ -1,24 +1,25 @@
 {
  "prompt": "Draw the state machine of a subscription: trial, active, past due, canceled, expired.",
- "session": "8a4b9d95-bbc6-4fc7-9d02-a39ac392f064",
- "at": "2026-08-29T11:21:19.540Z",
+ "session": "8b28e293-745b-4b17-bac7-893ca51bd610",
+ "at": "2026-08-29T14:25:57.480Z",
  "frame": "Subscription state machine",
  "elements": [
   {
    "type": "ellipse",
    "id": "start",
-   "x": 432,
+   "x": 232,
    "y": 40,
    "width": 16,
    "height": 16,
    "backgroundColor": "#1e1e1e",
    "strokeColor": "#1e1e1e",
-   "fillStyle": "solid"
+   "fillStyle": "solid",
+   "strokeWidth": 1
   },
   {
    "type": "rectangle",
    "id": "trial",
-   "x": 360,
+   "x": 160,
    "y": 120,
    "width": 160,
    "height": 60,
@@ -27,6 +28,7 @@
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
    "label": {
     "text": "Trial"
    }
@@ -34,7 +36,7 @@
   {
    "type": "rectangle",
    "id": "active",
-   "x": 360,
+   "x": 160,
    "y": 300,
    "width": 160,
    "height": 60,
@@ -43,6 +45,7 @@
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
    "label": {
     "text": "Active"
    }
@@ -50,7 +53,7 @@
   {
    "type": "rectangle",
    "id": "pastdue",
-   "x": 360,
+   "x": 160,
    "y": 480,
    "width": 160,
    "height": 60,
@@ -68,8 +71,8 @@
   {
    "type": "rectangle",
    "id": "canceled",
-   "x": 360,
-   "y": 660,
+   "x": 480,
+   "y": 480,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -77,6 +80,7 @@
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
    "label": {
     "text": "Canceled"
    }
@@ -84,8 +88,8 @@
   {
    "type": "rectangle",
    "id": "expired",
-   "x": 360,
-   "y": 840,
+   "x": 800,
+   "y": 300,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -93,6 +97,7 @@
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
    "label": {
     "text": "Expired"
    }
@@ -100,8 +105,8 @@
   {
    "type": "ellipse",
    "id": "endring",
-   "x": 430,
-   "y": 960,
+   "x": 1040,
+   "y": 320,
    "width": 20,
    "height": 20,
    "backgroundColor": "transparent",
@@ -111,13 +116,14 @@
   {
    "type": "ellipse",
    "id": "enddot",
-   "x": 434,
-   "y": 964,
+   "x": 1044,
+   "y": 324,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
    "strokeColor": "#1e1e1e",
-   "fillStyle": "solid"
+   "fillStyle": "solid",
+   "strokeWidth": 1
   },
   {
    "type": "arrow",
@@ -128,6 +134,8 @@
    "end": {
     "id": "trial"
    },
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
     "text": "sign up",
     "fontSize": 16,
@@ -143,6 +151,8 @@
    "end": {
     "id": "active"
    },
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
     "text": "card charged",
     "fontSize": 16,
@@ -153,13 +163,16 @@
    "type": "arrow",
    "id": "a3",
    "start": {
-    "id": "active"
+    "id": "trial"
    },
    "end": {
-    "id": "pastdue"
+    "id": "expired"
    },
+   "elbowed": true,
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "payment fails",
+    "text": "trial ends, no card",
     "fontSize": 16,
     "fontFamily": 102
    }
@@ -168,13 +181,15 @@
    "type": "arrow",
    "id": "a4",
    "start": {
-    "id": "pastdue"
+    "id": "active"
    },
    "end": {
-    "id": "canceled"
+    "id": "pastdue"
    },
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "retries exhausted",
+    "text": "payment fails",
     "fontSize": 16,
     "fontFamily": 102
    }
@@ -182,14 +197,30 @@
   {
    "type": "arrow",
    "id": "a5",
-   "start": {
-    "id": "canceled"
-   },
-   "end": {
-    "id": "expired"
-   },
+   "x": 160,
+   "y": 510,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -88,
+     0
+    ],
+    [
+     -88,
+     -180
+    ],
+    [
+     0,
+     -180
+    ]
+   ],
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "period ends",
+    "text": "payment recovered",
     "fontSize": 16,
     "fontFamily": 102
    }
@@ -198,64 +229,31 @@
    "type": "arrow",
    "id": "a6",
    "start": {
-    "id": "expired"
+    "id": "pastdue"
    },
    "end": {
-    "id": "endring"
-   }
-  },
-  {
-   "type": "arrow",
-   "id": "a7",
-   "x": 520,
-   "y": 500,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     100,
-     0
-    ],
-    [
-     100,
-     -170
-    ],
-    [
-     0,
-     -170
-    ]
-   ],
+    "id": "canceled"
+   },
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "retry ok",
+    "text": "dunning fails",
     "fontSize": 16,
     "fontFamily": 102
    }
   },
   {
    "type": "arrow",
-   "id": "a8",
-   "x": 360,
-   "y": 340,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     -120,
-     0
-    ],
-    [
-     -120,
-     360
-    ],
-    [
-     0,
-     360
-    ]
-   ],
+   "id": "a7",
+   "start": {
+    "id": "active"
+   },
+   "end": {
+    "id": "canceled"
+   },
+   "elbowed": true,
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
     "text": "user cancels",
     "fontSize": 16,
@@ -264,82 +262,47 @@
   },
   {
    "type": "arrow",
-   "id": "a9",
-   "x": 360,
-   "y": 160,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     -260,
-     0
-    ],
-    [
-     -260,
-     720
-    ],
-    [
-     0,
-     720
-    ]
-   ],
+   "id": "a8",
+   "start": {
+    "id": "canceled"
+   },
+   "end": {
+    "id": "expired"
+   },
+   "elbowed": true,
+   "strokeWidth": 1,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "no payment",
+    "text": "period ends",
     "fontSize": 16,
     "fontFamily": 102
    }
   },
   {
+   "type": "arrow",
+   "id": "a9",
+   "start": {
+    "id": "expired"
+   },
+   "end": {
+    "id": "endring"
+   },
+   "strokeWidth": 1,
+   "endArrowhead": "triangle"
+  },
+  {
    "type": "text",
-   "id": "n1",
-   "x": 700,
-   "y": 548,
-   "width": 260,
-   "text": "Dunning window: retries run, access stays on.",
+   "id": "note1",
+   "x": 440,
+   "y": 588,
+   "width": 280,
+   "text": "Resume before period end returns to Active.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
-  },
-  {
-   "type": "text",
-   "id": "n2",
-   "x": 700,
-   "y": 700,
-   "width": 260,
-   "text": "Canceled keeps access until the paid period ends.",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "arrow",
-   "id": "l1",
-   "start": {
-    "id": "n1"
-   },
-   "end": {
-    "id": "pastdue"
-   },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
-  },
-  {
-   "type": "arrow",
-   "id": "l2",
-   "start": {
-    "id": "n2"
-   },
-   "end": {
-    "id": "canceled"
-   },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
   }
+ ],
+ "todo": [
+  "arrow a3 crosses text IQOHfy2OIaddP46LSjvGJ \"user cancels\""
  ]
 }

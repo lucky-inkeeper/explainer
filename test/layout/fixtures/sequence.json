@@ -1,79 +1,16 @@
 {
  "prompt": "Show the message flow when a user checks out with a saved card: browser, checkout API, payment provider, orders database. Include the failed payment branch.",
- "session": "af0a62e3-0add-46ac-a362-cf1346cb7880",
- "at": "2026-08-29T11:18:45.429Z",
+ "session": "05606f58-7dd0-48a2-895a-9019f0482fd5",
+ "at": "2026-08-29T14:24:12.470Z",
  "frame": "Checkout with saved card",
  "elements": [
   {
-   "id": "a_browser",
-   "type": "ellipse",
-   "x": 60,
-   "y": 0,
-   "width": 180,
-   "height": 64,
-   "backgroundColor": "#ffec99",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "label": {
-    "text": "Browser",
-    "fontSize": 18
-   }
-  },
-  {
-   "id": "a_api",
    "type": "rectangle",
-   "x": 340,
-   "y": 0,
-   "width": 180,
-   "height": 64,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "label": {
-    "text": "Checkout API",
-    "fontSize": 18
-   }
-  },
-  {
-   "id": "a_psp",
-   "type": "rectangle",
-   "x": 620,
-   "y": 0,
-   "width": 180,
-   "height": 64,
-   "backgroundColor": "#ffc9c9",
-   "fillStyle": "solid",
-   "strokeWidth": 2,
-   "label": {
-    "text": "Payment Provider",
-    "fontSize": 18
-   }
-  },
-  {
-   "id": "a_db",
-   "type": "rectangle",
-   "x": 900,
-   "y": 0,
-   "width": 180,
-   "height": 64,
-   "backgroundColor": "#b2f2bb",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "roundness": {
-    "type": 3
-   },
-   "label": {
-    "text": "DB: orders",
-    "fontSize": 18
-   }
-  },
-  {
-   "id": "frag",
-   "type": "rectangle",
-   "x": 138,
-   "y": 220,
-   "width": 864,
-   "height": 450,
+   "id": "altbox",
+   "x": 108,
+   "y": 212,
+   "width": 1104,
+   "height": 518,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
    "strokeStyle": "dashed",
@@ -81,16 +18,15 @@
    "roundness": {
     "type": 3
    },
-   "strokeWidth": 1,
    "groupIds": [
     "altfrag"
    ]
   },
   {
-   "id": "frag_title",
    "type": "text",
-   "x": 152,
-   "y": 232,
+   "id": "alttitle",
+   "x": 132,
+   "y": 228,
    "text": "ALT",
    "fontSize": 14,
    "fontFamily": 102,
@@ -100,10 +36,10 @@
    ]
   },
   {
-   "id": "frag_g1",
    "type": "text",
-   "x": 152,
-   "y": 254,
+   "id": "guard1",
+   "x": 132,
+   "y": 252,
    "text": "[payment approved]",
    "fontSize": 14,
    "fontFamily": 102,
@@ -113,11 +49,33 @@
    ]
   },
   {
-   "id": "frag_g2",
+   "type": "line",
+   "id": "divider",
+   "x": 108,
+   "y": 502,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     1104,
+     0
+    ]
+   ],
+   "strokeStyle": "dashed",
+   "strokeColor": "#868e96",
+   "strokeWidth": 1,
+   "groupIds": [
+    "altfrag"
+   ]
+  },
+  {
    "type": "text",
-   "x": 152,
-   "y": 474,
-   "text": "[payment declined]",
+   "id": "guard2",
+   "x": 132,
+   "y": 514,
+   "text": "[else declined]",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -126,9 +84,9 @@
    ]
   },
   {
-   "id": "ll_browser",
    "type": "line",
-   "x": 150,
+   "id": "ll1",
+   "x": 120,
    "y": 64,
    "points": [
     [
@@ -137,7 +95,7 @@
     ],
     [
      0,
-     646
+     716
     ]
    ],
    "strokeStyle": "dashed",
@@ -145,9 +103,9 @@
    "strokeWidth": 1
   },
   {
-   "id": "ll_api",
    "type": "line",
-   "x": 430,
+   "id": "ll2",
+   "x": 420,
    "y": 64,
    "points": [
     [
@@ -156,7 +114,7 @@
     ],
     [
      0,
-     646
+     716
     ]
    ],
    "strokeStyle": "dashed",
@@ -164,9 +122,9 @@
    "strokeWidth": 1
   },
   {
-   "id": "ll_psp",
    "type": "line",
-   "x": 710,
+   "id": "ll3",
+   "x": 700,
    "y": 64,
    "points": [
     [
@@ -175,7 +133,7 @@
     ],
     [
      0,
-     646
+     716
     ]
    ],
    "strokeStyle": "dashed",
@@ -183,9 +141,9 @@
    "strokeWidth": 1
   },
   {
-   "id": "ll_db",
    "type": "line",
-   "x": 990,
+   "id": "ll4",
+   "x": 1200,
    "y": 64,
    "points": [
     [
@@ -194,7 +152,7 @@
     ],
     [
      0,
-     646
+     716
     ]
    ],
    "strokeStyle": "dashed",
@@ -202,21 +160,76 @@
    "strokeWidth": 1
   },
   {
-   "id": "m1",
+   "type": "ellipse",
+   "id": "browser",
+   "x": 40,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Browser"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "api",
+   "x": 330,
+   "y": 0,
+   "width": 180,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Checkout API"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "psp",
+   "x": 610,
+   "y": 0,
+   "width": 180,
+   "height": 60,
+   "backgroundColor": "#ffc9c9",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "label": {
+    "text": "Payment provider"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "db",
+   "x": 1110,
+   "y": 0,
+   "width": 180,
+   "height": 60,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "label": {
+    "text": "DB: orders"
+   }
+  },
+  {
    "type": "arrow",
-   "x": 150,
-   "y": 120,
+   "id": "m1",
+   "x": 120,
+   "y": 112,
    "points": [
     [
      0,
      0
     ],
     [
-     280,
+     300,
      0
     ]
    ],
-   "strokeStyle": "solid",
    "endArrowhead": "triangle",
    "label": {
     "text": "POST /checkout",
@@ -224,10 +237,10 @@
    }
   },
   {
-   "id": "m2",
    "type": "arrow",
-   "x": 430,
-   "y": 180,
+   "id": "m2",
+   "x": 420,
+   "y": 172,
    "points": [
     [
      0,
@@ -238,18 +251,17 @@
      0
     ]
    ],
-   "strokeStyle": "solid",
    "endArrowhead": "triangle",
    "label": {
-    "text": "charge saved token",
+    "text": "charge saved card",
     "fontSize": 16
    }
   },
   {
-   "id": "m3",
    "type": "arrow",
-   "x": 710,
-   "y": 300,
+   "id": "m3",
+   "x": 700,
+   "y": 282,
    "points": [
     [
      0,
@@ -265,81 +277,91 @@
    "label": {
     "text": "approved",
     "fontSize": 16
-   }
-  },
-  {
-   "id": "m4",
-   "type": "arrow",
-   "x": 430,
-   "y": 360,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     560,
-     0
-    ]
-   ],
-   "strokeStyle": "solid",
-   "endArrowhead": "triangle",
-   "label": {
-    "text": "insert order paid",
-    "fontSize": 16
-   }
-  },
-  {
-   "id": "m5",
-   "type": "arrow",
-   "x": 430,
-   "y": 420,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     -280,
-     0
-    ]
-   ],
-   "strokeStyle": "solid",
-   "strokeColor": "#e8590c",
-   "strokeWidth": 2,
-   "endArrowhead": "triangle",
-   "label": {
-    "text": "200 order confirmed",
-    "fontSize": 16
-   }
-  },
-  {
-   "id": "divider",
-   "type": "line",
-   "x": 138,
-   "y": 452,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     864,
-     0
-    ]
-   ],
-   "strokeStyle": "dashed",
-   "strokeColor": "#868e96",
-   "strokeWidth": 1,
+   },
    "groupIds": [
     "altfrag"
    ]
   },
   {
-   "id": "m6",
    "type": "arrow",
-   "x": 710,
-   "y": 520,
+   "id": "m4",
+   "x": 420,
+   "y": 342,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     780,
+     0
+    ]
+   ],
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "save order paid",
+    "fontSize": 16
+   },
+   "groupIds": [
+    "altfrag"
+   ]
+  },
+  {
+   "type": "arrow",
+   "id": "m5",
+   "x": 1200,
+   "y": 402,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -780,
+     0
+    ]
+   ],
+   "strokeStyle": "dashed",
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "order id",
+    "fontSize": 16
+   },
+   "groupIds": [
+    "altfrag"
+   ]
+  },
+  {
+   "type": "arrow",
+   "id": "m6",
+   "x": 420,
+   "y": 462,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -300,
+     0
+    ]
+   ],
+   "endArrowhead": "triangle",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "label": {
+    "text": "201 confirmed",
+    "fontSize": 16
+   },
+   "groupIds": [
+    "altfrag"
+   ]
+  },
+  {
+   "type": "arrow",
+   "id": "m7",
+   "x": 700,
+   "y": 572,
    "points": [
     [
      0,
@@ -355,59 +377,67 @@
    "label": {
     "text": "declined",
     "fontSize": 16
-   }
+   },
+   "groupIds": [
+    "altfrag"
+   ]
   },
   {
-   "id": "m7",
    "type": "arrow",
-   "x": 430,
-   "y": 580,
+   "id": "m8",
+   "x": 420,
+   "y": 632,
    "points": [
     [
      0,
      0
     ],
     [
-     560,
+     780,
      0
     ]
    ],
-   "strokeStyle": "solid",
    "endArrowhead": "triangle",
    "label": {
-    "text": "insert order failed",
+    "text": "save order failed",
     "fontSize": 16
-   }
+   },
+   "groupIds": [
+    "altfrag"
+   ]
   },
   {
-   "id": "m8",
    "type": "arrow",
-   "x": 430,
-   "y": 640,
+   "id": "m9",
+   "x": 420,
+   "y": 692,
    "points": [
     [
      0,
      0
     ],
     [
-     -280,
+     -300,
      0
     ]
    ],
-   "strokeStyle": "solid",
+   "strokeStyle": "dashed",
    "endArrowhead": "triangle",
    "label": {
     "text": "402 payment failed",
     "fontSize": 16
-   }
+   },
+   "groupIds": [
+    "altfrag"
+   ]
   },
   {
-   "id": "note1",
    "type": "text",
-   "x": 1040,
-   "y": 560,
-   "width": 280,
-   "text": "Failed attempt is stored, not dropped.\nBrowser can retry the same cart.",
+   "id": "note1",
+   "x": 470,
+   "y": 746,
+   "width": 320,
+   "text": "Declined charge still writes an order row (status failed), so the user can retry.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"

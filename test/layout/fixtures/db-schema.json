@@ -1,161 +1,142 @@
 {
  "prompt": "Draw the physical Postgres schema for orders and order_items: column types, primary keys, the foreign key with its ON DELETE behavior, and the index on orders.customer_id.",
- "session": "d7a7b1d8-3220-46dd-91fc-0b735a7b1dba",
- "at": "2026-08-29T11:24:08.356Z",
+ "session": "183d1956-8de5-42dd-9dfa-2ad0f1a6fb22",
+ "at": "2026-08-29T14:29:16.544Z",
  "frame": "Physical schema: orders and order_items",
  "elements": [
   {
-   "id": "orders_h",
+   "id": "o_head",
    "type": "rectangle",
    "x": 0,
-   "y": 28,
-   "width": 340,
+   "y": 0,
+   "width": 360,
    "height": 44,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
-   "roughness": 0,
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_orders"
    ],
    "label": {
     "text": "DB: public.orders",
-    "fontSize": 16
+    "fontSize": 18
    }
   },
   {
-   "id": "o_r1",
+   "id": "o_id",
+   "type": "rectangle",
+   "x": 0,
+   "y": 44,
+   "width": 360,
+   "height": 28,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "groupIds": [
+    "g_orders"
+   ],
+   "label": {
+    "text": "id   bigserial   PK",
+    "fontSize": 14,
+    "fontFamily": 102,
+    "textAlign": "left"
+   }
+  },
+  {
+   "id": "o_customer",
    "type": "rectangle",
    "x": 0,
    "y": 72,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_orders"
    ],
    "label": {
-    "text": "id  uuid  PK",
+    "text": "customer_id   bigint   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "o_r2",
+   "id": "o_status",
    "type": "rectangle",
    "x": 0,
    "y": 100,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_orders"
    ],
    "label": {
-    "text": "customer_id  uuid  FK NN",
+    "text": "status   text   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "o_r3",
+   "id": "o_total",
    "type": "rectangle",
    "x": 0,
    "y": 128,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_orders"
    ],
    "label": {
-    "text": "status  text  NN",
+    "text": "total_amount   numeric(12,2)   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "o_r4",
+   "id": "o_created",
    "type": "rectangle",
    "x": 0,
    "y": 156,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_orders"
    ],
    "label": {
-    "text": "total_cents  integer  NN",
+    "text": "created_at   timestamptz   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "o_r5",
-   "type": "rectangle",
-   "x": 0,
-   "y": 184,
-   "width": 340,
-   "height": 28,
-   "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
-   "roughness": 0,
-   "strokeWidth": 1,
-   "groupIds": [
-    "g_orders"
-   ],
-   "label": {
-    "text": "created_at  timestamptz  NN",
-    "fontSize": 14,
-    "fontFamily": 102,
-    "textAlign": "left"
-   }
-  },
-  {
-   "id": "o_r6",
-   "type": "rectangle",
-   "x": 0,
-   "y": 212,
-   "width": 340,
-   "height": 28,
-   "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
-   "roughness": 0,
-   "strokeWidth": 1,
-   "groupIds": [
-    "g_orders"
-   ],
-   "label": {
-    "text": "+ 3 more columns",
-    "fontSize": 14,
-    "fontFamily": 102,
-    "textAlign": "left"
-   }
-  },
-  {
-   "id": "o_idx_t",
+   "id": "o_idx_title",
    "type": "text",
    "x": 0,
-   "y": 248,
+   "y": 196,
+   "width": 200,
    "text": "INDEXES",
    "fontSize": 14,
    "fontFamily": 102,
@@ -168,167 +149,146 @@
    "id": "o_idx",
    "type": "rectangle",
    "x": 0,
-   "y": 272,
-   "width": 340,
+   "y": 220,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_orders"
    ],
    "label": {
-    "text": "orders_customer_id_idx  btree (customer_id)",
+    "text": "idx_orders_customer_id   btree (customer_id)",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "items_h",
+   "id": "i_head",
    "type": "rectangle",
-   "x": 600,
+   "x": 520,
    "y": 0,
-   "width": 340,
+   "width": 360,
    "height": 44,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
-   "roughness": 0,
    "roundness": {
     "type": 3
    },
    "strokeColor": "#e8590c",
    "strokeWidth": 2,
+   "roughness": 0,
    "groupIds": [
     "g_items"
    ],
    "label": {
     "text": "DB: public.order_items",
-    "fontSize": 16
+    "fontSize": 18
    }
   },
   {
-   "id": "i_r1",
+   "id": "i_id",
    "type": "rectangle",
-   "x": 600,
+   "x": 520,
    "y": 44,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_items"
    ],
    "label": {
-    "text": "id  bigserial  PK",
+    "text": "id   bigserial   PK",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "i_r2",
+   "id": "i_order",
    "type": "rectangle",
-   "x": 600,
+   "x": 520,
    "y": 72,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_items"
    ],
    "label": {
-    "text": "order_id  uuid  FK NN",
+    "text": "order_id   bigint   FK NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "i_r3",
+   "id": "i_product",
    "type": "rectangle",
-   "x": 600,
+   "x": 520,
    "y": 100,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_items"
    ],
    "label": {
-    "text": "product_id  uuid  NN",
+    "text": "product_id   bigint   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "i_r4",
+   "id": "i_qty",
    "type": "rectangle",
-   "x": 600,
+   "x": 520,
    "y": 128,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_items"
    ],
    "label": {
-    "text": "quantity  integer  NN",
+    "text": "quantity   integer   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
    }
   },
   {
-   "id": "i_r5",
+   "id": "i_price",
    "type": "rectangle",
-   "x": 600,
+   "x": 520,
    "y": 156,
-   "width": 340,
+   "width": 360,
    "height": 28,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
-   "roughness": 0,
    "strokeWidth": 1,
+   "roughness": 0,
    "groupIds": [
     "g_items"
    ],
    "label": {
-    "text": "unit_cents  integer  NN",
-    "fontSize": 14,
-    "fontFamily": 102,
-    "textAlign": "left"
-   }
-  },
-  {
-   "id": "i_r6",
-   "type": "rectangle",
-   "x": 600,
-   "y": 184,
-   "width": 340,
-   "height": 28,
-   "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
-   "roughness": 0,
-   "strokeWidth": 1,
-   "groupIds": [
-    "g_items"
-   ],
-   "label": {
-    "text": "+ 2 more columns",
+    "text": "unit_price   numeric(12,2)   NN",
     "fontSize": 14,
     "fontFamily": 102,
     "textAlign": "left"
@@ -338,41 +298,59 @@
    "id": "fk",
    "type": "arrow",
    "start": {
-    "id": "i_r2"
+    "id": "i_order"
    },
    "end": {
-    "id": "o_r1"
+    "id": "o_id"
    },
+   "elbowed": true,
    "strokeColor": "#e8590c",
    "strokeWidth": 2,
    "endArrowhead": "triangle",
    "label": {
     "text": "ON DELETE CASCADE",
-    "fontSize": 14,
+    "fontSize": 16,
     "fontFamily": 102
    }
   },
   {
-   "id": "n1",
+   "id": "n_idx",
    "type": "text",
    "x": 0,
-   "y": 316,
+   "y": 260,
    "width": 320,
-   "text": "Non-unique btree. Serves WHERE customer_id = $1.",
+   "text": "Lookup by customer seeks the index. Without it Postgres scans every order row.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
   },
   {
-   "id": "n2",
+   "id": "n_fk",
    "type": "text",
-   "x": 380,
-   "y": 132,
-   "width": 180,
-   "text": "Delete an order, its items go with it.",
+   "x": 520,
+   "y": 260,
+   "width": 320,
+   "text": "Delete an order and its items go too. No orphan items, no manual cleanup.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
+  },
+  {
+   "id": "lead_fk",
+   "type": "arrow",
+   "start": {
+    "id": "n_fk"
+   },
+   "end": {
+    "id": "i_order"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
   }
+ ],
+ "todo": [
+  "arrow lead_fk crosses text 7aC2WbP0Wv_RIdbeLdFCg \"unit_price   numeric(12,\""
  ]
 }

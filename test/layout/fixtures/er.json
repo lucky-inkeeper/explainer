@@ -1,387 +1,307 @@
 {
  "prompt": "Draw the data model of a blog: users, posts, comments, tags, with cardinality.",
- "session": "66589d16-3369-4c2f-81a4-95a71366f541",
- "at": "2026-08-29T11:22:54.413Z",
+ "session": "d39a0c10-3f91-4ff0-9e8b-df847680290c",
+ "at": "2026-08-29T14:27:58.305Z",
  "frame": "Blog data model",
  "elements": [
   {
+   "id": "user",
    "type": "rectangle",
-   "id": "e_user",
    "x": 0,
-   "y": 100,
-   "width": 240,
-   "height": 110,
-   "backgroundColor": "#b2f2bb",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
-   "groupIds": [
-    "g_user"
-   ],
-   "label": {
-    "text": "DB: User",
-    "verticalAlign": "top",
-    "fontSize": 16
-   }
-  },
-  {
-   "type": "text",
-   "id": "t_user",
-   "x": 16,
-   "y": 144,
-   "width": 200,
-   "text": "# id\nemail\nname",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "textAlign": "left",
-   "groupIds": [
-    "g_user"
-   ]
-  },
-  {
-   "type": "rectangle",
-   "id": "e_post",
-   "x": 340,
-   "y": 78,
-   "width": 260,
-   "height": 154,
-   "backgroundColor": "#b2f2bb",
-   "fillStyle": "solid",
-   "strokeColor": "#e8590c",
-   "strokeWidth": 2,
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
-   "groupIds": [
-    "g_post"
-   ],
-   "label": {
-    "text": "DB: Post",
-    "verticalAlign": "top",
-    "fontSize": 16
-   }
-  },
-  {
-   "type": "text",
-   "id": "t_post",
-   "x": 356,
-   "y": 122,
-   "width": 220,
-   "text": "# id\n-> author_id\ntitle\nbody\npublished_at",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "textAlign": "left",
-   "groupIds": [
-    "g_post"
-   ]
-  },
-  {
-   "type": "rectangle",
-   "id": "e_comment",
-   "x": 0,
-   "y": 380,
+   "y": 60,
    "width": 240,
    "height": 132,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
-   "strokeWidth": 1,
-   "roughness": 0,
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
    "groupIds": [
-    "g_comment"
+    "gUser"
    ],
    "label": {
-    "text": "DB: Comment",
-    "verticalAlign": "top",
-    "fontSize": 16
+    "text": "DB: User",
+    "verticalAlign": "top"
    }
   },
   {
+   "id": "userFields",
    "type": "text",
-   "id": "t_comment",
    "x": 16,
-   "y": 424,
-   "width": 200,
-   "text": "# id\n-> post_id\n-> author_id\nbody",
-   "fontSize": 16,
+   "y": 104,
+   "width": 208,
+   "text": "# id\nemail\nname\ncreated_at",
    "fontFamily": 102,
+   "fontSize": 16,
    "textAlign": "left",
    "groupIds": [
-    "g_comment"
+    "gUser"
    ]
   },
   {
+   "id": "post",
    "type": "rectangle",
-   "id": "e_posttag",
-   "x": 700,
-   "y": 111,
-   "width": 220,
-   "height": 88,
+   "x": 440,
+   "y": 60,
+   "width": 240,
+   "height": 154,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
-   "strokeWidth": 1,
-   "roughness": 0,
    "roundness": {
     "type": 3
    },
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
    "groupIds": [
-    "g_posttag"
+    "gPost"
    ],
    "label": {
-    "text": "DB: PostTag",
-    "verticalAlign": "top",
-    "fontSize": 16
+    "text": "DB: Post",
+    "verticalAlign": "top"
    }
   },
   {
+   "id": "postFields",
    "type": "text",
-   "id": "t_posttag",
-   "x": 716,
-   "y": 155,
-   "width": 180,
-   "text": "-> post_id\n-> tag_id",
-   "fontSize": 16,
+   "x": 456,
+   "y": 104,
+   "width": 208,
+   "text": "# id\n-> author_id\ntitle\nbody\npublished_at",
    "fontFamily": 102,
+   "fontSize": 16,
    "textAlign": "left",
    "groupIds": [
-    "g_posttag"
+    "gPost"
    ]
   },
   {
+   "id": "tag",
    "type": "rectangle",
-   "id": "e_tag",
-   "x": 1020,
-   "y": 100,
-   "width": 220,
+   "x": 880,
+   "y": 60,
+   "width": 240,
    "height": 110,
    "backgroundColor": "#b2f2bb",
    "fillStyle": "solid",
-   "strokeWidth": 1,
-   "roughness": 0,
    "roundness": {
     "type": 3
    },
+   "strokeWidth": 1,
    "groupIds": [
-    "g_tag"
+    "gTag"
    ],
    "label": {
     "text": "DB: Tag",
-    "verticalAlign": "top",
-    "fontSize": 16
+    "verticalAlign": "top"
    }
   },
   {
+   "id": "tagFields",
    "type": "text",
-   "id": "t_tag",
-   "x": 1036,
-   "y": 144,
-   "width": 180,
+   "x": 896,
+   "y": 104,
+   "width": 208,
    "text": "# id\nname\nslug",
-   "fontSize": 16,
    "fontFamily": 102,
+   "fontSize": 16,
    "textAlign": "left",
    "groupIds": [
-    "g_tag"
+    "gTag"
    ]
   },
   {
+   "id": "comment",
+   "type": "rectangle",
+   "x": 440,
+   "y": 420,
+   "width": 240,
+   "height": 154,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "strokeWidth": 1,
+   "groupIds": [
+    "gComment"
+   ],
+   "label": {
+    "text": "DB: Comment",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "commentFields",
+   "type": "text",
+   "x": 456,
+   "y": 464,
+   "width": 208,
+   "text": "# id\n-> post_id\n-> author_id\nbody\ncreated_at",
+   "fontFamily": 102,
+   "fontSize": 16,
+   "textAlign": "left",
+   "groupIds": [
+    "gComment"
+   ]
+  },
+  {
+   "id": "relUserPost",
    "type": "arrow",
-   "id": "r_user_post",
    "start": {
-    "id": "e_user"
+    "id": "user"
    },
    "end": {
-    "id": "e_post"
+    "id": "post"
    },
    "endArrowhead": null,
    "startArrowhead": null,
    "strokeWidth": 1,
-   "roughness": 0,
    "label": {
-    "text": "writes",
+    "text": "authors",
     "fontSize": 16
    }
   },
   {
+   "id": "relPostTag",
    "type": "arrow",
-   "id": "r_user_comment",
    "start": {
-    "id": "e_user"
+    "id": "post"
    },
    "end": {
-    "id": "e_comment"
+    "id": "tag"
    },
    "endArrowhead": null,
    "startArrowhead": null,
    "strokeWidth": 1,
-   "roughness": 0,
    "label": {
-    "text": "writes",
+    "text": "tagged with",
     "fontSize": 16
    }
   },
   {
+   "id": "relPostComment",
    "type": "arrow",
-   "id": "r_post_comment",
    "start": {
-    "id": "e_comment"
+    "id": "post"
    },
    "end": {
-    "id": "e_post"
+    "id": "comment"
    },
    "endArrowhead": null,
    "startArrowhead": null,
    "strokeWidth": 1,
-   "roughness": 0,
-   "elbowed": true,
    "label": {
     "text": "has",
     "fontSize": 16
    }
   },
   {
+   "id": "relUserComment",
    "type": "arrow",
-   "id": "r_post_posttag",
    "start": {
-    "id": "e_post"
+    "id": "user"
    },
    "end": {
-    "id": "e_posttag"
+    "id": "comment"
    },
    "endArrowhead": null,
    "startArrowhead": null,
    "strokeWidth": 1,
-   "roughness": 0
+   "label": {
+    "text": "writes",
+    "fontSize": 16
+   }
   },
   {
-   "type": "arrow",
-   "id": "r_posttag_tag",
-   "start": {
-    "id": "e_posttag"
-   },
-   "end": {
-    "id": "e_tag"
-   },
-   "endArrowhead": null,
-   "startArrowhead": null,
-   "strokeWidth": 1,
-   "roughness": 0
-  },
-  {
+   "id": "cUserPost1",
    "type": "text",
-   "id": "c1",
    "x": 252,
-   "y": 126,
+   "y": 108,
    "text": "1",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
+   "id": "cUserPostN",
    "type": "text",
-   "id": "c2",
-   "x": 312,
-   "y": 126,
+   "x": 416,
+   "y": 108,
    "text": "N",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
+   "id": "cPostTagN",
    "type": "text",
-   "id": "c3",
-   "x": 132,
-   "y": 222,
+   "x": 692,
+   "y": 108,
+   "text": "N",
+   "fontFamily": 102,
+   "fontSize": 14,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "cPostTagM",
+   "type": "text",
+   "x": 856,
+   "y": 108,
+   "text": "M",
+   "fontFamily": 102,
+   "fontSize": 14,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "cPostComment1",
+   "type": "text",
+   "x": 566,
+   "y": 226,
    "text": "1",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
+   "id": "cPostCommentN",
    "type": "text",
-   "id": "c4",
-   "x": 132,
-   "y": 344,
+   "x": 566,
+   "y": 392,
    "text": "N",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
+   "id": "cUserComment1",
    "type": "text",
-   "id": "c5",
-   "x": 252,
-   "y": 416,
-   "text": "N",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "text",
-   "id": "c6",
-   "x": 484,
-   "y": 244,
+   "x": 120,
+   "y": 204,
    "text": "1",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
+   "id": "cUserCommentN",
    "type": "text",
-   "id": "c7",
-   "x": 612,
-   "y": 126,
-   "text": "1",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "text",
-   "id": "c8",
-   "x": 672,
-   "y": 126,
+   "x": 412,
+   "y": 424,
    "text": "N",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
+   "id": "noteJoin",
    "type": "text",
-   "id": "c9",
-   "x": 932,
-   "y": 126,
-   "text": "N",
-   "fontSize": 14,
+   "x": 880,
+   "y": 210,
+   "width": 260,
+   "text": "M:N needs a join table:\npost_tags(post_id, tag_id)",
    "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "text",
-   "id": "c10",
-   "x": 992,
-   "y": 126,
-   "text": "1",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "text",
-   "id": "n1",
-   "x": 700,
-   "y": 214,
-   "width": 300,
-   "text": "Join table: Post and Tag are\nmany-to-many.",
    "fontSize": 16,
-   "fontFamily": 102,
    "strokeColor": "#868e96"
   }
  ]

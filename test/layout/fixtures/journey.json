@@ -1,74 +1,26 @@
 {
  "prompt": "Draw the user journey of a first-week trial user: sign up, import data, first report, hit the plan limit, upgrade. Include how it feels at each stage.",
- "session": "f47f8124-738a-490f-a93b-c07cf14ff797",
- "at": "2026-08-29T11:38:10.434Z",
- "frame": "First-Week Trial Journey",
+ "session": "d73e2aa1-e8a9-4129-8a6c-a1f81dc1643b",
+ "at": "2026-08-29T14:40:34.235Z",
+ "frame": "Trial user: first week",
  "elements": [
   {
    "type": "text",
-   "id": "eb1",
-   "x": 160,
+   "id": "h1e",
+   "x": 140,
    "y": 0,
    "width": 200,
-   "text": "STAGE 1",
+   "text": "STAGE 1 · DAY 1",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "center"
+   "textAlign": "center",
+   "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "eb2",
-   "x": 384,
-   "y": 0,
-   "width": 200,
-   "text": "STAGE 2",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "center"
-  },
-  {
-   "type": "text",
-   "id": "eb3",
-   "x": 608,
-   "y": 0,
-   "width": 200,
-   "text": "STAGE 3",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "center"
-  },
-  {
-   "type": "text",
-   "id": "eb4",
-   "x": 832,
-   "y": 0,
-   "width": 200,
-   "text": "STAGE 4",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "center"
-  },
-  {
-   "type": "text",
-   "id": "eb5",
-   "x": 1056,
-   "y": 0,
-   "width": 200,
-   "text": "STAGE 5",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "center"
-  },
-  {
-   "type": "text",
-   "id": "h1",
-   "x": 160,
-   "y": 24,
+   "id": "h1n",
+   "x": 140,
+   "y": 22,
    "width": 200,
    "text": "Sign up",
    "fontSize": 20,
@@ -76,9 +28,21 @@
   },
   {
    "type": "text",
-   "id": "h2",
-   "x": 384,
-   "y": 24,
+   "id": "h2e",
+   "x": 364,
+   "y": 0,
+   "width": 200,
+   "text": "STAGE 2 · DAY 1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "center",
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "h2n",
+   "x": 364,
+   "y": 22,
    "width": 200,
    "text": "Import data",
    "fontSize": 20,
@@ -86,9 +50,21 @@
   },
   {
    "type": "text",
-   "id": "h3",
-   "x": 608,
-   "y": 24,
+   "id": "h3e",
+   "x": 588,
+   "y": 0,
+   "width": 200,
+   "text": "STAGE 3 · DAY 2",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "center",
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "h3n",
+   "x": 588,
+   "y": 22,
    "width": 200,
    "text": "First report",
    "fontSize": 20,
@@ -96,9 +72,21 @@
   },
   {
    "type": "text",
-   "id": "h4",
-   "x": 832,
-   "y": 24,
+   "id": "h4e",
+   "x": 812,
+   "y": 0,
+   "width": 200,
+   "text": "STAGE 4 · DAY 4",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "center",
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "h4n",
+   "x": 812,
+   "y": 22,
    "width": 200,
    "text": "Plan limit",
    "fontSize": 20,
@@ -106,9 +94,21 @@
   },
   {
    "type": "text",
-   "id": "h5",
-   "x": 1056,
-   "y": 24,
+   "id": "h5e",
+   "x": 1036,
+   "y": 0,
+   "width": 200,
+   "text": "STAGE 5 · DAY 6",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "center",
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "h5n",
+   "x": 1036,
+   "y": 22,
    "width": 200,
    "text": "Upgrade",
    "fontSize": 20,
@@ -116,16 +116,16 @@
   },
   {
    "type": "line",
-   "id": "gh",
+   "id": "gHigh",
    "x": 140,
-   "y": 90,
+   "y": 100,
    "points": [
     [
      0,
      0
     ],
     [
-     1136,
+     1096,
      0
     ]
    ],
@@ -136,16 +136,16 @@
   },
   {
    "type": "line",
-   "id": "gn",
+   "id": "gNeut",
    "x": 140,
-   "y": 150,
+   "y": 160,
    "points": [
     [
      0,
      0
     ],
     [
-     1136,
+     1096,
      0
     ]
    ],
@@ -156,16 +156,16 @@
   },
   {
    "type": "line",
-   "id": "gl",
+   "id": "gLow",
    "x": 140,
-   "y": 210,
+   "y": 220,
    "points": [
     [
      0,
      0
     ],
     [
-     1136,
+     1096,
      0
     ]
    ],
@@ -176,45 +176,42 @@
   },
   {
    "type": "text",
-   "id": "lh",
+   "id": "lHigh",
    "x": 0,
-   "y": 80,
-   "width": 130,
+   "y": 92,
+   "width": 120,
    "text": "HIGH",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "right"
+   "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "ln",
+   "id": "lNeut",
    "x": 0,
-   "y": 140,
-   "width": 130,
+   "y": 152,
+   "width": 120,
    "text": "NEUTRAL",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "right"
+   "strokeColor": "#868e96"
   },
   {
    "type": "text",
-   "id": "ll",
+   "id": "lLow",
    "x": 0,
-   "y": 200,
-   "width": 130,
+   "y": 212,
+   "width": 120,
    "text": "LOW",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "right"
+   "strokeColor": "#868e96"
   },
   {
    "type": "line",
-   "id": "segA",
-   "x": 260,
-   "y": 120,
+   "id": "curveA",
+   "x": 240,
+   "y": 130,
    "points": [
     [
      0,
@@ -222,7 +219,7 @@
     ],
     [
      224,
-     30
+     60
     ],
     [
      448,
@@ -235,9 +232,9 @@
   },
   {
    "type": "line",
-   "id": "segB",
-   "x": 708,
-   "y": 90,
+   "id": "curveB",
+   "x": 688,
+   "y": 100,
    "points": [
     [
      0,
@@ -254,9 +251,9 @@
   },
   {
    "type": "line",
-   "id": "segC",
-   "x": 932,
-   "y": 210,
+   "id": "curveC",
+   "x": 912,
+   "y": 220,
    "points": [
     [
      0,
@@ -274,76 +271,70 @@
   {
    "type": "ellipse",
    "id": "d1",
-   "x": 254,
-   "y": 114,
+   "x": 234,
+   "y": 124,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
    "strokeColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "roughness": 0
+   "fillStyle": "solid"
   },
   {
    "type": "ellipse",
    "id": "d2",
-   "x": 478,
-   "y": 144,
+   "x": 458,
+   "y": 184,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
    "strokeColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "roughness": 0
+   "fillStyle": "solid"
   },
   {
    "type": "ellipse",
    "id": "d3",
-   "x": 702,
-   "y": 84,
+   "x": 682,
+   "y": 94,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
    "strokeColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "roughness": 0
+   "fillStyle": "solid"
   },
   {
    "type": "ellipse",
    "id": "d4",
-   "x": 924,
-   "y": 202,
+   "x": 904,
+   "y": 212,
    "width": 16,
    "height": 16,
    "backgroundColor": "#e8590c",
    "strokeColor": "#e8590c",
-   "strokeWidth": 2,
-   "fillStyle": "solid",
-   "roughness": 0
+   "fillStyle": "solid"
   },
   {
    "type": "ellipse",
    "id": "d5",
-   "x": 1150,
-   "y": 114,
+   "x": 1130,
+   "y": 124,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
    "strokeColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "roughness": 0
+   "fillStyle": "solid"
   },
   {
    "type": "line",
    "id": "sep1",
-   "x": 140,
-   "y": 250,
+   "x": 0,
+   "y": 256,
    "points": [
     [
      0,
      0
     ],
     [
-     1136,
+     1236,
      0
     ]
    ],
@@ -353,78 +344,77 @@
   },
   {
    "type": "text",
-   "id": "rlA",
+   "id": "rowA",
    "x": 0,
-   "y": 262,
-   "width": 130,
+   "y": 272,
+   "width": 120,
    "text": "ACTIONS",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "right"
+   "strokeColor": "#868e96"
   },
   {
    "type": "text",
    "id": "a1",
-   "x": 160,
-   "y": 262,
+   "x": 140,
+   "y": 272,
    "width": 200,
-   "text": "Create account\nVerify email",
-   "fontSize": 16,
+   "text": "Signs up with email, skips the demo call",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "a2",
-   "x": 384,
-   "y": 262,
+   "x": 364,
+   "y": 272,
    "width": 200,
-   "text": "Upload CSV\nMap fields",
-   "fontSize": 16,
+   "text": "Connects CSV and Stripe, waits for sync",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "a3",
-   "x": 608,
-   "y": 262,
+   "x": 588,
+   "y": 272,
    "width": 200,
-   "text": "Run report\nShare link",
-   "fontSize": 16,
+   "text": "Runs first report, shares it with the team",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "a4",
-   "x": 832,
-   "y": 262,
+   "x": 812,
+   "y": 272,
    "width": 200,
-   "text": "Blocked at 5k rows",
-   "fontSize": 16,
+   "text": "Adds 4th source, gets blocked mid-task",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "a5",
-   "x": 1056,
-   "y": 262,
+   "x": 1036,
+   "y": 272,
    "width": 200,
-   "text": "Choose Pro\nEnter card",
-   "fontSize": 16,
+   "text": "Picks Pro, enters card, re-runs report",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "line",
    "id": "sep2",
-   "x": 140,
-   "y": 316,
+   "x": 0,
+   "y": 336,
    "points": [
     [
      0,
      0
     ],
     [
-     1136,
+     1236,
      0
     ]
    ],
@@ -434,159 +424,157 @@
   },
   {
    "type": "text",
-   "id": "rlT",
+   "id": "rowF",
    "x": 0,
-   "y": 328,
-   "width": 130,
-   "text": "TOUCHPOINTS",
+   "y": 352,
+   "width": 120,
+   "text": "FEELS",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "right"
-  },
-  {
-   "type": "text",
-   "id": "t1",
-   "x": 160,
-   "y": 328,
-   "width": 200,
-   "text": "Landing page\nSignup form",
-   "fontSize": 16,
-   "fontFamily": 102
-  },
-  {
-   "type": "text",
-   "id": "t2",
-   "x": 384,
-   "y": 328,
-   "width": 200,
-   "text": "Import wizard\nProgress email",
-   "fontSize": 16,
-   "fontFamily": 102
-  },
-  {
-   "type": "text",
-   "id": "t3",
-   "x": 608,
-   "y": 328,
-   "width": 200,
-   "text": "Dashboard\nShare modal",
-   "fontSize": 16,
-   "fontFamily": 102
-  },
-  {
-   "type": "text",
-   "id": "t4",
-   "x": 832,
-   "y": 328,
-   "width": 200,
-   "text": "Limit banner\nUpgrade modal",
-   "fontSize": 16,
-   "fontFamily": 102
-  },
-  {
-   "type": "text",
-   "id": "t5",
-   "x": 1056,
-   "y": 328,
-   "width": 200,
-   "text": "Checkout\nReceipt email",
-   "fontSize": 16,
-   "fontFamily": 102
-  },
-  {
-   "type": "line",
-   "id": "sep3",
-   "x": 140,
-   "y": 382,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     1136,
-     0
-    ]
-   ],
-   "strokeColor": "#868e96",
-   "strokeWidth": 1,
-   "roughness": 0
-  },
-  {
-   "type": "text",
-   "id": "rlF",
-   "x": 0,
-   "y": 394,
-   "width": 130,
-   "text": "FEELING",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "textAlign": "right"
+   "strokeColor": "#868e96"
   },
   {
    "type": "text",
    "id": "f1",
-   "x": 160,
-   "y": 394,
+   "x": 140,
+   "y": 352,
    "width": 200,
-   "text": "Hopeful, low risk",
-   "fontSize": 16,
+   "text": "Curious. Nothing at stake yet.",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "f2",
-   "x": 384,
-   "y": 394,
+   "x": 364,
+   "y": 352,
    "width": 200,
-   "text": "Patient, unsure",
-   "fontSize": 16,
+   "text": "Impatient. \"Did that even work?\"",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "f3",
-   "x": 608,
-   "y": 394,
+   "x": 588,
+   "y": 352,
    "width": 200,
-   "text": "Aha. It works.",
-   "fontSize": 16,
+   "text": "Aha. Proud. Wants more of it.",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "f4",
-   "x": 832,
-   "y": 394,
+   "x": 812,
+   "y": 352,
    "width": 200,
-   "text": "Blocked, ambushed",
-   "fontSize": 16,
+   "text": "Frustrated. Feels baited, work stops.",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "text",
    "id": "f5",
-   "x": 1056,
-   "y": 394,
+   "x": 1036,
+   "y": 352,
    "width": 200,
-   "text": "Relieved, committed",
-   "fontSize": 16,
+   "text": "Relieved, but watching the price.",
+   "fontSize": 14,
    "fontFamily": 102
   },
   {
    "type": "line",
-   "id": "sep4",
-   "x": 140,
-   "y": 436,
+   "id": "sep3",
+   "x": 0,
+   "y": 416,
    "points": [
     [
      0,
      0
     ],
     [
-     1136,
+     1236,
+     0
+    ]
+   ],
+   "strokeColor": "#868e96",
+   "strokeWidth": 1,
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "rowT",
+   "x": 0,
+   "y": 432,
+   "width": 120,
+   "text": "TOUCHPOINTS",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 140,
+   "y": 432,
+   "width": 200,
+   "text": "Landing page, welcome email",
+   "fontSize": 14,
+   "fontFamily": 102
+  },
+  {
+   "type": "text",
+   "id": "t2",
+   "x": 364,
+   "y": 432,
+   "width": 200,
+   "text": "Import wizard, docs, support chat",
+   "fontSize": 14,
+   "fontFamily": 102
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 588,
+   "y": 432,
+   "width": 200,
+   "text": "Dashboard, Slack share link",
+   "fontSize": 14,
+   "fontFamily": 102
+  },
+  {
+   "type": "text",
+   "id": "t4",
+   "x": 812,
+   "y": 432,
+   "width": 200,
+   "text": "Paywall modal, in-app banner",
+   "fontSize": 14,
+   "fontFamily": 102
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 1036,
+   "y": 432,
+   "width": 200,
+   "text": "Checkout, receipt email",
+   "fontSize": 14,
+   "fontFamily": 102
+  },
+  {
+   "type": "line",
+   "id": "sep4",
+   "x": 0,
+   "y": 488,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     1236,
      0
     ]
    ],
@@ -597,31 +585,47 @@
   {
    "type": "rectangle",
    "id": "pain",
-   "x": 832,
-   "y": 456,
+   "x": 812,
+   "y": 508,
    "width": 200,
-   "height": 48,
-   "backgroundColor": "#ffe8cc",
+   "height": 56,
+   "backgroundColor": "transparent",
    "strokeColor": "#e8590c",
    "strokeStyle": "dashed",
    "strokeWidth": 2,
-   "fillStyle": "solid",
    "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
    "label": {
-    "text": "No warning before limit",
+    "text": "Hard stop: 3 sources",
     "fontSize": 14
    }
   },
   {
    "type": "text",
    "id": "note1",
-   "x": 1060,
-   "y": 456,
-   "width": 260,
-   "text": "Value proves itself on day 3.\nThe wall on day 4 converts.",
+   "x": 440,
+   "y": 508,
+   "width": 300,
+   "text": "Value arrives before the wall. Flip that order and the trough becomes churn, not an upgrade.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "lead1",
+   "start": {
+    "id": "note1"
+   },
+   "end": {
+    "id": "pain"
+   },
+   "strokeColor": "#868e96",
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "endArrowhead": "dot"
   }
  ]
 }

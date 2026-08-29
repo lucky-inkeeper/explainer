@@ -1,149 +1,148 @@
 {
  "prompt": "Draw the org chart of a support team: head of support, a tier 1 pod with three agents, a tier 2 pod with two engineers, and escalation to the engineering on-call. Show how to reach each one.",
- "session": "dfcfc08c-d25e-4c2e-b7f9-9bbee54e9c0e",
- "at": "2026-08-29T11:33:16.590Z",
+ "session": "82b0f90d-a015-479e-abf9-7384e675c0ae",
+ "at": "2026-08-29T14:36:57.542Z",
  "frame": "Support team org chart",
  "elements": [
   {
    "id": "head",
    "type": "ellipse",
-   "x": 564,
+   "x": 560,
    "y": 0,
-   "width": 280,
-   "height": 96,
+   "width": 240,
+   "height": 100,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Head of Support\nDM @head-sup"
+    "text": "Head of Support\n@sam · DM",
+    "fontSize": 16
    }
   },
   {
    "id": "t1pod",
    "type": "rectangle",
    "x": 250,
-   "y": 160,
-   "width": 220,
-   "height": 88,
+   "y": 200,
+   "width": 180,
+   "height": 76,
    "backgroundColor": "#a5d8ff",
    "fillStyle": "solid",
    "strokeColor": "#e8590c",
    "strokeWidth": 2,
    "label": {
-    "text": "Tier 1 Pod\n#support-t1"
+    "text": "Tier 1 Pod\n#support-tier1",
+    "fontSize": 16
    }
   },
   {
    "id": "t2pod",
    "type": "rectangle",
-   "x": 940,
-   "y": 160,
-   "width": 220,
-   "height": 88,
+   "x": 930,
+   "y": 200,
+   "width": 180,
+   "height": 76,
    "backgroundColor": "#a5d8ff",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Tier 2 Pod\n#support-t2"
+    "text": "Tier 2 Pod\n#support-tier2",
+    "fontSize": 16
    }
   },
   {
    "id": "oncall",
    "type": "rectangle",
-   "x": 1360,
-   "y": 160,
-   "width": 240,
-   "height": 88,
+   "x": 1290,
+   "y": 200,
+   "width": 200,
+   "height": 76,
    "backgroundColor": "#ffc9c9",
    "fillStyle": "solid",
+   "strokeColor": "#e8590c",
    "strokeWidth": 2,
    "label": {
-    "text": "Engineering On-call\nPagerDuty eng-oncall"
+    "text": "Eng On-call\nPagerDuty: page-eng",
+    "fontSize": 16
    }
   },
   {
    "id": "a1",
    "type": "ellipse",
    "x": 0,
-   "y": 340,
+   "y": 380,
    "width": 200,
-   "height": 96,
+   "height": 84,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Ana R.\n@ana.r"
+    "text": "Ana · billing\n@ana",
+    "fontSize": 16
    }
   },
   {
    "id": "a2",
    "type": "ellipse",
-   "x": 260,
-   "y": 340,
+   "x": 240,
+   "y": 380,
    "width": 200,
-   "height": 96,
+   "height": 84,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Ben K.\n@ben.k"
+    "text": "Bo · accounts\n@bo",
+    "fontSize": 16
    }
   },
   {
    "id": "a3",
    "type": "ellipse",
-   "x": 520,
-   "y": 340,
+   "x": 480,
+   "y": 380,
    "width": 200,
-   "height": 96,
+   "height": 84,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Cai M.\n@cai.m"
+    "text": "Kim · how-to\n@kim",
+    "fontSize": 16
    }
   },
   {
    "id": "e1",
    "type": "ellipse",
-   "x": 820,
-   "y": 340,
+   "x": 800,
+   "y": 380,
    "width": 200,
-   "height": 96,
+   "height": 84,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Dana P.\n@dana.p"
+    "text": "Ravi · APIs\n@ravi",
+    "fontSize": 16
    }
   },
   {
    "id": "e2",
    "type": "ellipse",
-   "x": 1080,
-   "y": 340,
+   "x": 1040,
+   "y": 380,
    "width": 200,
-   "height": 96,
+   "height": 84,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
-   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Eli V.\n@eli.v"
+    "text": "Ines · data\n@ines",
+    "fontSize": 16
    }
   },
   {
-   "id": "note1",
-   "type": "text",
-   "x": 1360,
-   "y": 344,
-   "width": 300,
-   "text": "T1 escalates after 30 min or 2 failed replies.\nOnly T2 pages the on-call.",
-   "strokeColor": "#868e96",
-   "fontFamily": 102,
-   "fontSize": 16
-  },
-  {
-   "id": "ar1",
+   "id": "arr-h-t1",
    "type": "arrow",
    "start": {
     "id": "head"
@@ -152,10 +151,11 @@
     "id": "t1pod"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "ar2",
+   "id": "arr-h-t2",
    "type": "arrow",
    "start": {
     "id": "head"
@@ -164,41 +164,11 @@
     "id": "t2pod"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "ar3",
-   "type": "arrow",
-   "start": {
-    "id": "t1pod"
-   },
-   "end": {
-    "id": "t2pod"
-   },
-   "endArrowhead": "triangle",
-   "label": {
-    "text": "escalate",
-    "fontSize": 16
-   }
-  },
-  {
-   "id": "ar4",
-   "type": "arrow",
-   "start": {
-    "id": "t2pod"
-   },
-   "end": {
-    "id": "oncall"
-   },
-   "strokeStyle": "dashed",
-   "endArrowhead": "arrow",
-   "label": {
-    "text": "page P1",
-    "fontSize": 16
-   }
-  },
-  {
-   "id": "ar5",
+   "id": "arr-t1-a1",
    "type": "arrow",
    "start": {
     "id": "t1pod"
@@ -207,10 +177,11 @@
     "id": "a1"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "ar6",
+   "id": "arr-t1-a2",
    "type": "arrow",
    "start": {
     "id": "t1pod"
@@ -219,10 +190,11 @@
     "id": "a2"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "ar7",
+   "id": "arr-t1-a3",
    "type": "arrow",
    "start": {
     "id": "t1pod"
@@ -231,10 +203,11 @@
     "id": "a3"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "ar8",
+   "id": "arr-t2-e1",
    "type": "arrow",
    "start": {
     "id": "t2pod"
@@ -243,10 +216,11 @@
     "id": "e1"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "ar9",
+   "id": "arr-t2-e2",
    "type": "arrow",
    "start": {
     "id": "t2pod"
@@ -255,21 +229,51 @@
     "id": "e2"
    },
    "elbowed": true,
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
-   "id": "lead1",
+   "id": "arr-t1-t2",
    "type": "arrow",
    "start": {
-    "id": "note1"
+    "id": "t1pod"
+   },
+   "end": {
+    "id": "t2pod"
+   },
+   "strokeColor": "#1e1e1e",
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "escalate < 30 min",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "arr-t2-oncall",
+   "type": "arrow",
+   "start": {
+    "id": "t2pod"
    },
    "end": {
     "id": "oncall"
    },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
+   "strokeColor": "#1e1e1e",
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "page P1",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "note1",
+   "type": "text",
+   "x": 1290,
+   "y": 320,
+   "width": 300,
+   "text": "Ticket queue is the front door: #support-tier1. Page on-call only for P1.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
   }
  ]
 }

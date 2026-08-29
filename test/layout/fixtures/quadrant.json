@@ -1,11 +1,11 @@
 {
  "prompt": "Place these features on an impact versus effort quadrant: dark mode, SSO, export to CSV, mobile app, in-app search, billing portal. Mark what to do first.",
- "session": "1c58b145-03c4-49e4-9bc4-4b808bfc686e",
- "at": "2026-08-29T11:29:48.462Z",
- "frame": "Feature priorities: impact vs effort",
+ "session": "fe0df27d-739e-4876-acc4-9c21cd01ab4c",
+ "at": "2026-08-29T14:33:56.396Z",
+ "frame": "Feature priority: impact vs effort",
  "elements": [
   {
-   "id": "axis-h",
+   "id": "axis-x",
    "type": "line",
    "x": 60,
    "y": 320,
@@ -15,19 +15,20 @@
      0
     ],
     [
-     800,
+     720,
      0
     ]
    ],
    "strokeWidth": 1,
    "strokeColor": "#1e1e1e",
-   "endArrowhead": "arrow"
+   "endArrowhead": "arrow",
+   "roughness": 0
   },
   {
-   "id": "axis-v",
+   "id": "axis-y",
    "type": "line",
-   "x": 450,
-   "y": 600,
+   "x": 420,
+   "y": 580,
    "points": [
     [
      0,
@@ -35,208 +36,210 @@
     ],
     [
      0,
-     -560
+     -520
     ]
    ],
    "strokeWidth": 1,
    "strokeColor": "#1e1e1e",
-   "endArrowhead": "arrow"
-  },
-  {
-   "id": "lbl-effort",
-   "type": "text",
-   "x": 875,
-   "y": 310,
-   "text": "EFFORT",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
+   "endArrowhead": "arrow",
+   "roughness": 0
   },
   {
    "id": "lbl-impact",
    "type": "text",
-   "x": 412,
-   "y": 8,
+   "x": 384,
+   "y": 24,
    "text": "IMPACT",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
-   "id": "q-first",
+   "id": "lbl-effort",
    "type": "text",
-   "x": 76,
+   "x": 792,
+   "y": 310,
+   "text": "EFFORT",
+   "fontFamily": 102,
+   "fontSize": 14,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "q-do",
+   "type": "text",
+   "x": 72,
    "y": 52,
    "text": "DO FIRST",
-   "fontSize": 14,
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
-   "id": "q-plan",
+   "id": "q-bet",
    "type": "text",
-   "x": 786,
+   "x": 676,
    "y": 52,
-   "text": "PLAN",
-   "fontSize": 14,
+   "text": "BIG BETS",
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
    "id": "q-fill",
    "type": "text",
-   "x": 76,
-   "y": 566,
-   "text": "FILL IN",
-   "fontSize": 14,
+   "x": 72,
+   "y": 552,
+   "text": "FILL-INS",
    "fontFamily": 102,
+   "fontSize": 14,
    "strokeColor": "#868e96"
   },
   {
-   "id": "q-later",
+   "id": "q-avoid",
    "type": "text",
-   "x": 786,
-   "y": 566,
-   "text": "LATER",
+   "x": 700,
+   "y": 552,
+   "text": "AVOID",
+   "fontFamily": 102,
    "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "id": "note-first",
-   "type": "text",
-   "x": 76,
-   "y": 76,
-   "width": 300,
-   "text": "Ship CSV export first: smallest build, unblocks reporting now.",
-   "fontSize": 16,
-   "fontFamily": 102,
    "strokeColor": "#868e96"
   },
   {
    "id": "dot-csv",
    "type": "ellipse",
-   "x": 120,
-   "y": 150,
+   "x": 142,
+   "y": 142,
    "width": 16,
    "height": 16,
    "backgroundColor": "#e8590c",
-   "fillStyle": "solid",
    "strokeColor": "#e8590c",
-   "strokeWidth": 2
+   "strokeWidth": 2,
+   "fillStyle": "solid"
   },
   {
    "id": "t-csv",
    "type": "text",
-   "x": 148,
-   "y": 142,
-   "text": "1  Export to CSV",
-   "fontSize": 16
+   "x": 75,
+   "y": 164,
+   "width": 150,
+   "text": "Export to CSV",
+   "fontSize": 16,
+   "textAlign": "center"
   },
   {
    "id": "dot-search",
    "type": "ellipse",
-   "x": 200,
-   "y": 215,
+   "x": 304,
+   "y": 94,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "strokeColor": "#1e1e1e"
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid"
   },
   {
    "id": "t-search",
    "type": "text",
-   "x": 224,
-   "y": 207,
-   "text": "2  In-app search",
-   "fontSize": 16
+   "x": 235,
+   "y": 112,
+   "width": 150,
+   "text": "In-app search",
+   "fontSize": 16,
+   "textAlign": "center"
   },
   {
    "id": "dot-billing",
    "type": "ellipse",
-   "x": 250,
-   "y": 275,
+   "x": 264,
+   "y": 244,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "strokeColor": "#1e1e1e"
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid"
   },
   {
    "id": "t-billing",
    "type": "text",
-   "x": 274,
-   "y": 267,
-   "text": "3  Billing portal",
-   "fontSize": 16
+   "x": 195,
+   "y": 262,
+   "width": 150,
+   "text": "Billing portal",
+   "fontSize": 16,
+   "textAlign": "center"
   },
   {
    "id": "dot-sso",
    "type": "ellipse",
-   "x": 620,
-   "y": 160,
+   "x": 614,
+   "y": 134,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "strokeColor": "#1e1e1e"
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid"
   },
   {
    "id": "t-sso",
    "type": "text",
-   "x": 644,
+   "x": 545,
    "y": 152,
+   "width": 150,
    "text": "SSO",
-   "fontSize": 16
+   "fontSize": 16,
+   "textAlign": "center"
   },
   {
    "id": "dot-dark",
    "type": "ellipse",
-   "x": 170,
-   "y": 430,
+   "x": 174,
+   "y": 424,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "strokeColor": "#1e1e1e"
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid"
   },
   {
    "id": "t-dark",
    "type": "text",
-   "x": 194,
-   "y": 422,
+   "x": 105,
+   "y": 442,
+   "width": 150,
    "text": "Dark mode",
-   "fontSize": 16
+   "fontSize": 16,
+   "textAlign": "center"
   },
   {
    "id": "dot-mobile",
    "type": "ellipse",
-   "x": 640,
-   "y": 450,
+   "x": 644,
+   "y": 454,
    "width": 12,
    "height": 12,
    "backgroundColor": "#1e1e1e",
-   "fillStyle": "solid",
-   "strokeColor": "#1e1e1e"
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid"
   },
   {
    "id": "t-mobile",
    "type": "text",
-   "x": 664,
-   "y": 442,
+   "x": 575,
+   "y": 472,
+   "width": 150,
    "text": "Mobile app",
-   "fontSize": 16
+   "fontSize": 16,
+   "textAlign": "center"
   },
   {
-   "id": "note-mobile",
+   "id": "note-first",
    "type": "text",
-   "x": 560,
-   "y": 492,
-   "width": 300,
-   "text": "Mobile app: highest cost, thinnest reach. Revisit after SSO.",
-   "fontSize": 16,
+   "x": 60,
+   "y": 196,
+   "width": 230,
+   "text": "Start here: CSV export. Days of work, unblocks reporting asks.",
    "fontFamily": 102,
+   "fontSize": 16,
    "strokeColor": "#868e96"
   }
  ]

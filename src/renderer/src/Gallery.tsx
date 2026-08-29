@@ -3,10 +3,16 @@ import { exportToBlob, restoreElements } from "@excalidraw/excalidraw";
 import { api } from "./api";
 import type { DrawingInfo, DrawingList } from "../../shared/types";
 
-const when = (ms: number) => {
-  const d = new Date(ms), today = new Date();
-  if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  return d.toLocaleDateString([], { day: "numeric", month: "short", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+/** "Edited 20 hours ago", Figma style. */
+const edited = (ms: number) => {
+  const s = Math.max(0, (Date.now() - ms) / 1000), m = s / 60, h = m / 60, d = h / 24;
+  if (m < 1) return "Edited just now";
+  if (h < 1) return `Edited ${Math.floor(m)} min ago`;
+  if (d < 1) return `Edited ${Math.floor(h)} hour${h < 2 ? "" : "s"} ago`;
+  if (d < 2) return "Edited yesterday";
+  if (d < 7) return `Edited ${Math.floor(d)} days ago`;
+  const date = new Date(ms);
+  return `Edited ${date.toLocaleDateString([], { day: "numeric", month: "short", year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric" })}`;
 };
 
 /** Thumbnail from the file on disk, cached by the main process per path + mtime. */
@@ -156,7 +162,7 @@ export function Gallery({ current, onOpen, onRelocate, onClose }: { current: str
                   <input className="gname" autoFocus defaultValue={f.name} onKeyDown={(e) => { if (e.key === "Enter") renameFile(f, e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => renameFile(f, e.currentTarget.value)} />
                 ) : <button className="gname" onClick={() => onOpen(f.path)} onDoubleClick={() => setRenaming(f.path)} title="Open (double-click to rename)">{f.name}</button>}
                 <div className="gfoot">
-                  <span className="gdate" title={new Date(f.mtime).toLocaleString()}>{f.hasSession ? "● " : ""}{when(f.mtime)}</span>
+                  <span className="gdate" title={new Date(f.mtime).toLocaleString()}>{edited(f.mtime)}</span>
                   <Menu id={f.path} items={[
                     { label: "Open", onClick: () => onOpen(f.path) },
                     { label: "Rename", onClick: () => { setMenu(null); setRenaming(f.path); } },

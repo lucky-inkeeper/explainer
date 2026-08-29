@@ -280,16 +280,29 @@ export function ChatPanel({ chat }: { chat: Chat }) {
   return (
     <div className="chat">
       <div className="chat-head">
-        <button onClick={() => chat.start()} title="New session">New</button>
-        <button onClick={openSessions} title="Sessions">Sessions</button>
-        <button onClick={() => session.id && chat.start(session.id, true)} title="Fork current session" disabled={!session.id}>Fork</button>
-        <span className="spacer" />
-        <select value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)} title="Model">
-          {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{m || "model: default"}</option>)}
-        </select>
-        <select value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)} title="Effort">{EFFORTS.map((m) => <option key={m} value={m}>{m || "effort: default"}</option>)}</select>
-        <select value={session.mode ?? state?.permissionMode ?? "default"} onChange={(e) => chat.setMode(e.target.value as PermissionMode)} title="Permission mode">{MODES.map((m) => <option key={m} value={m}>{m}</option>)}</select>
-        <button onClick={chat.pickFolder} title={state?.workspace}>📁 {state?.workspace.split("/").pop()}</button>
+        <div className="row">
+          <button onClick={() => chat.start()} title="Start a new session">New</button>
+          <button onClick={openSessions} title="Switch session">Sessions</button>
+          <button onClick={() => session.id && chat.start(session.id, true)} title="Fork the current session" disabled={!session.id}>Fork</button>
+          <span className="spacer" />
+          <button className="folder" onClick={chat.pickFolder} title={`Agent folder: ${state?.workspace}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 6h6l2 2h10v11H3z" /></svg>
+            {state?.workspace.split("/").pop()}
+          </button>
+        </div>
+        <div className="row">
+          <label>Model
+            <select value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)}>
+              {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{m ? m.replace(/^claude-/, "") : "default"}</option>)}
+            </select>
+          </label>
+          <label>Effort
+            <select value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)}>{EFFORTS.map((m) => <option key={m} value={m}>{m || "default"}</option>)}</select>
+          </label>
+          <label>Mode
+            <select value={session.mode ?? state?.permissionMode ?? "default"} onChange={(e) => chat.setMode(e.target.value as PermissionMode)}>{MODES.map((m) => <option key={m} value={m}>{m}</option>)}</select>
+          </label>
+        </div>
       </div>
       {sessions && (
         <div className="sessions">
@@ -328,8 +341,8 @@ export function ChatPanel({ chat }: { chat: Chat }) {
         {slash.length > 0 && (
           <div className="popup">{slash.map((c, i) => <div key={c.name} className={i === active ? "active" : ""} onMouseDown={() => { setInput(`/${c.name} `); setActive(0); }}>/{c.name} <span>{c.description}</span></div>)}</div>
         )}
-        <textarea ref={ta} value={input} placeholder={attached.length ? "Ask about the attached elements…" : "Ask… (Enter to send, / for commands, paste images)"} onChange={(e) => { setInput(e.target.value); setActive(0); }} onKeyDown={onKey} onPaste={onPaste} rows={2} />
-        {running ? <button className="stop" onClick={chat.stop}>Stop</button> : <button onClick={submit}>Send</button>}
+        <textarea ref={ta} value={input} placeholder={attached.length ? "Ask about the attached elements" : "Ask the agent. / for commands"} onChange={(e) => { setInput(e.target.value); setActive(0); }} onKeyDown={onKey} onPaste={onPaste} rows={2} />
+        {running && <button className="stop" onClick={chat.stop} title="Interrupt the agent">Stop</button>}
       </div>
       <div className="chat-foot">
         <span className={"dot " + (running ? "running" : "ok")} />

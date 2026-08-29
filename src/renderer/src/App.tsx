@@ -9,6 +9,9 @@ import { Gallery } from "./Gallery";
 import type { AppState } from "../../shared/types";
 
 const LIB_KEY = "explainer-library";
+const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null } (null = Home)
+const readTabs = (): { tabs: string[]; active: string | null } => { try { return { tabs: [], active: null, ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null }; } };
+const shortName = (p: string) => p.split("/").pop()?.replace(/\.excalidraw$/, "") ?? p;
 const same = (a: string[], b: string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 export function App() {
@@ -22,7 +25,8 @@ export function App() {
   const [docked, setDocked] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dark, setDark] = useState(false);
-  const [gallery, setGallery] = useState(false);
+  const [tabs, setTabs] = useState<string[]>([]);
+  const [home, setHome] = useState(true); // Home tab = the gallery; the canvas stays mounted underneath
   const selRef = useRef(selectedIds); selRef.current = selectedIds;
   const xapiRef = useRef(xapi); xapiRef.current = xapi;
   const fileRef = useRef(file); fileRef.current = file;
@@ -76,10 +80,17 @@ export function App() {
     (async () => {
       const s = await api.invoke("state:get");
       setState(s);
-      const last = s.lastFile && (await api.invoke("file:read", s.lastFile)) !== null ? s.lastFile : await api.invoke("file:new");
+      const saved = readTabs();
+      const alive: string[] = [];
+      for (const t of saved.tabs) if ((await api.invoke("file:read", t)) !== null) alive.push(t);
+      const last = saved.active && alive.includes(saved.active) ? saved.active : alive[0] ?? (s.lastFile && (await api.invoke("file:read", s.lastFile)) !== null ? s.lastFile : await api.invoke("file:new"));
+      if (!alive.includes(last)) alive.push(last);
+      setTabs(alive);
+      setHome(saved.active === null || !saved.tabs.length);
       await openFile(last);
     })();
   }, [openFile]);
+  useEffect(() => { if (file) localStorage.setItem(TABS_KEY, JSON.stringify({ tabs, active: home ? null : file })); }, [tabs, home, file]);
 
   useEffect(() => api.on("canvas:call", async ({ callId, tool, args }) => {
     const x = xapiRef.current;
@@ -101,7 +112,7 @@ export function App() {
         const [, y1, x2] = getCommonBounds(sel as any);
         const p = sceneCoordsToViewportCoords({ sceneX: x2, sceneY: y1 }, appState);
         const inside = p.x > 0 && p.y > 40 && p.x < appState.width && p.y < appState.height;
-        btn.style.left = `${Math.round(p.x + 8)}px`; btn.style.top = `${Math.round(p.y - 36)}px`;
+        btn.style.left = `${Math.round(p.x - appState.offsetLeft + 8)}px`; btn.style.top = `${Math.round(p.y - appState.offsetTop - 36)}px`;
         btn.hidden = !inside;
         btn.title = `Ask the agent about ${sel.length} selected element${sel.length > 1 ? "s" : ""}`;
       } else btn.hidden = true;
@@ -125,9 +136,25 @@ export function App() {
     return true;
   }, []);
 
-  const newFile = async () => openFile(await api.invoke("file:new"));
-  const openFromGallery = useCallback((p: string) => { setGallery(false); openFile(p); }, [openFile]);
-  const closeGallery = useCallback(() => setGallery(false), []);
+  /** Show a drawing in its tab; opens a new tab when it has none. */
+  const openTab = useCallback((p: string) => {
+    setTabs((t) => (t.includes(p) ? t : [...t, p]));
+    setHome(false);
+    if (p !== fileRef.current) openFile(p);
+  }, [openFile]);
+  const closeTab = useCallback((p: string) => {
+    setTabs((t) => {
+      const i = t.indexOf(p), next = t.filter((x) => x !== p);
+      if (p === fileRef.current) { const n = next[Math.min(i, next.length - 1)]; if (n) openFile(n); else setHome(true); }
+      return next;
+    });
+  }, [openFile]);
+  /** A drawing was renamed, moved or trashed in the gallery: its tab follows; the gallery stays open. */
+  const relocate = useCallback((from: string, to: string | null) => {
+    setTabs((t) => (to ? t.map((x) => (x === from ? to : x)) : t.filter((x) => x !== from)));
+    if (from === fileRef.current) { if (to) openFile(to); else { const n = readTabs().tabs.find((x) => x !== from); if (n) openFile(n); } }
+  }, [openFile]);
+  const newFile = async () => openTab(await api.invoke("file:new"));
   const open = async () => { const p = await api.invoke("file:openDialog"); if (p) openFile(p); };
   const saveAs = async () => {
     const x = xapiRef.current, p = await api.invoke("file:saveAsDialog", fileRef.current ?? "");
@@ -149,6 +176,21 @@ export function App() {
   if (!initial || !file) return <div className="app" />;
   return (
     <div className={"app" + (sidebarOpen ? " sidebar-open" : "") + (dark ? " dark" : "")}>
+      <div className="tabs" role="tablist">
+        <button className={"tab home" + (home ? " on" : "")} role="tab" aria-selected={home} onClick={() => setHome(true)} title="Drawings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>
+        </button>
+        {tabs.map((t) => (
+          <div key={t} className={"tab" + (!home && t === file ? " on" : "")} role="tab" aria-selected={!home && t === file} onClick={() => openTab(t)} title={t}>
+            <span className="tab-name">{shortName(t)}</span>
+            <button className="tab-x" aria-label={`Close ${shortName(t)}`} onClick={(e) => { e.stopPropagation(); closeTab(t); }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+        ))}
+        <button className="tab plus" onClick={() => setHome(true)} title="New tab" aria-label="New tab">+</button>
+      </div>
+      <div className="canvas-wrap">
       <Excalidraw
         key={file}
         initialData={initial}
@@ -161,7 +203,7 @@ export function App() {
       >
         <WelcomeScreen />
         <MainMenu>
-          <MainMenu.Item onSelect={() => setGallery(true)}>Drawings…</MainMenu.Item>
+          <MainMenu.Item onSelect={() => setHome(true)}>Drawings…</MainMenu.Item>
           <MainMenu.Item onSelect={newFile}>New drawing</MainMenu.Item>
           <MainMenu.Item onSelect={open}>Open…</MainMenu.Item>
           <MainMenu.Item onSelect={saveAs}>Save as…</MainMenu.Item>
@@ -181,14 +223,8 @@ export function App() {
         </Sidebar>
       </Excalidraw>
       <Minimap ref={minimap} api={xapi} />
-      <button className="gallery-btn" onClick={() => setGallery(true)} title="Drawings">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
-        {file.split("/").pop()?.replace(/\.excalidraw$/, "")}
-      </button>
-      {gallery && <Gallery current={file} onOpen={openFromGallery} onClose={closeGallery} />}
-      <button ref={askBtn} className="ask-btn" hidden aria-label="Ask agent" onClick={() => { setAttached(selRef.current); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>
-      </button>
+      {home && <Gallery current={file} onOpen={openTab} onRelocate={relocate} onClose={tabs.length ? () => setHome(false) : undefined} />}
+      </div>
     </div>
   );
 }

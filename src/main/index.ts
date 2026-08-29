@@ -18,6 +18,7 @@ const readState = (): AppState => { try { return { ...DEFAULTS, ...JSON.parse(fs
 const writeState = (s: AppState) => fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 const FILTERS = [{ name: "Excalidraw", extensions: ["excalidraw", "json"] }];
 
+app.setName("Explainer"); // menu bar and About; the Dock label of the dev binary stays "Electron" until the app is packaged
 if (process.env.EXPLAINER_DEBUG_PORT) app.commandLine.appendSwitch("remote-debugging-port", process.env.EXPLAINER_DEBUG_PORT);
 
 let win: BrowserWindow;
@@ -27,6 +28,7 @@ const pendingCanvas = new Map<string, { resolve: (v: any) => void; reject: (e: E
 function createWindow() {
   win = new BrowserWindow({
     width: 1440, height: 920, title: "Explainer",
+    titleBarStyle: "hiddenInset", trafficLightPosition: { x: 14, y: 12 }, // the tab bar is the title bar, Figma style
     webPreferences: { preload: path.join(__dirname, "../preload/index.js"), contextIsolation: true, sandbox: false },
   });
   win.maximize(); // Excalidraw docks the sidebar only above ~1229px editor width

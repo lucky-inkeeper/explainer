@@ -1,0 +1,6 @@
+{
+  "name": "diagram-design",
+  "description": "Diagram type routing and layout rules for the Explainer canvas. Ported from cathrynlavery/diagram-design (MIT); render target is Excalidraw, not HTML.",
+  "version": "0.1.0",
+  "license": "MIT"
+}

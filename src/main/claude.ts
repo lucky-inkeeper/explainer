@@ -6,6 +6,9 @@ import path from "node:path";
 import { CANVAS_SERVER, SYSTEM_PROMPT, TOOLS } from "../shared/tools";
 import type { StartOpts, UserContent } from "../shared/types";
 
+declare const __AGENT_DIR__: string; // <repo>/agent, baked at build time like __DATA_DIR__
+const PLUGIN_DIR = path.join(__AGENT_DIR__, "diagram-design");
+
 /** GUI apps get a minimal PATH; look in the usual places for the user's claude install. */
 export function findClaude(): string {
   const home = os.homedir();
@@ -34,7 +37,9 @@ export class ClaudeSession {
       "-p", "--output-format", "stream-json", "--verbose", "--input-format", "stream-json", "--include-partial-messages",
       "--permission-prompt-tool", "stdio",
       "--mcp-config", JSON.stringify({ mcpServers: { [CANVAS_SERVER]: { type: "sdk", name: CANVAS_SERVER, alwaysLoad: true } } }),
-      "--allowedTools", `mcp__${CANVAS_SERVER}__*`,
+      "--plugin-dir", PLUGIN_DIR,
+      // canvas tools always; reading the skill references must not prompt in default mode
+      "--allowedTools", `mcp__${CANVAS_SERVER}__*`, `Read(/${PLUGIN_DIR}/**)`,
       "--append-system-prompt", SYSTEM_PROMPT,
       "--permission-mode", opts.permissionMode ?? "default",
     ];

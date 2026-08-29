@@ -81,6 +81,7 @@ function add(api: ExcalidrawImperativeAPI, rawEls: El[], mode: string, selectedI
 
 type Box = { x: number; y: number; w: number; h: number };
 const box = (e: El): Box => ({ x: e.x, y: e.y, w: e.width, h: e.height });
+const contains = (outer: Box, inner: Box) => inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.w <= outer.x + outer.w && inner.y + inner.h <= outer.y + outer.h;
 const hit = (a: Box, b: Box, pad = 2) => a.x + a.w > b.x + pad && b.x + b.w > a.x + pad && a.y + a.h > b.y + pad && b.y + b.h > a.y + pad;
 const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
 
@@ -166,6 +167,7 @@ function overlapWarnings(els: El[]) {
     if (t.type !== "text") continue;
     for (const e of els) {
       if (!SHAPES.has(e.type) || e.id === t.containerId || e.isDeleted) continue;
+      if (contains(box(e), box(t))) continue; // ponytail: a text fully inside a shape is a section title or a note in a zone, not a collision
       if (hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps ${e.type} ${e.id}`);
     }
   }

@@ -75,7 +75,7 @@ function add(api: ExcalidrawImperativeAPI, rawEls: El[], mode: string, selectedI
   const incoming = new Set(placed.map((e) => e.id));
   // a deleted element may be re-created under the same id: drop the tombstone so ids stay unique
   const base = api.getSceneElementsIncludingDeleted().filter((e) => !(e.isDeleted && incoming.has(e.id)));
-  api.updateScene({ elements: [...base, ...placed], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
+  api.updateScene({ elements: growFrames([...base, ...placed]), captureUpdate: CaptureUpdateAction.IMMEDIATELY });
   api.scrollToContent(placed, { fitToContent: true, animate: true, duration: 300 });
   return { created: placed.map((e) => ({ id: e.id, type: e.type, x: r(e.x), y: r(e.y) })) };
 }
@@ -245,6 +245,20 @@ function legendFor(els: El[]): El[] {
   return convertToExcalidrawElements(out, { regenerateIds: true }) as El[];
 }
 
+/** A frame clips its children; when the agent moves or adds a child past the edge, grow the frame (never shrink). */
+function growFrames(els: El[]): El[] {
+  const grown = new Map<string, El>();
+  for (const f of els) {
+    if (f.type !== "frame" || f.isDeleted) continue;
+    const kids = els.filter((e) => e.frameId === f.id && !e.isDeleted);
+    if (!kids.length) continue;
+    const [x1, y1, x2, y2] = getCommonBounds(kids);
+    const pad = 32, nx = Math.min(f.x, x1 - pad), ny = Math.min(f.y, y1 - pad), nx2 = Math.max(f.x + f.width, x2 + pad), ny2 = Math.max(f.y + f.height, y2 + pad);
+    if (nx !== f.x || ny !== f.y || nx2 !== f.x + f.width || ny2 !== f.y + f.height) grown.set(f.id, newElementWith(f, { x: nx, y: ny, width: nx2 - nx, height: ny2 - ny }));
+  }
+  return grown.size ? els.map((e) => grown.get(e.id) ?? e) : els;
+}
+
 /** Wrap a converted batch in one frame named `name` (top-level elements only; nested frames keep their children). */
 function wrapInFrame(els: El[], name: string): El[] {
   const top = els.filter((e) => !e.frameId && Number.isFinite(e.x));
@@ -334,7 +348,7 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
         return newElementWith(e, props);
       });
       const restored = restoreElements(next, null, { refreshDimensions: true, repairBindings: true }) as El[];
-      api.updateScene({ elements: followBindings(restored, new Set(updates.map((u) => u.id))), captureUpdate: CaptureUpdateAction.IMMEDIATELY });
+      api.updateScene({ elements: growFrames(followBindings(restored, new Set(updates.map((u) => u.id)))), captureUpdate: CaptureUpdateAction.IMMEDIATELY });
       return { updated: updates.map((u) => u.id) };
     }
     case "delete_elements": {

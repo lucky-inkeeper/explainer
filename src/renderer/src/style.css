@@ -125,7 +125,7 @@ input.gnew { padding: 5px 10px; border-radius: 8px; border: 1px solid #6965db; b
 .gactions { display: flex; gap: 8px; align-items: center; }
 .gprimary { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid #6965db; background: #6965db; color: #fff; cursor: pointer; }
 .gprimary:hover { background: #5b57d1; }
-.gclose { font: 22px/1 system-ui; width: 36px; height: 36px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #4a4b52; cursor: pointer; }
+.gclose { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #4a4b52; cursor: pointer; }
 .gclose:hover { background: #ececf1; }
 .gerror { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: #fff0f0; color: #c92a2a; font-size: 13px; }
 .ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }

@@ -79,7 +79,9 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
         </div>
         <div className="gactions">
           <button className="gprimary" onClick={create}>+ New drawing</button>
-          <button className="gclose" onClick={onClose} aria-label="Close" title="Close (Esc)">×</button>
+          <button className="gclose" onClick={onClose} aria-label="Close" title="Close (Esc)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
         </div>
       </header>
       {error && <div className="gerror">{error}</div>}

@@ -3,17 +3,18 @@ import { exportToBlob, restoreElements } from "@excalidraw/excalidraw";
 import { api } from "./api";
 import type { DrawingInfo, DrawingList } from "../../shared/types";
 
-/** "Edited 20 hours ago", Figma style. */
-const edited = (ms: number) => {
+/** "20 hours ago", Figma style. */
+const ago = (ms: number) => {
   const s = Math.max(0, (Date.now() - ms) / 1000), m = s / 60, h = m / 60, d = h / 24;
-  if (m < 1) return "Edited just now";
-  if (h < 1) return `Edited ${Math.floor(m)} min ago`;
-  if (d < 1) return `Edited ${Math.floor(h)} hour${h < 2 ? "" : "s"} ago`;
-  if (d < 2) return "Edited yesterday";
-  if (d < 7) return `Edited ${Math.floor(d)} days ago`;
-  const date = new Date(ms);
-  return `Edited ${date.toLocaleDateString([], { day: "numeric", month: "short", year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric" })}`;
+  if (m < 1) return "just now";
+  if (h < 1) return `${Math.floor(m)} min ago`;
+  if (d < 1) return `${Math.floor(h)} hour${h < 2 ? "" : "s"} ago`;
+  if (d < 2) return "yesterday";
+  if (d < 30) return `${Math.floor(d)} days ago`;
+  if (d < 365) return `${Math.floor(d / 30)} month${d < 60 ? "" : "s"} ago`;
+  return `${Math.floor(d / 365)} year${d < 730 ? "" : "s"} ago`;
 };
+const edited = (ms: number) => `Edited ${ago(ms)}`;
 
 /** Thumbnail from the file on disk, cached by the main process per path + mtime. */
 async function thumbnail(f: DrawingInfo): Promise<string | null> {
@@ -33,7 +34,7 @@ async function thumbnail(f: DrawingInfo): Promise<string | null> {
 }
 
 const VIEW_KEY = "explainer-gallery"; // { kind, sort, view }
-type Prefs = { kind: "all" | "files" | "folders"; sort: "modified" | "name"; view: "grid" | "list" };
+type Prefs = { kind: "all" | "files" | "folders"; sort: "modified" | "created" | "name"; view: "grid" | "list" };
 const readPrefs = (): Prefs => { try { return { kind: "all", sort: "modified", view: "grid", ...JSON.parse(localStorage.getItem(VIEW_KEY) ?? "{}") }; } catch { return { kind: "all", sort: "modified", view: "grid" }; } };
 
 const FolderIcon = () => (
@@ -89,8 +90,25 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   const bulkMove = (folder: string | null) => act(async () => { for (const f of picked) if (f.folder !== folder) onRelocate(f.path, await api.invoke("drawings:move", f.path, folder)); setSelected(new Set()); });
   const create = () => act(async () => onOpen(await api.invoke("file:new", cwd)));
 
-  const files = list.files.filter((f) => f.folder === cwd && prefs.kind !== "folders").sort((a, b) => (prefs.sort === "name" ? a.name.localeCompare(b.name) : b.mtime - a.mtime));
+  const files = list.files.filter((f) => f.folder === cwd && prefs.kind !== "folders").sort((a, b) => (prefs.sort === "name" ? a.name.localeCompare(b.name) : prefs.sort === "created" ? b.ctime - a.ctime : b.mtime - a.mtime));
   const folders = cwd === null && prefs.kind !== "files" ? list.folders : [];
+  const folderItems = (d: string): MenuItem[] => [
+    { label: "Open", onClick: () => { setMenu(null); setCwd(d); } },
+    { label: "Rename", onClick: () => { setMenu(null); setRenaming(`folder:${d}`); } },
+    { label: "Move to Trash", onClick: () => removeFolder(d), danger: true },
+  ];
+  const fileItems = (f: DrawingInfo): MenuItem[] => {
+    const targets = [null, ...list.folders].filter((d) => d !== f.folder);
+    return [
+      { label: "Open", onClick: () => onOpen(f.path) },
+      { label: "Rename", onClick: () => { setMenu(null); setRenaming(f.path); } },
+      ...(targets.length ? [{ label: "Move to", onClick: () => {}, head: true }, ...targets.map((d) => ({ label: d ?? "No folder", onClick: () => move(f, d) }))] : []),
+      { label: "Move to Trash", onClick: () => removeFile(f), danger: true },
+    ];
+  };
+  const Name = ({ id, value, onRename, onOpenIt }: { id: string; value: string; onRename: (v: string) => void; onOpenIt: () => void }) => renaming === id ? (
+    <input className="gname" autoFocus defaultValue={value} onKeyDown={(e) => { if (e.key === "Enter") onRename(e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => onRename(e.currentTarget.value)} />
+  ) : <button className="gname" onClick={onOpenIt} onDoubleClick={() => setRenaming(id)} title="Open (double-click to rename)">{value}</button>;
   const Menu = ({ id, items }: { id: string; items: MenuItem[] }) => (
     <>
       <button className="gmore" onClick={() => setMenu(menu === id ? null : id)} aria-label="More" title="More"><Dots /></button>
@@ -108,16 +126,16 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
         <div className="gactions">
           {cwd !== null && (
             <nav className="gcrumbs" aria-label="Folder">
-              <button className="gcrumb" onClick={() => setCwd(null)} title="All drawings">
+              <button className="gcrumb back" onClick={() => setCwd(null)} title="All drawings" aria-label="Back to all drawings">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
               </button>
               <span className="gcrumb on">{cwd}</span>
             </nav>
           )}
-          <button className="gprimary" onClick={create}>+ New drawing</button>
           {cwd === null && (addingFolder ? (
             <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
           ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
+          <button className="gprimary" onClick={create}>+ New drawing</button>
         </div>
         <div className="gfilters">
           <select className="gselect" value={prefs.kind} onChange={(e) => setPref({ kind: e.target.value as Prefs["kind"] })} title="Show">
@@ -127,6 +145,7 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
           </select>
           <select className="gselect" value={prefs.sort} onChange={(e) => setPref({ sort: e.target.value as Prefs["sort"] })} title="Sort">
             <option value="modified">Last modified</option>
+            <option value="created">Date created</option>
             <option value="name">Alphabetical</option>
           </select>
           <div className="gview" role="group" aria-label="View">
@@ -152,23 +171,59 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
           <button className="gsecondary" onClick={() => setSelected(new Set())}>Clear</button>
         </div>
       )}
-      <div className={"ggrid" + (prefs.view === "list" ? " list" : "")}>
+      {prefs.view === "list" ? (
+        <div className="glist" role="table">
+          <div className="grow head" role="row">
+            <span />
+            <button className={"gcol" + (prefs.sort === "name" ? " on" : "")} onClick={() => setPref({ sort: "name" })}>Name{prefs.sort === "name" && <span className="garrow">↓</span>}</button>
+            <button className={"gcol" + (prefs.sort === "modified" ? " on" : "")} onClick={() => setPref({ sort: "modified" })}>Last modified{prefs.sort === "modified" && <span className="garrow">↓</span>}</button>
+            <button className={"gcol" + (prefs.sort === "created" ? " on" : "")} onClick={() => setPref({ sort: "created" })}>Created{prefs.sort === "created" && <span className="garrow">↓</span>}</button>
+            <span />
+          </div>
+          {folders.map((d) => {
+            const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
+            return (
+              <div key={key} className="grow folder" role="row">
+                <span />
+                <div className="gcell name">
+                  <button className="gthumb" onClick={() => setCwd(d)} title={`Open ${d}`}><FolderIcon /></button>
+                  <Name id={key} value={d} onRename={(v) => renameFolder(d, v)} onOpenIt={() => setCwd(d)} />
+                </div>
+                <span className="gcell dim">{n} drawing{n === 1 ? "" : "s"}</span>
+                <span className="gcell dim" />
+                <span className="gcell"><Menu id={key} items={folderItems(d)} /></span>
+              </div>
+            );
+          })}
+          {files.map((f) => {
+            const t = thumbs[`${f.path}@${f.mtime}`];
+            return (
+              <div key={f.path} className={"grow" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")} role="row">
+                <input type="checkbox" className="gpick" checked={selected.has(f.path)} onChange={() => toggle(f.path)} aria-label={`Select ${f.name}`} />
+                <div className="gcell name">
+                  <button className="gthumb" onClick={() => onOpen(f.path)} title={`Open ${f.name}`}>{t ? <img src={t} alt="" /> : <span className="gempty">{t === "" ? "empty" : ""}</span>}</button>
+                  <Name id={f.path} value={f.name} onRename={(v) => renameFile(f, v)} onOpenIt={() => onOpen(f.path)} />
+                </div>
+                <span className="gcell" title={new Date(f.mtime).toLocaleString()}>{ago(f.mtime)}</span>
+                <span className="gcell" title={new Date(f.ctime).toLocaleString()}>{ago(f.ctime)}</span>
+                <span className="gcell"><Menu id={f.path} items={fileItems(f)} /></span>
+              </div>
+            );
+          })}
+          {!folders.length && !files.length && <div className="gnone">No drawings here yet.</div>}
+        </div>
+      ) : (
+      <div className="ggrid">
         {folders.map((d) => {
           const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
           return (
             <article key={key} className="gcard folder">
               <button className="gthumb" onClick={() => setCwd(d)} title={`Open ${d}`}><FolderIcon /></button>
               <div className="gmeta">
-                {renaming === key ? (
-                  <input className="gname" autoFocus defaultValue={d} onKeyDown={(e) => { if (e.key === "Enter") renameFolder(d, e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => renameFolder(d, e.currentTarget.value)} />
-                ) : <button className="gname" onClick={() => setCwd(d)} onDoubleClick={() => setRenaming(key)}>{d}</button>}
+                <Name id={key} value={d} onRename={(v) => renameFolder(d, v)} onOpenIt={() => setCwd(d)} />
                 <div className="gfoot">
                   <span className="gdate">{n} drawing{n === 1 ? "" : "s"}</span>
-                  <Menu id={key} items={[
-                    { label: "Open", onClick: () => { setMenu(null); setCwd(d); } },
-                    { label: "Rename", onClick: () => { setMenu(null); setRenaming(key); } },
-                    { label: "Move to Trash", onClick: () => removeFolder(d), danger: true },
-                  ]} />
+                  <Menu id={key} items={folderItems(d)} />
                 </div>
               </div>
             </article>
@@ -176,7 +231,6 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
         })}
         {files.map((f) => {
           const t = thumbs[`${f.path}@${f.mtime}`];
-          const targets = [null, ...list.folders].filter((d) => d !== f.folder);
           return (
             <article key={f.path} className={"gcard" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")}>
               <input type="checkbox" className="gpick" checked={selected.has(f.path)} onChange={() => toggle(f.path)} aria-label={`Select ${f.name}`} title="Select for a bulk action" />
@@ -184,17 +238,10 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
                 {t ? <img src={t} alt="" /> : <span className="gempty">{t === "" ? "empty" : ""}</span>}
               </button>
               <div className="gmeta">
-                {renaming === f.path ? (
-                  <input className="gname" autoFocus defaultValue={f.name} onKeyDown={(e) => { if (e.key === "Enter") renameFile(f, e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => renameFile(f, e.currentTarget.value)} />
-                ) : <button className="gname" onClick={() => onOpen(f.path)} onDoubleClick={() => setRenaming(f.path)} title="Open (double-click to rename)">{f.name}</button>}
+                <Name id={f.path} value={f.name} onRename={(v) => renameFile(f, v)} onOpenIt={() => onOpen(f.path)} />
                 <div className="gfoot">
                   <span className="gdate" title={new Date(f.mtime).toLocaleString()}>{edited(f.mtime)}</span>
-                  <Menu id={f.path} items={[
-                    { label: "Open", onClick: () => onOpen(f.path) },
-                    { label: "Rename", onClick: () => { setMenu(null); setRenaming(f.path); } },
-                    ...(targets.length ? [{ label: "Move to", onClick: () => {}, head: true }, ...targets.map((d) => ({ label: d ?? "No folder", onClick: () => move(f, d) }))] : []),
-                    { label: "Move to Trash", onClick: () => removeFile(f), danger: true },
-                  ]} />
+                  <Menu id={f.path} items={fileItems(f)} />
                 </div>
               </div>
             </article>
@@ -202,6 +249,7 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
         })}
         {!folders.length && !files.length && <div className="gnone">No drawings here yet.</div>}
       </div>
+      )}
     </div>
   );
 }

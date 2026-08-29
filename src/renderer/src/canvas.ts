@@ -110,13 +110,30 @@ function geometry(r: Route) {
   return { x: r.p1[0], y: r.p1[1], width: Math.abs(dx), height: Math.abs(dy), points: [[0, 0], ...mid.filter((m, i, all) => i === 0 || m[0] !== all[i - 1][0] || m[1] !== all[i - 1][1]), [dx, dy]] };
 }
 
-/** Route cost: 100 per shape it runs through (other than its own two ends), 10 per arrow it runs along, 1 per arrow it crosses. */
-function routeCost(r: Route, obstacles: El[], placed: Seg[]) {
+const isSection = (e: El) => (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa";
+
+/** Where Excalidraw puts an arrow label: the middle point of an odd path (the corner), else the midpoint of the middle segment. */
+function labelCenter(pts: number[][]): number[] {
+  if (pts.length % 2 === 1) return pts[Math.floor(pts.length / 2)];
+  const i = pts.length / 2 - 1;
+  return [(pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2];
+}
+
+/**
+ * Route cost: 100 per shape it runs through (other than its own two ends), 10 per arrow it runs along, 1 per arrow it crosses,
+ * 20 when its label would sit on a node, 5 when the label would straddle a section border.
+ */
+function routeCost(r: Route, obstacles: El[], placed: Seg[], label: { w: number; h: number } | null, sections: El[]) {
   const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
   const segs: Seg[] = pts.slice(1).map((p, i) => [pts[i], p]);
   let cost = 0;
   for (const o of obstacles) if (segs.some((sg) => segCrosses(sg[0], sg[1], box(o)))) cost += 100;
   for (const sh of placed) for (const sg of segs) { if (segsAlong(sg, sh)) cost += 10; else if (segsCross(sg, sh)) cost += 1; }
+  if (label) {
+    const c = labelCenter(pts), lb: Box = { x: c[0] - label.w / 2, y: c[1] - label.h / 2, w: label.w, h: label.h };
+    for (const o of obstacles) if (hit(lb, box(o))) cost += 20;
+    for (const sc of sections) if (hit(lb, box(sc)) && !contains(box(sc), lb)) cost += 5;
+  }
   return cost;
 }
 
@@ -125,7 +142,7 @@ function routeCost(r: Route, obstacles: El[], placed: Seg[]) {
  * axis, the two single-bend routes and the other z-route, and takes the cheapest (shapes it runs through, then arrows it runs
  * along or crosses); ties go to the first. ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
  */
-function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = []): Route {
+function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = [], sections: El[] = []): Route {
   const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
   const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
   const gap = 6, endGap = a.endArrowhead === "dot" ? 12 : gap; // a dot head needs room or it sits on the target
@@ -140,7 +157,8 @@ function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = []): R
   const bends = (z: Route) => [z, { ...z, frac: 0.3 }, { ...z, frac: 0.7 }]; // a z-route can bend early or late to dodge another arrow
   const order = Math.abs(dx) >= Math.abs(dy) ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
   const others = obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
-  const costs = order.map((r) => routeCost(r, others, placed));
+  const label = a.label?.text ? { w: String(a.label.text).length * 8 + 8, h: 24 } : null; // estimate; measured later by the spacing pass
+  const costs = order.map((r) => routeCost(r, others, placed, label, sections));
   return order[costs.indexOf(Math.min(...costs))];
 }
 
@@ -193,7 +211,7 @@ function followBindings(els: El[], touched: Set<string>): El[] {
     if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
     const s = byId.get(a.startBinding.elementId), t = byId.get(a.endBinding.elementId);
     if (!s || !t || !(touched.has(s.id) || touched.has(t.id))) continue;
-    const next = newElementWith(a, route(a, s, t, els.filter((e) => SHAPES.has(e.type) && !e.isDeleted && (e.backgroundColor ?? "").toLowerCase() !== "#f8f9fa")));
+    const next = newElementWith(a, route(a, s, t, els.filter((e) => SHAPES.has(e.type) && !e.isDeleted && !isSection(e))));
     moved.set(a.id, next);
     const label = els.find((e) => e.type === "text" && e.containerId === a.id);
     if (label) {
@@ -215,7 +233,8 @@ function spaceForLabels(skeleton: El[]): El[] {
     // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
     const routed: { a: El; r: Route; s: El; t: El }[] = [];
     const placed: Seg[] = [];
-    const obstacles = sk.filter((e) => SHAPES.has(e.type) && e.x != null && (e.backgroundColor ?? "").toLowerCase() !== "#f8f9fa");
+    const obstacles = sk.filter((e) => SHAPES.has(e.type) && e.x != null && !isSection(e));
+    const sections = sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e));
     for (const a of sk) {
       if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
       const s = byId.get(a.start.id), t = byId.get(a.end.id);
@@ -224,7 +243,7 @@ function spaceForLabels(skeleton: El[]): El[] {
       const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
       const [sx, sy] = c(s), [tx, ty] = c(t);
       if (!a.elbowed && Math.abs(tx - sx) > 24 && Math.abs(ty - sy) > 24) a.elbowed = true;
-      const r = ports(a, s, t, obstacles, placed);
+      const r = ports(a, s, t, obstacles, placed, sections);
       routed.push({ a, r, s, t });
       const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
       placed.push(...pts.slice(1).map((p, i) => [pts[i], p] as Seg));
@@ -312,6 +331,25 @@ function growFrames(els: El[]): El[] {
   return grown.size ? els.map((e) => grown.get(e.id) ?? e) : els;
 }
 
+/** A free text that lands on a node is parked below the content; the agent guesses note positions and cannot always see the scene. */
+function parkNotes(els: El[]): { els: El[]; parked: string[] } {
+  const nodes = els.filter((e) => SHAPES.has(e.type) && !isSection(e) && !e.isDeleted);
+  const notes = els.filter((t) => t.type === "text" && !t.containerId && !t.isDeleted);
+  const placed = els.filter((e) => Number.isFinite(e.x) && !e.isDeleted);
+  if (!nodes.length || !notes.length || !placed.length) return { els, parked: [] };
+  let y = getCommonBounds(placed)[3] + 24;
+  const moved = new Map<string, El>();
+  for (const t of notes) {
+    const on = nodes.find((n) => hit(box(t), box(n)) && !contains(box(n), box(t)));
+    if (!on) continue;
+    moved.set(t.id, newElementWith(t, { y }));
+    y += t.height + 16;
+  }
+  if (!moved.size) return { els, parked: [] };
+  const out = followBindings(els.map((e) => moved.get(e.id) ?? e), new Set(moved.keys()));
+  return { els: out, parked: [...moved.keys()] };
+}
+
 /** Wrap a converted batch in one frame named `name` (top-level elements only; nested frames keep their children). */
 function wrapInFrame(els: El[], name: string): El[] {
   const top = els.filter((e) => !e.frameId && Number.isFinite(e.x));
@@ -330,7 +368,7 @@ function overlapWarnings(els: El[]) {
     for (const e of els) {
       if (e.isDeleted || e.id === t.id || e.id === t.containerId) continue;
       if (e.type === "text") { if (e.id > t.id && hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps text "${e.text}" (${e.id})`); continue; }
-      if (!SHAPES.has(e.type) || (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa") continue; // sections are transparent
+      if (!SHAPES.has(e.type) || isSection(e)) continue; // sections are transparent
       if (contains(box(e), box(t))) continue; // ponytail: a text fully inside a shape is a note in a zone, not a collision
       if (hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps ${e.type} ${e.id}`);
     }
@@ -396,7 +434,6 @@ function segsAlong([a, b]: Seg, [c, d]: Seg): boolean {
 /** Arrows that run through a node they do not connect, over a text that is not their label, or along another arrow. Sections are transparent. */
 function crossingWarnings(els: El[]) {
   const out: string[] = [];
-  const isSection = (e: El) => (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa";
   const arrows = els.filter((a) => a.type === "arrow" && !a.isDeleted);
   for (const a of arrows) {
     const ends = new Set([a.startBinding?.elementId, a.endBinding?.elementId]);
@@ -423,10 +460,12 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
         if (target && (target.type === "arrow" || target.type === "line")) throw new Error(`${e.type} ${e.id} cannot bind its ${side} to ${target.type} ${target.id}; bind to a shape or text, or give x/y/points`);
       }
       const renamed = dedupeIds(api, args.elements ?? []);
-      let els = spaceForLabels(withDefaultFont(args.elements));
+      const park = parkNotes(spaceForLabels(withDefaultFont(args.elements)));
+      let els = park.els;
       if (args.frame) els = wrapInFrame([...els, ...legendFor(els)], String(args.frame));
       const res: any = add(api, els, args.placement ?? "auto", selectedIds);
       if (renamed.length) res.renamed = renamed; // ids that were already on the canvas got a suffix; use the new ids from `created`
+      if (park.parked.length) res.parked = park.parked.map((id) => `${id} sat on a node; moved below the diagram (its leader follows)`);
       const fresh = api.getSceneElements().filter((e) => res.created.some((c: any) => c.id === e.id));
       const warnings = [...overlapWarnings(fresh), ...crossingWarnings(fresh)];
       return warnings.length ? { ...res, warnings, hint: "Fix with update_elements (move/shrink/reword, or route the arrow around) or delete_elements + redraw." } : res;
@@ -442,8 +481,16 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
     }
     case "read_canvas": {
       const scene = api.getSceneElements();
-      const els = args.selection_only ? scene.filter((e) => selectedIds.includes(e.id)) : scene;
-      return { selectedIds, elements: els.map(compact) };
+      const frames = scene.filter((e) => e.type === "frame").map((f) => ({ id: f.id, name: f.name, elements: scene.filter((e) => e.frameId === f.id).length }));
+      let els = args.selection_only ? scene.filter((e) => selectedIds.includes(e.id)) : scene;
+      if (args.frame) {
+        const f = scene.find((e) => e.type === "frame" && (e.id === args.frame || e.name === args.frame));
+        els = f ? els.filter((e) => e.id === f.id || e.frameId === f.id) : [];
+      }
+      if (Array.isArray(args.ids) && args.ids.length) els = els.filter((e) => args.ids.includes(e.id) || args.ids.includes(e.frameId));
+      const scoped = args.selection_only || args.frame || (Array.isArray(args.ids) && args.ids.length);
+      if (!scoped && els.length > 150) return { selectedIds, frames, elements: [], hint: `${els.length} elements on the canvas; pass frame (name or id) or ids to read one part` };
+      return { selectedIds, frames, elements: els.map(compact) };
     }
     case "update_elements": {
       const updates: El[] = args.updates ?? [];

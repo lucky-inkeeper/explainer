@@ -57,10 +57,14 @@ export const TOOLS = [
   {
     name: "read_canvas",
     description:
-      "Read the canvas: compact list of elements (id, type, x, y, width, height, text, colors, bindings, groups, frames) plus the ids the user currently has selected. Use before editing, placing exactly, or answering questions about the drawing.",
+      "Read the canvas: compact list of elements (id, type, x, y, width, height, text, colors, bindings, groups, frames) plus the ids the user currently has selected and the list of frames. Scope it: pass frame (the diagram title or frame id) or ids; an unscoped read of a large canvas returns only the frame list. Use before editing, placing exactly, or answering questions about the drawing.",
     inputSchema: {
       type: "object",
-      properties: { selection_only: { type: "boolean", description: "Only return selected elements" } },
+      properties: {
+        selection_only: { type: "boolean", description: "Only return selected elements" },
+        frame: { type: "string", description: "Only the elements of this frame (its name or id), e.g. the diagram you just drew" },
+        ids: { type: "array", items: { type: "string" }, description: "Only these element ids (a frame id includes its children)" },
+      },
     },
   },
   {

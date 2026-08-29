@@ -13,8 +13,9 @@ html, body, #root { height: 100%; margin: 0; }
 .ask-btn:hover { background: #5b57d1; }
 
 .chat { display: flex; flex-direction: column; flex: 1; min-height: 0; font: 13px/1.45 system-ui, sans-serif; color: var(--text-primary-color); }
+.agent-sidebar .sidebar__header { padding: 4px 10px; }
 .agent-title { flex: 1; display: flex; align-items: center; gap: 8px; }
-.agent-title .title { flex: 1; text-align: center; font-size: 1.25rem; font-weight: 700; }
+.agent-title .title { flex: 1; text-align: center; font-size: 1.05rem; font-weight: 700; }
 .agent-title button {
   font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--default-border-color);
   background: var(--island-bg-color); color: var(--text-primary-color); cursor: pointer;

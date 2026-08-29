@@ -213,6 +213,10 @@ function spaceForLabels(skeleton: El[]): El[] {
       if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
       const s = byId.get(a.start.id), t = byId.get(a.end.id);
       if (!s || s.x == null || !t || t.x == null) continue;
+      // no diagonals: ends that share neither a row nor a column get a right-angle route
+      const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
+      const [sx, sy] = c(s), [tx, ty] = c(t);
+      if (!a.elbowed && Math.abs(tx - sx) > 24 && Math.abs(ty - sy) > 24) a.elbowed = true;
       routed.push({ a, r: ports(a, s, t, obstacles), s, t });
     }
     fan(routed);
@@ -263,7 +267,7 @@ function legendFor(els: El[]): El[] {
   const arrows = els.filter((e) => e.type === "arrow");
   if (arrows.some((a) => a.strokeStyle === "solid" || !a.strokeStyle)) items.push({ label: "Flow / call", arrow: { strokeStyle: "solid" } });
   if (arrows.some((a) => a.strokeStyle === "dashed" || a.strokeStyle === "dotted")) items.push({ label: "Async / optional / return", arrow: { strokeStyle: "dashed" } });
-  if (items.length < 2) return [];
+  if (!items.length) return [];
   const top = els.filter((e) => !e.frameId && !e.containerId && Number.isFinite(e.x));
   const [x1, , x2, y2] = getCommonBounds(top);
   const groupIds = [`legend-${Date.now().toString(36)}`];

@@ -6,10 +6,10 @@
 
 ## Layout conventions
 - Ranked rows by dependency depth: rank 0 (entry points nothing depends on) at the top, deeper ranks below. Rows 120 px apart. Nodes in one rank share one row.
-- Forward arrows point down across ranks, or run horizontal inside one rank. Never upward, except the one marked cycle.
+- Forward arrows point down across ranks, or run horizontal inside one rank. Never upward, except the one marked cycle. Bind every arrow to its two nodes (`start`/`end` by id) and let the app route it; never give explicit diagonal `points`.
 - Nodes: module rectangles (grey) for internal packages, external rectangles (red) for third-party, `opacity 70` for leaves with no outgoing arrows. 160x56.
 - Fan-in badge: a small grey text at the top-right of every node: `4 in`. The node with the highest fan-in is the story; nothing else competes with it.
-- The cycle: at most one back-arrow that points up against the rank order. Focal color, dashed, with `elbowed: true` so it runs around the outside of the node stack, with a grey label `CYCLE` at its visible end. The two nodes it touches keep their normal treatment.
+- The cycle: at most one back-arrow that points up against the rank order. Focal color, dashed, bound to its two nodes with `elbowed: true`; place the two nodes at the outer edge of their ranks so the route runs around the outside of the stack. Grey label `CYCLE` on the arrow. The two nodes it touches keep their normal treatment.
 - Focal rule: the 2 focal elements are the back-arrow and its `CYCLE` label. Nothing else.
 - Over capacity: collapse a leaf cluster into one aggregate node (`+6 leaves`) and say so in chat. Do not drop nodes silently.
 

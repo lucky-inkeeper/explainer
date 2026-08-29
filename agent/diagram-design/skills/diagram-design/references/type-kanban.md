@@ -5,7 +5,7 @@
 ## Layout conventions
 - Up to 5 vertical columns of equal width (240), 32 px gutters. Each column is a Section container.
 - Column title: the column name plus a WIP chip at the right: `n/limit` as grey text, fontFamily 102. A queue or terminal column shows a bare `n`. Every in-process column states a limit.
-- Cards: rectangles, column width minus 32, height 56, 12 px vertical gap. Label: the title. Sublabel text under it, fontFamily 102, grey: `TICKET-ID  owner`.
+- Cards: rectangles, column width minus 32, height 72, 12 px vertical gap. Label: the title, `verticalAlign: "top"`, at most 24 characters so it stays on one line. Sublabel text inside the card at its bottom-left (x + 12, y + 44), fontFamily 102, fontSize 14, grey: `TICKET-ID  owner`, sharing a `groupIds` entry with the card.
 - Batch order: columns, then column titles and chips, then cards.
 
 ## Card states

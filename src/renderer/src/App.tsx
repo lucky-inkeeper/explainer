@@ -18,6 +18,7 @@ export function App() {
   const [askPos, setAskPos] = useState<{ x: number; y: number } | null>(null);
   const [attached, setAttached] = useState<string[]>([]);
   const [docked, setDocked] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const selRef = useRef(selectedIds); selRef.current = selectedIds;
   const xapiRef = useRef(xapi); xapiRef.current = xapi;
   const fileRef = useRef(file); fileRef.current = file;
@@ -55,6 +56,7 @@ export function App() {
   }), []);
 
   const onChange = useCallback((elements: readonly any[], appState: any, files: any) => {
+    setSidebarOpen(!!appState.openSidebar);
     const ids = Object.keys(appState.selectedElementIds).filter((id) => appState.selectedElementIds[id]);
     setSelectedIds((prev) => (same(prev, ids) ? prev : ids));
     if (ids.length) {
@@ -102,7 +104,7 @@ export function App() {
 
   if (!initial || !file) return <div className="app" />;
   return (
-    <div className="app">
+    <div className={"app" + (sidebarOpen ? " sidebar-open" : "")}>
       <Excalidraw
         key={file}
         initialData={initial}

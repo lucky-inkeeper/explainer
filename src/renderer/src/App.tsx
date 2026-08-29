@@ -130,7 +130,6 @@ export function App() {
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
         <Sidebar name="agent" docked={docked} onDock={setDocked} className="agent-sidebar">
-          <Sidebar.Header>Claude</Sidebar.Header>
           <ChatPanel chat={chat} />
         </Sidebar>
       </Excalidraw>

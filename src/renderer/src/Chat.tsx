@@ -23,7 +23,7 @@ let n = 0;
 const uid = () => `i${++n}`;
 const shortModel = (m: string) => (m ? m.replace(/^claude-/, "") : "model");
 /** A select is as wide as its widest option; size it to the chosen label so the chevron hugs the text. */
-const fit = (label: string) => ({ width: `calc(${label.length}ch + 22px)` });
+const fit = (label: string) => ({ width: `calc(${label.length}ch + 10px)` });
 const stripAttach = (t: string) => t.replace(/\n*<selected_elements>[\s\S]*?<\/selected_elements>/g, "").trim();
 
 export function useChat({ xapi, file, state, setState, attached, setAttached }: {

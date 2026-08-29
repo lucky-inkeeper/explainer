@@ -132,7 +132,8 @@ button.chip:hover { background: var(--button-hover-bg); }
 .gallery { position: absolute; inset: 0; z-index: 6; overflow: auto; background: #f7f7f9; color: #1b1b1f; font: 14px/1.4 system-ui, sans-serif; padding: 20px 28px 48px; }
 .ghead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .gcrumbs { display: flex; align-items: center; gap: 6px; font-size: 15px; }
-.gcrumb { font: inherit; padding: 6px 10px; border-radius: 8px; border: 0; background: transparent; color: #4a4b52; cursor: pointer; }
+.gcrumb { font: inherit; display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 8px; border: 0; background: transparent; color: #4a4b52; cursor: pointer; }
+.gcrumbs { margin-right: 8px; }
 button.gcrumb:hover { background: #ececf1; }
 .gcrumb.on { color: #1b1b1f; font-weight: 600; }
 .gsep { color: #b0b1b8; }
@@ -151,6 +152,21 @@ input.gnew { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px s
 .gcard.picked { border-color: #6965db; background: #f6f6ff; }
 .app.dark .gbulk { background: #232335; color: #e3e3e8; } .app.dark .gbulk select { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
 .app.dark .gcard.picked { background: #1f1f2e; }
+.gfilters { display: flex; align-items: center; gap: 8px; }
+.gselect { font: inherit; font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238a8b93' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center; color: #1b1b1f; cursor: pointer; appearance: none; -webkit-appearance: none; }
+.gview { display: inline-flex; border: 1px solid #d5d6dd; border-radius: 8px; background: #fff; overflow: hidden; }
+.gview button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 0; background: transparent; color: #8a8b93; cursor: pointer; }
+.gview button.on { background: #ececf1; color: #1b1b1f; }
+.ggrid.list { display: flex; flex-direction: column; gap: 6px; }
+.ggrid.list .gcard { flex-direction: row; align-items: center; padding: 6px 10px 6px 8px; gap: 12px; }
+.ggrid.list .gthumb { width: 72px; flex: none; border: 1px solid #ececf1; border-radius: 6px; }
+.ggrid.list .gcard.folder .gthumb svg { width: 36px; height: 27px; }
+.ggrid.list .gmeta { flex: 1; flex-direction: row; align-items: center; gap: 16px; padding: 0; min-width: 0; }
+.ggrid.list .gmeta > .gname { flex: 1; min-width: 0; }
+.ggrid.list .gfoot { flex: none; gap: 16px; }
+.ggrid.list .gpick { position: static; opacity: 1; }
+.app.dark .gselect { background-color: #232329; color: #e3e3e8; border-color: #3a3a44; }
+.app.dark .gview { background: #232329; border-color: #3a3a44; } .app.dark .gview button.on { background: #3a3a44; color: #fff; }
 .gerror { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: #fff0f0; color: #c92a2a; font-size: 13px; }
 .ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
 .gcard { position: relative; display: flex; flex-direction: column; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; }

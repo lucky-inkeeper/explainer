@@ -32,6 +32,10 @@ async function thumbnail(f: DrawingInfo): Promise<string | null> {
   } catch (e) { console.error("thumbnail failed", f.path, e); return null; }
 }
 
+const VIEW_KEY = "explainer-gallery"; // { kind, sort, view }
+type Prefs = { kind: "all" | "files" | "folders"; sort: "modified" | "name"; view: "grid" | "list" };
+const readPrefs = (): Prefs => { try { return { kind: "all", sort: "modified", view: "grid", ...JSON.parse(localStorage.getItem(VIEW_KEY) ?? "{}") }; } catch { return { kind: "all", sort: "modified", view: "grid" }; } };
+
 const FolderIcon = () => (
   <svg viewBox="0 0 64 48" width="72" height="54" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#dcdcff" stroke="#8e8bd6" strokeWidth="2" /><path d="M4 18h56" stroke="#8e8bd6" strokeWidth="2" /></svg>
 );
@@ -48,6 +52,8 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   const [addingFolder, setAddingFolder] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set()); // file paths ticked for a bulk action
+  const [prefs, setPrefs] = useState<Prefs>(readPrefs);
+  const setPref = (patch: Partial<Prefs>) => setPrefs((p) => { const n = { ...p, ...patch }; localStorage.setItem(VIEW_KEY, JSON.stringify(n)); return n; });
   const alive = useRef(true);
 
   const reload = useCallback(async () => {
@@ -83,8 +89,8 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   const bulkMove = (folder: string | null) => act(async () => { for (const f of picked) if (f.folder !== folder) onRelocate(f.path, await api.invoke("drawings:move", f.path, folder)); setSelected(new Set()); });
   const create = () => act(async () => onOpen(await api.invoke("file:new", cwd)));
 
-  const files = list.files.filter((f) => f.folder === cwd);
-  const folders = cwd === null ? list.folders : [];
+  const files = list.files.filter((f) => f.folder === cwd && prefs.kind !== "folders").sort((a, b) => (prefs.sort === "name" ? a.name.localeCompare(b.name) : b.mtime - a.mtime));
+  const folders = cwd === null && prefs.kind !== "files" ? list.folders : [];
   const Menu = ({ id, items }: { id: string; items: MenuItem[] }) => (
     <>
       <button className="gmore" onClick={() => setMenu(menu === id ? null : id)} aria-label="More" title="More"><Dots /></button>
@@ -99,16 +105,38 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   return (
     <div className="gallery" role="dialog" aria-label="Drawings">
       <header className="ghead">
-        <nav className="gcrumbs" aria-label="Folder">
-          <button className={"gcrumb" + (cwd === null ? " on" : "")} onClick={() => setCwd(null)}>Drawings</button>
-          {cwd !== null && <><span className="gsep">/</span><span className="gcrumb on">{cwd}</span></>}
-        </nav>
         <div className="gactions">
+          {cwd !== null && (
+            <nav className="gcrumbs" aria-label="Folder">
+              <button className="gcrumb" onClick={() => setCwd(null)} title="All drawings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <span className="gcrumb on">{cwd}</span>
+            </nav>
+          )}
+          <button className="gprimary" onClick={create}>+ New drawing</button>
           {cwd === null && (addingFolder ? (
             <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
           ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
-          <button className="gprimary" onClick={create}>+ New drawing</button>
-
+        </div>
+        <div className="gfilters">
+          <select className="gselect" value={prefs.kind} onChange={(e) => setPref({ kind: e.target.value as Prefs["kind"] })} title="Show">
+            <option value="all">All files</option>
+            <option value="files">Drawings</option>
+            <option value="folders">Folders</option>
+          </select>
+          <select className="gselect" value={prefs.sort} onChange={(e) => setPref({ sort: e.target.value as Prefs["sort"] })} title="Sort">
+            <option value="modified">Last modified</option>
+            <option value="name">Alphabetical</option>
+          </select>
+          <div className="gview" role="group" aria-label="View">
+            <button className={prefs.view === "grid" ? "on" : ""} onClick={() => setPref({ view: "grid" })} title="Grid" aria-pressed={prefs.view === "grid"}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+            </button>
+            <button className={prefs.view === "list" ? "on" : ""} onClick={() => setPref({ view: "list" })} title="List" aria-pressed={prefs.view === "list"}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13" /><circle cx="4" cy="6" r="1" fill="currentColor" /><circle cx="4" cy="12" r="1" fill="currentColor" /><circle cx="4" cy="18" r="1" fill="currentColor" /></svg>
+            </button>
+          </div>
         </div>
       </header>
       {error && <div className="gerror">{error}</div>}
@@ -124,7 +152,7 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
           <button className="gsecondary" onClick={() => setSelected(new Set())}>Clear</button>
         </div>
       )}
-      <div className="ggrid">
+      <div className={"ggrid" + (prefs.view === "list" ? " list" : "")}>
         {folders.map((d) => {
           const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
           return (

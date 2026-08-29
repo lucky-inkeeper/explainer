@@ -1,5 +1,21 @@
 html, body, #root { height: 100%; margin: 0; }
-.app { height: 100vh; position: relative; }
+.app { height: 100vh; position: relative; display: flex; flex-direction: column; }
+.canvas-wrap { position: relative; flex: 1; min-height: 0; }
+/* ---- tab bar (outside .excalidraw: no CSS vars) */
+.tabs { display: flex; align-items: stretch; height: 40px; flex: none; padding-left: 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow-x: auto; overflow-y: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
+.tab, .tab-x { -webkit-app-region: no-drag; }
+.tab { display: flex; align-items: center; gap: 8px; padding: 0 12px; max-width: 220px; border: 0; border-right: 1px solid #e0e0e6; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.tab:hover { background: #e7e7ee; }
+.tab.on { background: #fff; color: #1b1b1f; box-shadow: inset 0 -2px 0 #6965db; }
+.tab.home { padding: 0 14px; }
+.tab.plus { font-size: 18px; padding: 0 14px; color: #8a8b93; border-right: 0; }
+.tab-name { overflow: hidden; text-overflow: ellipsis; }
+.tab-x { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; margin-right: -4px; border: 0; border-radius: 5px; background: transparent; color: #8a8b93; cursor: pointer; opacity: 0; }
+.tab:hover .tab-x, .tab.on .tab-x { opacity: 1; }
+.tab-x:hover { background: #d5d6dd; color: #1b1b1f; }
+.app.dark .tabs { background: #1b1b21; border-color: #3a3a44; color: #b9b9c2; }
+.app.dark .tab { border-color: #2a2a32; } .app.dark .tab:hover { background: #232329; } .app.dark .tab.on { background: #121216; color: #fff; }
+.app.dark .tab-x:hover { background: #3a3a44; color: #fff; }
 /* Excalidraw narrows its UI layer only when it deems the sidebar dockable (wide windows); do it whenever the panel is open */
 .app.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
 .app.sidebar-open .agent-trigger { display: none; }
@@ -109,8 +125,6 @@ button.chip:hover { background: var(--button-hover-bg); }
 .ask-btn[hidden] { display: none; }
 
 /* ---- drawings gallery (outside .excalidraw: no CSS vars, light defaults, .app.dark overrides) */
-.gallery-btn { position: absolute; top: 14px; left: 64px; z-index: 5; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #1b1b1f; font: 13px system-ui, sans-serif; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.08); max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gallery-btn:hover { background: #f1f0ff; }
 .gallery { position: absolute; inset: 0; z-index: 6; overflow: auto; background: #f7f7f9; color: #1b1b1f; font: 14px/1.4 system-ui, sans-serif; padding: 20px 28px 48px; }
 .ghead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .gcrumbs { display: flex; align-items: center; gap: 6px; font-size: 15px; }
@@ -126,6 +140,15 @@ input.gnew { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px s
 .gsecondary:hover { background: #ececf1; }
 .gclose { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #4a4b52; cursor: pointer; }
 .gclose:hover { background: #ececf1; }
+.gbulk { display: flex; align-items: center; gap: 10px; margin: -6px 0 14px; padding: 8px 12px; border-radius: 10px; background: #eeeefc; color: #1b1b1f; font-size: 13px; }
+.gbulk select { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: inherit; }
+.gdanger { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid #f1c0c0; background: #fff0f0; color: #c92a2a; cursor: pointer; }
+.gdanger:hover { background: #ffe3e3; }
+.gpick { position: absolute; top: 10px; left: 10px; z-index: 1; width: 18px; height: 18px; margin: 0; accent-color: #6965db; opacity: 0; cursor: pointer; }
+.gcard:hover .gpick, .gcard.picked .gpick, .gpick:focus-visible { opacity: 1; }
+.gcard.picked { border-color: #6965db; background: #f6f6ff; }
+.app.dark .gbulk { background: #232335; color: #e3e3e8; } .app.dark .gbulk select { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
+.app.dark .gcard.picked { background: #1f1f2e; }
 .gerror { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: #fff0f0; color: #c92a2a; font-size: 13px; }
 .ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
 .gcard { position: relative; display: flex; flex-direction: column; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; }
@@ -150,7 +173,6 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .gmenu button.danger:hover { background: #fff0f0; }
 .gmenu .ghead-item { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #8a8b93; padding: 8px 10px 2px; border-top: 1px solid #ececf1; margin-top: 2px; }
 .gnone { color: #8a8b93; padding: 40px 0; grid-column: 1 / -1; text-align: center; }
-.app.dark .gallery-btn { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
 .app.dark .gallery { background: #121216; color: #e3e3e8; }
 .app.dark .gcrumb { color: #b9b9c2; } .app.dark button.gcrumb:hover { background: #232329; } .app.dark .gcrumb.on { color: #fff; }
 .app.dark .gcard { background: #1b1b21; border-color: #3a3a44; } .app.dark .gthumb { background: #fff; border-color: #2a2a32; } .app.dark .gcard.folder .gthumb { background: #232329; }

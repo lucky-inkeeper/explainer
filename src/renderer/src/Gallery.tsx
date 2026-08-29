@@ -33,7 +33,7 @@ const Dots = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="current
 
 type MenuItem = { label: string; onClick: () => void; danger?: boolean; head?: boolean };
 
-export function Gallery({ current, onOpen, onClose }: { current: string | null; onOpen: (path: string) => void; onClose: () => void }) {
+export function Gallery({ current, onOpen, onRelocate, onClose }: { current: string | null; onOpen: (path: string) => void; onRelocate: (from: string, to: string | null) => void; onClose?: () => void }) {
   const [list, setList] = useState<DrawingList>({ folders: [], files: [] });
   const [cwd, setCwd] = useState<string | null>(null); // folder name, or null at the root
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
@@ -41,6 +41,7 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
   const [menu, setMenu] = useState<string | null>(null); // same keys
   const [addingFolder, setAddingFolder] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set()); // file paths ticked for a bulk action
   const alive = useRef(true);
 
   const reload = useCallback(async () => {
@@ -57,18 +58,23 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
 
   useEffect(() => { alive.current = true; reload(); return () => { alive.current = false; }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return; if (menu) setMenu(null); else if (!renaming && !addingFolder) onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return; if (menu) setMenu(null); else if (selected.size) setSelected(new Set()); else if (!renaming && !addingFolder) onClose?.(); };
     const onClick = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest(".gmenu, .gmore")) setMenu(null); };
     window.addEventListener("keydown", onKey); window.addEventListener("mousedown", onClick);
     return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mousedown", onClick); };
-  }, [onClose, renaming, addingFolder, menu]);
+  }, [onClose, renaming, addingFolder, menu, selected]);
 
   const act = async (fn: () => Promise<unknown>) => { setMenu(null); setError(null); try { await fn(); await reload(); } catch (e: any) { setError(e?.message?.replace(/^.*Error: /, "") ?? String(e)); } };
-  const renameFile = (f: DrawingInfo, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== f.name) act(async () => { const p = await api.invoke("drawings:rename", f.path, name); if (f.path === current) onOpen(p); }); };
-  const renameFolder = (d: string, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== d) act(async () => { await api.invoke("drawings:renameFolder", d, name); if (cwd === d) setCwd(name.trim()); }); };
-  const move = (f: DrawingInfo, folder: string | null) => act(async () => { const p = await api.invoke("drawings:move", f.path, folder); if (f.path === current) onOpen(p); });
-  const removeFile = (f: DrawingInfo) => { setMenu(null); if (!confirm(`Move "${f.name}" to the Trash?`)) return; act(async () => { await api.invoke("drawings:delete", f.path); if (f.path === current) onOpen(await api.invoke("file:new")); }); };
-  const removeFolder = (d: string) => { setMenu(null); const n = list.files.filter((f) => f.folder === d).length; if (!confirm(`Move the folder "${d}"${n ? ` and its ${n} drawing${n > 1 ? "s" : ""}` : ""} to the Trash?`)) return; act(async () => { const inside = list.files.some((f) => f.folder === d && f.path === current); await api.invoke("drawings:deleteFolder", d); if (cwd === d) setCwd(null); if (inside) onOpen(await api.invoke("file:new")); }); };
+  const renameFile = (f: DrawingInfo, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== f.name) act(async () => onRelocate(f.path, await api.invoke("drawings:rename", f.path, name))); };
+  const inFolder = (d: string) => list.files.filter((f) => f.folder === d);
+  const renameFolder = (d: string, name: string) => { setRenaming(null); const next = name.trim(); if (next && next !== d) act(async () => { await api.invoke("drawings:renameFolder", d, next); for (const f of inFolder(d)) onRelocate(f.path, f.path.replace(`/${d}/`, `/${next}/`)); if (cwd === d) setCwd(next); }); };
+  const move = (f: DrawingInfo, folder: string | null) => act(async () => onRelocate(f.path, await api.invoke("drawings:move", f.path, folder)));
+  const removeFile = (f: DrawingInfo) => { setMenu(null); if (!confirm(`Move "${f.name}" to the Trash?`)) return; act(async () => { await api.invoke("drawings:delete", f.path); onRelocate(f.path, null); }); };
+  const removeFolder = (d: string) => { setMenu(null); const n = inFolder(d).length; if (!confirm(`Move the folder "${d}"${n ? ` and its ${n} drawing${n > 1 ? "s" : ""}` : ""} to the Trash?`)) return; act(async () => { const files = inFolder(d); await api.invoke("drawings:deleteFolder", d); for (const f of files) onRelocate(f.path, null); if (cwd === d) setCwd(null); }); };
+  const picked = list.files.filter((f) => selected.has(f.path));
+  const toggle = (p: string) => setSelected((s) => { const n = new Set(s); n.has(p) ? n.delete(p) : n.add(p); return n; });
+  const bulkTrash = () => { if (!confirm(`Move ${picked.length} drawing${picked.length > 1 ? "s" : ""} to the Trash?`)) return; act(async () => { for (const f of picked) { await api.invoke("drawings:delete", f.path); onRelocate(f.path, null); } setSelected(new Set()); }); };
+  const bulkMove = (folder: string | null) => act(async () => { for (const f of picked) if (f.folder !== folder) onRelocate(f.path, await api.invoke("drawings:move", f.path, folder)); setSelected(new Set()); });
   const create = () => act(async () => onOpen(await api.invoke("file:new", cwd)));
 
   const files = list.files.filter((f) => f.folder === cwd);
@@ -96,12 +102,24 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
             <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
           ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
           <button className="gprimary" onClick={create}>+ New drawing</button>
-          <button className="gclose" onClick={onClose} aria-label="Close" title="Close (Esc)">
+          {onClose && <button className="gclose" onClick={onClose} aria-label="Back to the drawing" title="Back to the drawing (Esc)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>
+          </button>}
         </div>
       </header>
       {error && <div className="gerror">{error}</div>}
+      {picked.length > 0 && (
+        <div className="gbulk">
+          <span>{picked.length} selected</span>
+          <select value="" onChange={(e) => bulkMove(e.target.value === "\0root" ? null : e.target.value)} title="Move the selected drawings">
+            <option value="" disabled>Move to…</option>
+            <option value="\0root">No folder</option>
+            {list.folders.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <button className="gdanger" onClick={bulkTrash}>Move to Trash</button>
+          <button className="gsecondary" onClick={() => setSelected(new Set())}>Clear</button>
+        </div>
+      )}
       <div className="ggrid">
         {folders.map((d) => {
           const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
@@ -128,7 +146,8 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
           const t = thumbs[`${f.path}@${f.mtime}`];
           const targets = [null, ...list.folders].filter((d) => d !== f.folder);
           return (
-            <article key={f.path} className={"gcard" + (f.path === current ? " current" : "")}>
+            <article key={f.path} className={"gcard" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")}>
+              <input type="checkbox" className="gpick" checked={selected.has(f.path)} onChange={() => toggle(f.path)} aria-label={`Select ${f.name}`} title="Select for a bulk action" />
               <button className="gthumb" onClick={() => onOpen(f.path)} title={`Open ${f.name}`}>
                 {t ? <img src={t} alt="" /> : <span className="gempty">{t === "" ? "empty" : ""}</span>}
               </button>

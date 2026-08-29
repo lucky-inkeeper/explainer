@@ -143,7 +143,8 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
     }
     case "draw_mermaid": {
       const { parseMermaidToExcalidraw } = await import("@excalidraw/mermaid-to-excalidraw");
-      const { elements, files } = await parseMermaidToExcalidraw(args.definition);
+      // extra keys reach mermaid.initialize(): wider ranks so edge labels fit between nodes
+      const { elements, files } = await parseMermaidToExcalidraw(args.definition, { flowchart: { curve: "linear", rankSpacing: 150, nodeSpacing: 70 } } as any);
       if (files) api.addFiles(Object.values(files) as any);
       const els = convertToExcalidrawElements(withDefaultFont(elements as any), { regenerateIds: true });
       return add(api, els, args.placement ?? "auto", selectedIds);

@@ -94,6 +94,7 @@ ipcMain.handle("claude:start", (_e, opts: StartOpts) => {
       const callId = randomUUID();
       pendingCanvas.set(callId, { resolve, reject });
       win.webContents.send("canvas:call", { callId, tool, args });
+      setTimeout(() => { if (pendingCanvas.delete(callId)) reject(new Error(`canvas did not answer ${tool} within 60s (window reloaded?)`)); }, 60_000);
     }),
   });
 });

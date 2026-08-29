@@ -277,7 +277,11 @@ export function ChatPanel({ chat }: { chat: Chat }) {
     r.readAsDataURL(f);
   };
 
-  useEffect(() => { const el = log.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 200) el.scrollTop = el.scrollHeight; }, [items]);
+  const [stuck, setStuck] = useState(true); // follow the newest message unless the user scrolled up
+  const toBottom = () => { const el = log.current; if (el) el.scrollTop = el.scrollHeight; };
+  useEffect(() => { if (!items.length) setStuck(true); }, [items.length]);
+  useEffect(() => { if (stuck) toBottom(); }, [items, stuck]);
+  const onScroll = () => { const el = log.current; if (el) setStuck(el.scrollHeight - el.scrollTop - el.clientHeight < 80); };
   useEffect(() => { if (attached.length) ta.current?.focus(); }, [attached]);
   useEffect(() => { const el = ta.current; if (!el) return; el.style.height = "auto"; el.style.height = `${Math.min(el.scrollHeight, 180)}px`; }, [input]); // grow with content
 
@@ -317,7 +321,8 @@ export function ChatPanel({ chat }: { chat: Chat }) {
           <button onClick={() => chat.start(session.id)}>Retry</button>
         </div>
       )}
-      <div className="chat-log" ref={log}>
+      <div className="log-wrap">
+      <div className="chat-log" ref={log} onScroll={onScroll}>
         {items.length === 0 && <div className="msg info">Ask for an explanation. The agent answers on the canvas. Select elements and press "Ask agent" to talk about them. Type / for commands.</div>}
         {items.map((it) => {
           switch (it.k) {
@@ -331,6 +336,8 @@ export function ChatPanel({ chat }: { chat: Chat }) {
             case "result": return <div key={it.id} className="msg error">{it.error}</div>;
           }
         })}
+      </div>
+      {!stuck && <button className="jump" onClick={() => { setStuck(true); toBottom(); }}>↓ Jump to latest</button>}
       </div>
       <div className="composer">
         <div className="chips">

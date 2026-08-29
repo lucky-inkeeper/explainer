@@ -302,7 +302,6 @@ export function ChatPanel({ chat }: { chat: Chat }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <span className="title">Claude</span>
-          <button className="new" onClick={() => chat.start()} title="New session">+</button>
         </div>
       </Sidebar.Header>
       {sessions && (
@@ -354,6 +353,9 @@ export function ChatPanel({ chat }: { chat: Chat }) {
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addImage(f); e.target.value = ""; }} />
           <Picker title="Permission mode" value={mode} options={MODES.map((m) => [m, MODE_LABELS[m]])} onChange={(v) => chat.setMode(v as PermissionMode)} />
           <span className="spacer" />
+          <button className="plain new" onClick={() => chat.start()} title="New session" aria-label="New session">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+          </button>
           <Picker title="Model" value={session.model ?? state?.model ?? ""} options={[...new Set([...MODELS, session.model ?? ""])].map((m) => [m, shortModel(m)])} onChange={chat.setModel} />
           <Picker title="Effort" value={state?.effort ?? ""} options={EFFORTS.map((m) => [m, m || "effort"])} onChange={chat.setEffort} />
           <span className={"dot " + (running ? "running" : "ok")} title={`${status ?? (running ? "working" : "idle")} · $${cost.toFixed(2)} this session`} />

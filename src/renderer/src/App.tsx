@@ -16,7 +16,7 @@ export function App() {
   const [initial, setInitial] = useState<ExcalidrawInitialDataState | null>(null);
   const [state, setState] = useState<AppState | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [askPos, setAskPos] = useState<{ x: number; y: number } | null>(null);
+  const askBtn = useRef<HTMLButtonElement>(null); // positioned imperatively: no React re-render per pan/zoom frame
   const [attached, setAttached] = useState<string[]>([]);
   const [docked, setDocked] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -73,15 +73,18 @@ export function App() {
     minimap.current?.draw(elements, appState);
     const ids = Object.keys(appState.selectedElementIds).filter((id) => appState.selectedElementIds[id]);
     setSelectedIds((prev) => (same(prev, ids) ? prev : ids));
-    if (ids.length) {
-      const sel = elements.filter((e) => ids.includes(e.id) && !e.isDeleted);
+    const btn = askBtn.current;
+    if (btn) {
+      const sel = ids.length ? elements.filter((e) => ids.includes(e.id) && !e.isDeleted) : [];
       if (sel.length) {
         const [, y1, x2] = getCommonBounds(sel as any);
         const p = sceneCoordsToViewportCoords({ sceneX: x2, sceneY: y1 }, appState);
-        const x = Math.round(p.x + 8), y = Math.round(p.y - 36);
-        setAskPos((prev) => (prev && prev.x === x && prev.y === y ? prev : { x, y })); // same value = no re-render (onChange fires on every render)
-      }
-    } else setAskPos(null);
+        const inside = p.x > 0 && p.y > 40 && p.x < appState.width && p.y < appState.height;
+        btn.style.left = `${Math.round(p.x + 8)}px`; btn.style.top = `${Math.round(p.y - 36)}px`;
+        btn.hidden = !inside;
+        btn.textContent = `✦ Ask agent (${sel.length})`;
+      } else btn.hidden = true;
+    }
     // autosave: scene version + the bits of appState worth keeping
     const sig = `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
     if (sig === lastSaved.current) return;
@@ -151,11 +154,7 @@ export function App() {
         </Sidebar>
       </Excalidraw>
       <Minimap ref={minimap} api={xapi} />
-      {askPos && selectedIds.length > 0 && (
-        <button className="ask-btn" style={{ left: askPos.x, top: askPos.y }} onClick={() => { setAttached(selectedIds); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }}>
-          ✦ Ask agent ({selectedIds.length})
-        </button>
-      )}
+      <button ref={askBtn} className="ask-btn" hidden onClick={() => { setAttached(selRef.current); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }} />
     </div>
   );
 }

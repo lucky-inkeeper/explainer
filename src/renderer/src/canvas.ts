@@ -92,44 +92,76 @@ const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
  * so Excalidraw re-routes the arrows and recenters labels. ponytail: axis-aligned push only; a real layout engine if diagrams get dense.
  */
 /** Point on the boundary of `e` (centre cx,cy) along the ray toward (ox,oy), pushed out by a small gap. */
-function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number): [number, number] {
+function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number, gapPx = 6): [number, number] {
   const dx = ox - cx, dy = oy - cy, hw = (e.width ?? 100) / 2, hh = (e.height ?? 100) / 2;
   if (!dx && !dy) return [cx, cy];
   const ax = Math.abs(dx) / hw, ay = Math.abs(dy) / hh;
   const t = e.type === "ellipse" ? 1 / Math.hypot(ax, ay) : e.type === "diamond" ? 1 / (ax + ay) : 1 / Math.max(ax, ay);
-  const len = Math.hypot(dx, dy), gap = 6 / len;
+  const len = Math.hypot(dx, dy), gap = gapPx / len;
   return [cx + dx * (t + gap), cy + dy * (t + gap)];
 }
 
-/**
- * Right-angle route for an `elbowed` arrow: leave and enter through the side that faces the other shape on the dominant axis,
- * one bend pair halfway. Excalidraw keeps the points we give (its router only runs when the user drags).
- * ponytail: no obstacle avoidance; Excalidraw re-routes on the first drag.
- */
-function elbowPorts(s: El, t: El): [[number, number], [number, number], [number, number][]] {
-  const cx = (e: El) => e.x + (e.width ?? 100) / 2, cy = (e: El) => e.y + (e.height ?? 100) / 2;
-  const dx = cx(t) - cx(s), dy = cy(t) - cy(s), gap = 6;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    const sign = Math.sign(dx) || 1;
-    const p1: [number, number] = [sign > 0 ? s.x + (s.width ?? 100) + gap : s.x - gap, cy(s)];
-    const p2: [number, number] = [sign > 0 ? t.x - gap : t.x + (t.width ?? 100) + gap, cy(t)];
-    const mx = (p2[0] - p1[0]) / 2;
-    return [p1, p2, p1[1] === p2[1] ? [] : [[mx, 0], [mx, p2[1] - p1[1]]]];
-  }
-  const sign = Math.sign(dy) || 1;
-  const p1: [number, number] = [cx(s), sign > 0 ? s.y + (s.height ?? 100) + gap : s.y - gap];
-  const p2: [number, number] = [cx(t), sign > 0 ? t.y - gap : t.y + (t.height ?? 100) + gap];
-  const my = (p2[1] - p1[1]) / 2;
-  return [p1, p2, p1[0] === p2[0] ? [] : [[0, my], [p2[0] - p1[0], my]]];
+type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh" };
+
+/** Skeleton geometry for a route: z = one bend pair halfway, l = one bend, straight otherwise. */
+function geometry(r: Route) {
+  const dx = r.p2[0] - r.p1[0], dy = r.p2[1] - r.p1[1];
+  const mid = r.kind === "zh" ? [[dx / 2, 0], [dx / 2, dy]] : r.kind === "zv" ? [[0, dy / 2], [dx, dy / 2]] : r.kind === "lv" ? [[0, dy]] : r.kind === "lh" ? [[dx, 0]] : [];
+  return { x: r.p1[0], y: r.p1[1], width: Math.abs(dx), height: Math.abs(dy), points: [[0, 0], ...mid.filter((m, i, all) => i === 0 || m[0] !== all[i - 1][0] || m[1] !== all[i - 1][1]), [dx, dy]] };
 }
 
-/** Geometry for an arrow between two shapes: straight edge to edge, or the elbow route. */
-function route(a: El, s: El, t: El) {
-  const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
-  const [sx, sy] = c(s), [tx, ty] = c(t);
-  const [p1, p2, mid] = a.elbowed ? elbowPorts(s, t) : [edgePoint(s, sx, sy, tx, ty), edgePoint(t, tx, ty, sx, sy), null];
-  const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
-  return { x: p1[0], y: p1[1], width: Math.abs(dx), height: Math.abs(dy), points: mid ? [[0, 0], ...mid, [dx, dy]] : [[0, 0], [dx, dy]] };
+/** Does this route run through a shape other than its own two ends? */
+function routeCrosses(r: Route, obstacles: El[]) {
+  const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
+  return obstacles.some((o) => pts.slice(1).some((p, i) => segCrosses(pts[i], p, box(o))));
+}
+
+/**
+ * Attach points and shape of a bound arrow. Straight edge to edge unless `elbowed`. An elbow tries, in order: a z-route on the
+ * dominant axis, the two single-bend routes, the other z-route; the first that crosses no other shape wins.
+ * ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
+ */
+function ports(a: El, s: El, t: El, obstacles: El[] = []): Route {
+  const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
+  const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
+  const gap = 6, endGap = a.endArrowhead === "dot" ? 12 : gap; // a dot head needs room or it sits on the target
+  if (!a.elbowed) return { p1: edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap), p2: edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap), kind: "straight" };
+  const dx = cx(t) - cx(s), dy = cy(t) - cy(s), sx = Math.sign(dx) || 1, sy = Math.sign(dy) || 1;
+  const sideX = (e: El, sign: number, g: number): number => (sign > 0 ? e.x + w(e) + g : e.x - g);
+  const sideY = (e: El, sign: number, g: number): number => (sign > 0 ? e.y + h(e) + g : e.y - g);
+  const zh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "zh" };
+  const zv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "zv" };
+  const lv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "lv" }; // down, then into the side
+  const lh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "lh" }; // sideways, then into top or bottom
+  const order = Math.abs(dx) >= Math.abs(dy) ? [zh, lh, lv, zv] : [zv, lv, lh, zh];
+  const others = obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
+  return order.find((r) => !routeCrosses(r, others)) ?? order[0];
+}
+
+const route = (a: El, s: El, t: El, obstacles: El[] = []) => geometry(ports(a, s, t, obstacles));
+
+/** Arrows that attach to the same side of one shape are spread 24 px apart along that side, so heads and labels do not stack. */
+function fan(routed: { a: El; r: Route; s: El; t: El }[]) {
+  const side = (e: El, p: [number, number]) => {
+    const d: [string, number][] = [["l", Math.abs(p[0] - e.x)], ["r", Math.abs(p[0] - (e.x + (e.width ?? 100)))], ["t", Math.abs(p[1] - e.y)], ["b", Math.abs(p[1] - (e.y + (e.height ?? 100)))]];
+    return d.sort((x, y) => x[1] - y[1])[0][0];
+  };
+  const groups = new Map<string, { r: Route; key: "p1" | "p2"; e: El; other: [number, number] }[]>();
+  for (const { r, s, t } of routed) {
+    for (const [key, e, other] of [["p1", s, r.p2], ["p2", t, r.p1]] as ["p1" | "p2", El, [number, number]][]) {
+      const k = `${e.id}:${side(e, r[key])}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k)!.push({ r, key, e, other });
+    }
+  }
+  for (const [k, g] of groups) {
+    if (g.length < 2) continue;
+    const alongY = k.endsWith(":l") || k.endsWith(":r");
+    g.sort((m, n) => (alongY ? m.other[1] - n.other[1] : m.other[0] - n.other[0])); // keep lines from crossing each other
+    const e = g[0].e, len = alongY ? e.height ?? 100 : e.width ?? 100, step = Math.min(24, (len - 24) / (g.length - 1));
+    const center = alongY ? e.y + len / 2 : e.x + len / 2;
+    g.forEach((m, i) => { const v = center + (i - (g.length - 1) / 2) * step; m.r[m.key] = alongY ? [m.r[m.key][0], v] : [v, m.r[m.key][1]]; });
+  }
 }
 
 /**
@@ -152,7 +184,7 @@ function followBindings(els: El[], touched: Set<string>): El[] {
     if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
     const s = byId.get(a.startBinding.elementId), t = byId.get(a.endBinding.elementId);
     if (!s || !t || !(touched.has(s.id) || touched.has(t.id))) continue;
-    const next = newElementWith(a, route(a, s, t));
+    const next = newElementWith(a, route(a, s, t, els.filter((e) => SHAPES.has(e.type) && !e.isDeleted && (e.backgroundColor ?? "").toLowerCase() !== "#f8f9fa")));
     moved.set(a.id, next);
     const label = els.find((e) => e.type === "text" && e.containerId === a.id);
     if (label) {
@@ -172,12 +204,16 @@ function spaceForLabels(skeleton: El[]): El[] {
     const sk: El[] = structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) }));
     const byId = new Map(sk.map((e) => [e.id, e]));
     // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
+    const routed: { a: El; r: Route; s: El; t: El }[] = [];
+    const obstacles = sk.filter((e) => SHAPES.has(e.type) && e.x != null && (e.backgroundColor ?? "").toLowerCase() !== "#f8f9fa");
     for (const a of sk) {
       if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
       const s = byId.get(a.start.id), t = byId.get(a.end.id);
       if (!s || s.x == null || !t || t.x == null) continue;
-      Object.assign(a, route(a, s, t));
+      routed.push({ a, r: ports(a, s, t, obstacles), s, t });
     }
+    fan(routed);
+    for (const { a, r } of routed) Object.assign(a, geometry(r));
     return convertToExcalidrawElements(sk, { regenerateIds: false });
   };
   let els = build();
@@ -275,7 +311,9 @@ function overlapWarnings(els: El[]) {
   for (const t of els) {
     if (t.type !== "text") continue;
     for (const e of els) {
-      if (!SHAPES.has(e.type) || e.id === t.containerId || e.isDeleted) continue;
+      if (e.isDeleted || e.id === t.id || e.id === t.containerId) continue;
+      if (e.type === "text") { if (e.id > t.id && hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps text "${e.text}" (${e.id})`); continue; }
+      if (!SHAPES.has(e.type)) continue;
       if (contains(box(e), box(t))) continue; // ponytail: a text fully inside a shape is a section title or a note in a zone, not a collision
       if (hit(box(t), box(e))) out.push(`text "${t.text}" (${t.id}) overlaps ${e.type} ${e.id}`);
     }
@@ -305,6 +343,37 @@ function dedupeIds(api: ExcalidrawImperativeAPI, skeleton: El[]): string[] {
   return [...map].map(([from, to]) => `${from} -> ${to}`);
 }
 
+/** True when the segment enters AND leaves the box. Touching an edge or ending inside is an attachment, not a crossing. */
+function segCrosses([x1, y1]: number[], [x2, y2]: number[], b: Box): boolean {
+  const pad = 4, bx1 = b.x + pad, by1 = b.y + pad, bx2 = b.x + b.w - pad, by2 = b.y + b.h - pad;
+  if (bx2 <= bx1 || by2 <= by1) return false;
+  let t0 = 0, t1 = 1;
+  const dx = x2 - x1, dy = y2 - y1;
+  for (const [p, q] of [[-dx, x1 - bx1], [dx, bx2 - x1], [-dy, y1 - by1], [dy, by2 - y1]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return t0 > 0.02 && t1 < 0.98;
+}
+
+/** Arrows that run through a node they do not connect, or over a text that is not their own label. Sections are transparent. */
+function crossingWarnings(els: El[]) {
+  const out: string[] = [];
+  const isSection = (e: El) => (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa";
+  for (const a of els) {
+    if (a.type !== "arrow" || a.isDeleted) continue;
+    const ends = new Set([a.startBinding?.elementId, a.endBinding?.elementId]);
+    const pts = a.points.map((p: number[]) => [a.x + p[0], a.y + p[1]]);
+    for (const e of els) {
+      if (e.isDeleted || e.id === a.id || ends.has(e.id) || isSection(e)) continue;
+      if (e.type === "text" ? e.containerId === a.id || ends.has(e.containerId) : !SHAPES.has(e.type)) continue;
+      for (let i = 1; i < pts.length; i++) if (segCrosses(pts[i - 1], pts[i], box(e))) { out.push(`arrow ${a.id} crosses ${e.type} ${e.id}${e.text ? ` "${e.text.slice(0, 24)}"` : ""}`); break; }
+    }
+  }
+  return out;
+}
+
 export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, args: any, selectedIds: string[]) {
   switch (tool) {
     case "draw_elements": {
@@ -319,8 +388,9 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
       if (args.frame) els = wrapInFrame([...els, ...legendFor(els)], String(args.frame));
       const res: any = add(api, els, args.placement ?? "auto", selectedIds);
       if (renamed.length) res.renamed = renamed; // ids that were already on the canvas got a suffix; use the new ids from `created`
-      const warnings = overlapWarnings(api.getSceneElements().filter((e) => res.created.some((c: any) => c.id === e.id)));
-      return warnings.length ? { ...res, warnings, hint: "Fix with update_elements (move/shrink/reword) or delete_elements + redraw." } : res;
+      const fresh = api.getSceneElements().filter((e) => res.created.some((c: any) => c.id === e.id));
+      const warnings = [...overlapWarnings(fresh), ...crossingWarnings(fresh)];
+      return warnings.length ? { ...res, warnings, hint: "Fix with update_elements (move/shrink/reword, or route the arrow around) or delete_elements + redraw." } : res;
     }
     case "draw_mermaid": {
       const { parseMermaidToExcalidraw } = await import("@excalidraw/mermaid-to-excalidraw");

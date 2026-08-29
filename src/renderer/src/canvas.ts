@@ -271,6 +271,8 @@ function spaceForLabels(skeleton: El[]): El[] {
   let els = build();
   for (let iter = 0; iter < 8; iter++) {
     const byId = new Map(els.map((e: El) => [e.id, e]));
+    const sects = (els as El[]).filter((e) => SHAPES.has(e.type) && isSection(e));
+    const sectionOf = (e: El) => sects.find((sc) => contains(box(sc), box(e)));
     let moved = false;
     for (const a of els as El[]) {
       if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
@@ -280,11 +282,19 @@ function spaceForLabels(skeleton: El[]): El[] {
       const horizontal = Math.abs(t.x + t.width / 2 - (s.x + s.width / 2)) >= Math.abs(t.y + t.height / 2 - (s.y + s.height / 2));
       const forward = horizontal ? t.x >= s.x : t.y >= s.y;
       const [near, far] = forward ? [s, t] : [t, s]; // near = upstream on the axis, far = the one we push
-      const gap = horizontal ? far.x - (near.x + near.width) : far.y - (near.y + near.height);
+      let gap = horizontal ? far.x - (near.x + near.width) : far.y - (near.y + near.height);
+      let threshold = horizontal ? far.x : far.y;
+      // across a section border the label must fit between the borders: measure from the outer edges and push the far section with everything in it
+      const ns = sectionOf(near), fs = sectionOf(far);
+      if (ns?.id !== fs?.id) {
+        const a = ns ?? near, b = fs ?? far;
+        gap = horizontal ? b.x - (a.x + a.width) : b.y - (a.y + a.height);
+        threshold = horizontal ? b.x : b.y;
+      }
       const lb = box(label), need = (horizontal ? lb.w : lb.h) + 32;
       const touches = hit(lb, box(s)) || hit(lb, box(t)); // a label slid off-center can still lean on a shape
       if (gap >= need && !touches) continue;
-      const delta = Math.max(gap < need ? need - gap : 0, touches ? 24 : 0), threshold = horizontal ? far.x : far.y;
+      const delta = Math.max(gap < need ? need - gap : 0, touches ? 24 : 0);
       base.forEach((e, i) => {
         if (e.type === "arrow" && !e.points) return; // bound arrows follow their shapes
         const pos = horizontal ? (e.x ?? 0) + off[i].x : (e.y ?? 0) + off[i].y;

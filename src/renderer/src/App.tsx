@@ -9,6 +9,7 @@ import { Gallery } from "./Gallery";
 import type { AppState } from "../../shared/types";
 
 const LIB_KEY = "explainer-library";
+const THEME_KEY = "explainer-theme"; // "light" | "dark", app-wide, wins over the theme saved inside a drawing
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null } (null = Home)
 const readTabs = (): { tabs: string[]; active: string | null } => { try { return { tabs: [], active: null, ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null }; } };
 const shortName = (p: string) => p.split("/").pop()?.replace(/\.excalidraw$/, "") ?? p;
@@ -71,7 +72,8 @@ export function App() {
     lastSaved.current = "";
     expected.current = (data.elements ?? []).filter((e: any) => !e.isDeleted).length;
     window.setTimeout(() => { expected.current = 0; }, 15_000); // never leave a file unsaveable if Excalidraw drops something on load
-    setInitial({ ...data, appState: { ...data.appState, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: true });
+    const theme = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) ?? data.appState?.theme;
+    setInitial({ ...data, appState: { ...data.appState, theme, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: true });
     setFile(path);
     setState(await api.invoke("state:set", { lastFile: path }));
   }, []);
@@ -155,6 +157,12 @@ export function App() {
     if (from === fileRef.current) { if (to) openFile(to); else { const n = readTabs().tabs.find((x) => x !== from); if (n) openFile(n); } }
   }, [openFile]);
   const newFile = async () => openTab(await api.invoke("file:new"));
+  const toggleTheme = useCallback(() => {
+    const next = dark ? "light" : "dark";
+    localStorage.setItem(THEME_KEY, next);
+    setDark(next === "dark");
+    xapiRef.current?.updateScene({ appState: { theme: next } });
+  }, [dark]);
   const open = async () => { const p = await api.invoke("file:openDialog"); if (p) openFile(p); };
   const saveAs = async () => {
     const x = xapiRef.current, p = await api.invoke("file:saveAsDialog", fileRef.current ?? "");
@@ -189,6 +197,11 @@ export function App() {
           </div>
         ))}
         <button className="tab plus" onClick={() => setHome(true)} title="New tab" aria-label="New tab">+</button>
+        <button className="tab theme" onClick={toggleTheme} title={dark ? "Light mode" : "Dark mode"} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} aria-pressed={dark}>
+          {dark
+            ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>}
+        </button>
       </div>
       <div className="canvas-wrap">
       <Excalidraw

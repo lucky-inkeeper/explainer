@@ -17,7 +17,7 @@
 ### Foreign-key arrows: the defining rule
 - Each FK arrow starts at the source column row and ends at the referenced column row. Bind `start` and `end` to the row rectangles, not to the header.
 - Label each arrow with its referential action: `ON DELETE CASCADE`, `ON DELETE RESTRICT`, `ON DELETE SET NULL`. fontFamily 102.
-- Put tables that reference each other side by side so FK arrows run horizontal.
+- Put tables that reference each other side by side so FK arrows run horizontal; rows at different heights get `elbowed: true`.
 
 ### Schema grouping
 Tables in a non-default schema sit inside a Section container titled with the schema name.

@@ -1,11 +1,23 @@
 /** Canvas MCP tools. Served in-process over claude's stdio control channel; executed in the renderer. */
 export const CANVAS_SERVER = "canvas";
 
+/** Notation kinds by fill color. Keep in sync with the NOTATION block in SYSTEM_PROMPT; the legend strip is built from this. */
+export const KINDS: { color: string; label: string; type: "rectangle" | "ellipse" | "diamond"; strokeStyle?: "dashed"; rounded?: boolean; strokeWidth?: number }[] = [
+  { color: "#ffec99", label: "User action", type: "ellipse" },
+  { color: "#a5d8ff", label: "System / process", type: "rectangle" },
+  { color: "#ffd8a8", label: "Decision", type: "diamond" },
+  { color: "#d0bfff", label: "Data", type: "rectangle", strokeStyle: "dashed" },
+  { color: "#b2f2bb", label: "Database", type: "rectangle", rounded: true },
+  { color: "#ffc9c9", label: "External service", type: "rectangle", strokeWidth: 2 },
+  { color: "#e9ecef", label: "Module / file", type: "rectangle" },
+];
+export const FOCAL = "#e8590c";
+
 const skeletonDoc = `Element skeleton (Excalidraw convertToExcalidrawElements format). Types: rectangle, ellipse, diamond, text, arrow, line, frame.
 Common props: id (string, give one so you can bind/update later), x, y, width, height, strokeColor (hex), backgroundColor (hex or "transparent"), fillStyle ("hachure"|"solid"|"cross-hatch"), strokeWidth (1|2|4), strokeStyle ("solid"|"dashed"|"dotted"), roughness (0|1|2), opacity (0-100), groupIds (string[]), frameId, link.
 rectangle/ellipse/diamond: label: {text, fontSize?, textAlign?, verticalAlign?}. Text inside a shape auto-centers.
 text: text, fontSize (16-28 typical), textAlign ("left"|"center"|"right"). Omit fontFamily for hand-drawn font.
-arrow: start: {id: "<shape id>"} and end: {id: "<shape id>"} to bind to shapes (no x/y/points needed), or x, y, points: [[0,0],[dx,dy]]. label: {text}. endArrowhead ("arrow"|"triangle"|"bar"|"dot"|null), startArrowhead.
+arrow: start: {id: "<shape id>"} and end: {id: "<shape id>"} to bind to shapes (no x/y/points needed), or x, y, points: [[0,0],[dx,dy]]. label: {text}. endArrowhead ("arrow"|"triangle"|"bar"|"dot"|null), startArrowhead. elbowed: true on a bound arrow = right-angle connector (the app routes it: leaves and enters through the facing sides, one bend pair).
 line: x, y, points: [[0,0],[dx,dy],...].
 frame: children: ["<id>", ...], name: "title".
 Bind arrows to shapes in the SAME call (bindings need the shape in the same batch). Keep width >= 140 for labeled boxes, height >= 60. Leave 60-120px gaps.`;
@@ -100,5 +112,5 @@ NOTATION (mandatory, identical in every diagram so the reader learns it once):
 - Arrow solid = flow / call; arrow dashed = async, optional or event; label arrows with a short verb when it helps: label: {text, fontSize: 16}. The app widens gaps so labels fit; the tool result lists any remaining overlap ("warnings") - fix those before answering
 - fillStyle "solid" for all shapes.
 - Fonts: the app defaults every text to fontFamily 101 (Playpen Sans, handwritten). Use fontFamily 102 (Inter) for notes, long explanations and code-like labels (paths, endpoints).
-No legend: the shapes and colors above are the legend; do not draw one unless the user asks.
+Legend: the app adds a legend strip (the kinds and arrow styles used) at the bottom of every framed diagram. Never draw a legend yourself.
 Mermaid mapping: ([User action]) stadium, [System step] rectangle, {Decision?} diamond, [(DB: name)] cylinder, [/Input/] for data, and add classDef lines with the same fills, e.g. classDef user fill:#ffec99; classDef sys fill:#a5d8ff; classDef dec fill:#ffd8a8; classDef data fill:#d0bfff; classDef db fill:#b2f2bb; classDef ext fill:#ffc9c9; then assign with ":::user" etc.`;

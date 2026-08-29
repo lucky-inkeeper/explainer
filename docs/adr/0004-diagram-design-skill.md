@@ -20,4 +20,6 @@ Date: 2026-08-29. Status: accepted.
 ## Consequences
 - Every new diagram costs one skill invocation plus one reference read (about 30-80 lines).
 - Upstream updates are merged by hand; `agent/diagram-design/UPSTREAM.md` records the commit to diff against.
-- Ponytail ceiling: arrows are straight lines. Orthogonal routing is done by node placement, not by elbow arrows; Excalidraw 0.18 has `elbowed` arrows, to try when straight arrows fail.
+- `elbowed: true` on a bound arrow gets a right-angle route from the spacing pass (facing sides, one bend pair, no obstacle avoidance; Excalidraw re-routes on the first drag).
+- Every framed diagram gets an app-built legend strip (swatch + label per kind used, one sample per arrow style, focal). The agent never draws a legend; `KINDS` in `src/shared/tools.ts` is the single table behind the strip and must match the NOTATION prose.
+- Ids the agent reuses across turns get a `-2`, `-3` suffix and references in the batch follow; the result lists them under `renamed`.

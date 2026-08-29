@@ -258,6 +258,12 @@ function dedupeIds(api: ExcalidrawImperativeAPI, skeleton: El[]): string[] {
 export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, args: any, selectedIds: string[]) {
   switch (tool) {
     case "draw_elements": {
+      // Excalidraw crashes with a bare TypeError when an arrow binds to an arrow or line; say it plainly instead
+      const byId = new Map<string, El>((args.elements ?? []).map((e: El) => [e.id, e]));
+      for (const e of args.elements ?? []) for (const side of ["start", "end"] as const) {
+        const target = e[side]?.id && byId.get(e[side].id);
+        if (target && (target.type === "arrow" || target.type === "line")) throw new Error(`${e.type} ${e.id} cannot bind its ${side} to ${target.type} ${target.id}; bind to a shape or text, or give x/y/points`);
+      }
       const renamed = dedupeIds(api, args.elements ?? []);
       let els = spaceForLabels(withDefaultFont(args.elements));
       if (args.frame) els = wrapInFrame([...els, ...legendFor(els)], String(args.frame));

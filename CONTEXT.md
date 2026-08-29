@@ -19,6 +19,7 @@ Explainer is a Mac app: the Excalidraw editor with a Claude agent in a side pane
 - **Elbowed arrow** - `elbowed: true` on a bound arrow; the spacing pass gives it a right-angle route (facing sides, one bend pair).
 - **Label spacing** - after a `draw_elements` batch, arrows bound between two shapes get enough room for their label: the far shape and everything beyond it is pushed along the arrow axis, then the batch is re-converted. Remaining text/shape overlaps come back as `warnings` in the tool result.
 - **Diagram-design skill** - a Claude Code plugin in `agent/diagram-design/` (ported from cathrynlavery/diagram-design, MIT). Routing table + 16 type references + semantic patterns, rewritten for the skeleton. Loaded with `--plugin-dir`; the system prompt makes the agent invoke it before every new complete diagram. See ADR-0004 and `agent/diagram-design/UPSTREAM.md`.
+- **Note** - grey Inter text, no box, next to the element it explains or tied to it by a dashed leader arrow with a dot end. Max 2 per diagram.
 - **Focal treatment** - `strokeColor "#e8590c"`, `strokeWidth 2` on the 1-2 nodes the reader must notice; the fill keeps the kind color.
 - **Fonts** - Google Fonts loaded in `index.html`; registered as Excalidraw font ids 101 (Playpen Sans, default) and 102 (Inter). Excalidraw's own picker still lists only built-ins; SVG export does not embed these fonts.
 

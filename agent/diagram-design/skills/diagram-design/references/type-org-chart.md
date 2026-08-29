@@ -8,7 +8,7 @@ Use Org chart instead of Tree when the nodes are people, agents, teams, roles or
 - Root owner or "front door" at the top center. Focal treatment on the person, team or agent that receives ambiguous work.
 - Tier 1 nodes are departments, pods, queues or primary routing buckets. Keep them on one row.
 - Tier 2 nodes are responsible owners or specialists. With more than 8 specialists, group them under pod nodes instead of one giant row.
-- Orthogonal connectors as in `type-tree.md`. No diagonal lines.
+- Orthogonal connectors as in `type-tree.md` (`elbowed: true`). No diagonal lines.
 - Each node answers three questions when space allows: name (the label), how to invoke (Slack handle, queue, issue prefix; grey sublabel text, fontFamily 102), scope (2-4 terse words; second sublabel line).
 - Owners that are not live yet: `strokeStyle "dashed"` instead of hidden. Missing routes matter.
 - Escalation and approval rules go in one note text or a small Section container at the side, not as extra org nodes.

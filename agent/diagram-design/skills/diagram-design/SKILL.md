@@ -62,10 +62,10 @@ Read the chosen reference before drawing. Then draw at once. Do not ask for appr
 | accent, coral, focal | focal treatment: `strokeColor "#e8590c"`, `strokeWidth 2`; fill stays the kind color. At most 2 per diagram |
 | muted text, eyebrow, mono, sublabel, tag, chip | text element, `fontFamily 102`, `fontSize 14`, `strokeColor "#868e96"`; a chip is that text inside a small grey rectangle |
 | zone, boundary, lane, fragment frame, containment | the Section container from the system prompt: `#f8f9fa` dashed rectangle listed before its members, title text top-left, shared `groupIds` |
-| orthogonal or elbow connector | arrows are straight; put nodes on shared rows and columns so every arrow runs horizontal or vertical |
+| orthogonal or elbow connector | `elbowed: true` on a bound arrow; the app routes it with right angles (facing sides, one bend pair). Still put nodes on shared rows and columns so most arrows need no bend |
 | bridge or hop at a crossing | not available; reorder nodes so arrows do not cross |
 | label mask, label margin | not needed; the app widens gaps so arrow labels fit |
-| legend strip | none; the notation is the legend |
+| legend strip | the app adds one under every framed diagram (kinds and arrow styles used); never draw one |
 | open arrowhead (async, fire-and-forget) | `strokeStyle "dashed"`, `endArrowhead "arrow"`; sync call = solid, `endArrowhead "triangle"` |
 | filled marker on return | dashed line, `endArrowhead "triangle"` |
 | Geist, Geist Mono, Instrument Serif | not used; `fontFamily 101` (hand) for labels, `102` (Inter) for notes and code-like text |
@@ -76,7 +76,7 @@ Read the chosen reference before drawing. Then draw at once. Do not ask for appr
 - One flow direction per diagram: left to right, or top to bottom. Hold it.
 - Nodes 160x60 by default. Use at most 2 node widths per diagram. Keep x, y, width, height in multiples of 4.
 - Gaps of 60-120 px between nodes. 24 px padding inside a section. 16 px between a section title and its first member.
-- Sections before their members. Arrows in the same call as their shapes, bound by id.
+- Sections before their members. Arrows in the same call as their shapes, bound by id. `elbowed: true` when source and target are not on one row or column.
 - Label every decision branch and every handoff arrow: a short verb or condition, 1-4 words.
 - Give the focal treatment to the node the reader must notice. Never more than 2.
 - Draw first. Fix the `warnings` from the tool result. Then answer.

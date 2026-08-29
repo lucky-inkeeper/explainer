@@ -1,4 +1,5 @@
 import { CaptureUpdateAction, FONT_FAMILY, convertToExcalidrawElements, getCommonBounds, getVisibleSceneBounds, newElementWith, restoreElements } from "@excalidraw/excalidraw";
+import { FOCAL, KINDS } from "../../shared/tools";
 
 /** Web fonts (Google Fonts, loaded in index.html) registered as extra Excalidraw font ids. Excalidraw resolves the id to the family name for canvas drawing and measuring. */
 export const FONTS = { "Playpen Sans": 101, Inter: 102 } as const;
@@ -100,6 +101,28 @@ function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number): [numb
   return [cx + dx * (t + gap), cy + dy * (t + gap)];
 }
 
+/**
+ * Right-angle route for an `elbowed` arrow: leave and enter through the side that faces the other shape on the dominant axis,
+ * one bend pair halfway. Excalidraw keeps the points we give (its router only runs when the user drags).
+ * ponytail: no obstacle avoidance; Excalidraw re-routes on the first drag.
+ */
+function elbowPorts(s: El, t: El): [[number, number], [number, number], [number, number][]] {
+  const cx = (e: El) => e.x + (e.width ?? 100) / 2, cy = (e: El) => e.y + (e.height ?? 100) / 2;
+  const dx = cx(t) - cx(s), dy = cy(t) - cy(s), gap = 6;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    const sign = Math.sign(dx) || 1;
+    const p1: [number, number] = [sign > 0 ? s.x + (s.width ?? 100) + gap : s.x - gap, cy(s)];
+    const p2: [number, number] = [sign > 0 ? t.x - gap : t.x + (t.width ?? 100) + gap, cy(t)];
+    const mx = (p2[0] - p1[0]) / 2;
+    return [p1, p2, p1[1] === p2[1] ? [] : [[mx, 0], [mx, p2[1] - p1[1]]]];
+  }
+  const sign = Math.sign(dy) || 1;
+  const p1: [number, number] = [cx(s), sign > 0 ? s.y + (s.height ?? 100) + gap : s.y - gap];
+  const p2: [number, number] = [cx(t), sign > 0 ? t.y - gap : t.y + (t.height ?? 100) + gap];
+  const my = (p2[1] - p1[1]) / 2;
+  return [p1, p2, p1[0] === p2[0] ? [] : [[0, my], [p2[0] - p1[0], my]]];
+}
+
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass
   const base: El[] = structuredClone(skeleton);
@@ -115,8 +138,9 @@ function spaceForLabels(skeleton: El[]): El[] {
       if (!s || s.x == null || !t || t.x == null) continue;
       const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
       const [sx, sy] = c(s), [tx, ty] = c(t);
-      const p1 = edgePoint(s, sx, sy, tx, ty), p2 = edgePoint(t, tx, ty, sx, sy);
-      Object.assign(a, { x: p1[0], y: p1[1], width: Math.abs(p2[0] - p1[0]), height: Math.abs(p2[1] - p1[1]), points: [[0, 0], [p2[0] - p1[0], p2[1] - p1[1]]] });
+      const [p1, p2, mid] = a.elbowed ? elbowPorts(s, t) : [edgePoint(s, sx, sy, tx, ty), edgePoint(t, tx, ty, sx, sy), null];
+      const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+      Object.assign(a, { x: p1[0], y: p1[1], width: Math.abs(dx), height: Math.abs(dy), points: mid ? [[0, 0], ...mid, [dx, dy]] : [[0, 0], [dx, dy]] });
     }
     return convertToExcalidrawElements(sk, { regenerateIds: false });
   };
@@ -150,6 +174,41 @@ function spaceForLabels(skeleton: El[]): El[] {
   return els;
 }
 
+/**
+ * Legend strip under a framed diagram: one swatch + label per notation kind used, one sample per arrow style used, focal if present.
+ * Built by the app so every diagram carries the same legend and the agent never spends tokens on it.
+ * ponytail: label widths are estimated (7.5 px per char at 14 px Inter); the 40 px item gap absorbs the error.
+ */
+function legendFor(els: El[]): El[] {
+  const lc = (c?: string) => (c ?? "").toLowerCase();
+  const items: El[] = [];
+  // match on color only: Mermaid renders a stadium as a rounded rectangle, not an ellipse
+  for (const k of KINDS) if (els.some((e) => SHAPES.has(e.type) && lc(e.backgroundColor) === k.color)) items.push({ label: k.label, swatch: { type: k.type, backgroundColor: k.color, strokeStyle: k.strokeStyle ?? "solid", strokeWidth: k.strokeWidth ?? 1, ...(k.rounded && { roundness: { type: 3 } }) } });
+  if (els.some((e) => SHAPES.has(e.type) && lc(e.strokeColor) === FOCAL)) items.push({ label: "Focal", swatch: { type: "rectangle", backgroundColor: "transparent", strokeColor: FOCAL, strokeWidth: 2 } });
+  const arrows = els.filter((e) => e.type === "arrow");
+  if (arrows.some((a) => a.strokeStyle === "solid" || !a.strokeStyle)) items.push({ label: "Flow / call", arrow: { strokeStyle: "solid" } });
+  if (arrows.some((a) => a.strokeStyle === "dashed" || a.strokeStyle === "dotted")) items.push({ label: "Async / optional / return", arrow: { strokeStyle: "dashed" } });
+  if (items.length < 2) return [];
+  const top = els.filter((e) => !e.frameId && !e.containerId && Number.isFinite(e.x));
+  const [x1, , x2, y2] = getCommonBounds(top);
+  const groupIds = [`legend-${Date.now().toString(36)}`];
+  const text = (x: number, y: number, t: string, fontSize = 14, strokeColor = "#495057") => ({ type: "text", x, y, text: t, fontSize, fontFamily: FONTS.Inter, strokeColor, groupIds });
+  const out: El[] = [
+    { type: "line", x: x1, y: y2 + 28, width: x2 - x1, height: 0, points: [[0, 0], [x2 - x1, 0]], strokeColor: "#dee2e6", strokeWidth: 1, roughness: 0, groupIds },
+    text(x1, y2 + 40, "LEGEND", 12, "#868e96"),
+  ];
+  let x = x1, y = y2 + 68;
+  for (const it of items) {
+    const sw = it.swatch ? 28 : 44, w = sw + 8 + it.label.length * 7.5;
+    if (x + w > x2 && x > x1) { x = x1; y += 32; }
+    if (it.swatch) out.push({ ...it.swatch, x, y, width: sw, height: 20, fillStyle: "solid", roughness: 0, groupIds });
+    else out.push({ type: "arrow", x, y: y + 10, width: sw, height: 0, points: [[0, 0], [sw, 0]], endArrowhead: "triangle", strokeWidth: 1, roughness: 0, groupIds, ...it.arrow });
+    out.push(text(x + sw + 8, y + 1, it.label));
+    x += w + 40;
+  }
+  return convertToExcalidrawElements(out, { regenerateIds: true }) as El[];
+}
+
 /** Wrap a converted batch in one frame named `name` (top-level elements only; nested frames keep their children). */
 function wrapInFrame(els: El[], name: string): El[] {
   const top = els.filter((e) => !e.frameId && Number.isFinite(e.x));
@@ -174,13 +233,37 @@ function overlapWarnings(els: El[]) {
   return out;
 }
 
+/** The agent reuses ids across turns (n1, start...): suffix the ones already on the canvas and repoint references inside the batch. */
+function dedupeIds(api: ExcalidrawImperativeAPI, skeleton: El[]): string[] {
+  const live = new Set(api.getSceneElements().map((e) => e.id));
+  const map = new Map<string, string>();
+  for (const e of skeleton) {
+    if (!e.id || !live.has(e.id)) continue;
+    let n = 2, id = `${e.id}-2`;
+    while (live.has(id)) id = `${e.id}-${++n}`;
+    map.set(e.id, id);
+  }
+  if (!map.size) return [];
+  const re = (id: string) => map.get(id) ?? id;
+  for (const e of skeleton) {
+    if (e.id) e.id = re(e.id);
+    if (e.frameId) e.frameId = re(e.frameId);
+    if (e.start?.id) e.start.id = re(e.start.id);
+    if (e.end?.id) e.end.id = re(e.end.id);
+    if (Array.isArray(e.children)) e.children = e.children.map(re);
+  }
+  return [...map].map(([from, to]) => `${from} -> ${to}`);
+}
+
 export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, args: any, selectedIds: string[]) {
   switch (tool) {
     case "draw_elements": {
+      const renamed = dedupeIds(api, args.elements ?? []);
       let els = spaceForLabels(withDefaultFont(args.elements));
-      if (args.frame) els = wrapInFrame(els, String(args.frame));
-      const res = add(api, els, args.placement ?? "auto", selectedIds);
-      const warnings = overlapWarnings(api.getSceneElements().filter((e) => res.created.some((c) => c.id === e.id)));
+      if (args.frame) els = wrapInFrame([...els, ...legendFor(els)], String(args.frame));
+      const res: any = add(api, els, args.placement ?? "auto", selectedIds);
+      if (renamed.length) res.renamed = renamed; // ids that were already on the canvas got a suffix; use the new ids from `created`
+      const warnings = overlapWarnings(api.getSceneElements().filter((e) => res.created.some((c: any) => c.id === e.id)));
       return warnings.length ? { ...res, warnings, hint: "Fix with update_elements (move/shrink/reword) or delete_elements + redraw." } : res;
     }
     case "draw_mermaid": {
@@ -189,7 +272,7 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
       const { elements, files } = await parseMermaidToExcalidraw(args.definition, { flowchart: { curve: "linear", rankSpacing: 150, nodeSpacing: 70 } } as any);
       if (files) api.addFiles(Object.values(files) as any);
       let els = convertToExcalidrawElements(withDefaultFont(elements as any), { regenerateIds: true });
-      if (args.frame) els = wrapInFrame(els, String(args.frame));
+      if (args.frame) els = wrapInFrame([...els, ...legendFor(els)], String(args.frame));
       return add(api, els, args.placement ?? "auto", selectedIds);
     }
     case "read_canvas": {

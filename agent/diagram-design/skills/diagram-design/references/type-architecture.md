@@ -10,8 +10,8 @@
 - A trust boundary (VPC, security group, zone) is a Section container with a dashed border and its title at the top-left.
 
 ## Connectors
-- Every arrow runs horizontal or vertical. Put the source and the target on the same row or the same column.
-- A diagonal arrow is allowed only between two adjacent tiers when no grid position works.
+- Every arrow runs horizontal or vertical. Put the source and the target on the same row or the same column; when that is not possible, use `elbowed: true` on the arrow.
+- Never a diagonal arrow.
 - Solid arrow = call or flow. Dashed arrow = optional, return, async or passive flow. Same routing rules for both.
 - When two arrows must cross, move a node. Do not let two arrows cross a third node.
 - Leave 16 px between the section title and the first node inside it.

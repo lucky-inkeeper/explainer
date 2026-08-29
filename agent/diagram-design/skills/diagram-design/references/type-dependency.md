@@ -9,7 +9,7 @@
 - Forward arrows point down across ranks, or run horizontal inside one rank. Never upward, except the one marked cycle.
 - Nodes: module rectangles (grey) for internal packages, external rectangles (red) for third-party, `opacity 70` for leaves with no outgoing arrows. 160x56.
 - Fan-in badge: a small grey text at the top-right of every node: `4 in`. The node with the highest fan-in is the story; nothing else competes with it.
-- The cycle: at most one back-arrow that points up against the rank order. Focal color, dashed, routed around the outside of the node stack (use explicit `points` with 3-4 segments), with a grey label `CYCLE` at its visible end. The two nodes it touches keep their normal treatment.
+- The cycle: at most one back-arrow that points up against the rank order. Focal color, dashed, with `elbowed: true` so it runs around the outside of the node stack, with a grey label `CYCLE` at its visible end. The two nodes it touches keep their normal treatment.
 - Focal rule: the 2 focal elements are the back-arrow and its `CYCLE` label. Nothing else.
 - Over capacity: collapse a leaf cluster into one aggregate node (`+6 leaves`) and say so in chat. Do not drop nodes silently.
 

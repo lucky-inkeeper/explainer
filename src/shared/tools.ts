@@ -79,11 +79,13 @@ export const TOOLS = [
   },
   {
     name: "delete_elements",
-    description: "Delete elements by id (their bound labels are removed too).",
+    description: "Delete elements by id, or a whole diagram by its frame. Deleting a frame deletes everything inside it; bound labels go with their element. To clear several diagrams, call this once per frame with `frame`; never read the .excalidraw file from disk to collect ids.",
     inputSchema: {
       type: "object",
-      properties: { ids: { type: "array", items: { type: "string" } } },
-      required: ["ids"],
+      properties: {
+        ids: { type: "array", items: { type: "string" }, description: "Element ids to delete" },
+        frame: { type: "string", description: "A frame name or id: delete the frame and all its contents" },
+      },
     },
   },
 ];

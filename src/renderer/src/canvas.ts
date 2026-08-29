@@ -575,6 +575,13 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
     case "delete_elements": {
       const ids = new Set<string>(args.ids ?? []);
       const scene = api.getSceneElementsIncludingDeleted();
+      if (args.frame) {
+        const f = scene.find((e) => e.type === "frame" && !e.isDeleted && (e.id === args.frame || (e as El).name === args.frame));
+        if (!f) throw new Error(`no frame named or with id "${args.frame}"`);
+        ids.add(f.id);
+      }
+      // a frame is the diagram: deleting it deletes everything inside it, and every element takes its bound label along
+      for (const e of scene as El[]) if (e.frameId && ids.has(e.frameId)) ids.add(e.id);
       for (const e of scene as El[]) if (ids.has(e.id)) for (const b of e.boundElements ?? []) if (b.type === "text") ids.add(b.id);
       const next = scene.map((e: El) => (ids.has(e.id) ? newElementWith(e, { isDeleted: true }) : e));
       api.updateScene({ elements: restoreElements(next, null, { repairBindings: true }), captureUpdate: CaptureUpdateAction.IMMEDIATELY });

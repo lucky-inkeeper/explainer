@@ -5,12 +5,12 @@ Explainer is a Mac app: the Excalidraw editor with a Claude agent in a side pane
 ## Glossary
 
 - **Canvas** - the single Excalidraw scene shown in the window. The user and the agent draw on the same canvas.
-- **Drawing** - a `.excalidraw` file in `data/drawings/` or in one **folder** below it (one level). One drawing is open at a time. It autosaves. A boot guard skips autosave while Excalidraw still reports fewer elements than the file held (a main-process restart once wrote an empty scene over a full file); `file:write` keeps a `.history` copy before any write that empties or shrinks a file by more than 30 percent.
+- **Drawing** - a `.excalidraw` file in `data/drawings/` or in one **folder** below it (one level). One drawing is open at a time. It autosaves. A boot guard skips autosave while Excalidraw still reports fewer elements than the file held; `file:write` keeps a `.history` copy before any write that empties or shrinks a file by more than 30 percent. (The two "emptied at restart" drawings of 2026-08-29 were in fact deleted by the agent on a "remove all drawing" chat request; the restart was a coincidence.)
 - **Gallery** - the drawings list (menu > Drawings…, or the button at the top left): thumbnails, folder tabs, new, open, rename, move to a folder, move to Trash. Thumbnails are cached in `data/drawings/.thumbs/` per file and mtime.
 - **Agent** - one long-lived `claude -p` process (the user's own Claude Code install and login), speaking stream-json over stdin/stdout.
 - **Session** - a Claude Code conversation (`~/.claude/projects/<cwd-slug>/<id>.jsonl`). A drawing remembers its last session (`data/app/state.json`).
 - **Workspace** - the agent's working directory (`data/workspace/` by default). Repos get cloned here.
-- **Canvas tools** - MCP tools the app serves in-process to the agent: `draw_elements`, `draw_mermaid`, `read_canvas`, `update_elements`, `delete_elements`.
+- **Canvas tools** - MCP tools the app serves in-process to the agent: `draw_elements`, `draw_mermaid`, `read_canvas`, `update_elements`, `delete_elements`. Deleting a frame deletes everything inside it; `delete_elements` takes a `frame` name or id for a whole diagram, `read_canvas` takes `frame` or `ids` to stay small.
 - **Skeleton** - Excalidraw's element-skeleton input format (`convertToExcalidrawElements`). What the agent emits.
 - **Placement** - where a batch of new elements lands: `auto` (free space right of content), `selection` (next to the user's selected elements), `exact`.
 - **Attach** - the Figma-style flow: select elements, press "Ask agent", the selection is sent with the next message as `<selected_elements>` JSON.

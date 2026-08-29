@@ -106,3 +106,4 @@ button.chip:hover { background: var(--button-hover-bg); }
 .minimap canvas { display: block; cursor: crosshair; }
 .app.sidebar-open .minimap { right: 314px; }
 .app.dark .minimap { background: rgba(35,35,41,.94); border-color: #3a3a44; }
+.ask-btn[hidden] { display: none; }

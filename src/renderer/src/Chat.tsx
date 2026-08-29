@@ -18,6 +18,7 @@ type Command = { name: string; description: string; argumentHint: string };
 const MODELS = ["", "claude-opus-5", "claude-sonnet-5", "claude-fable-5", "claude-haiku-4-5"];
 const EFFORTS = ["", "low", "medium", "high", "xhigh", "max"];
 const MODES: PermissionMode[] = ["default", "acceptEdits", "plan", "auto", "bypassPermissions"];
+const MODE_LABELS: Record<PermissionMode, string> = { default: "Ask", acceptEdits: "Accept edits", plan: "Plan", auto: "Auto", bypassPermissions: "Bypass", dontAsk: "Don't ask" };
 let n = 0;
 const uid = () => `i${++n}`;
 const stripAttach = (t: string) => t.replace(/\n*<selected_elements>[\s\S]*?<\/selected_elements>/g, "").trim();
@@ -146,6 +147,7 @@ export function useChat({ xapi, file, state, setState, attached, setAttached }: 
     await api.invoke("claude:start", { cwd: s.workspace, resume, fork, model: s.model, effort: s.effort, permissionMode: s.permissionMode });
     if (resume && !fork) {
       onSessionId(resume);
+      setSession((x) => ({ ...x, id: resume }));
       for (const m of await api.invoke("sessions:transcript", resume, s.workspace)) m.type === "assistant" ? onAssistant(m) : onUser(m, true);
     }
   }, [onAssistant, onUser]);
@@ -254,6 +256,12 @@ export function ChatPanel({ chat }: { chat: Chat }) {
   const [active, setActive] = useState(0);
   const log = useRef<HTMLDivElement>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const addImage = (f: File) => {
+    const r = new FileReader();
+    r.onload = () => setImages((im) => [...im, { type: "image", source: { type: "base64", media_type: f.type, data: String(r.result).split(",")[1] } }]);
+    r.readAsDataURL(f);
+  };
 
   useEffect(() => { const el = log.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 200) el.scrollTop = el.scrollHeight; }, [items]);
   useEffect(() => { if (attached.length) ta.current?.focus(); }, [attached]);
@@ -267,42 +275,16 @@ export function ChatPanel({ chat }: { chat: Chat }) {
     if (e.key === "Escape") setInput("");
   };
   const onPaste = (e: React.ClipboardEvent) => {
-    for (const f of Array.from(e.clipboardData.files)) {
-      if (!f.type.startsWith("image/")) continue;
-      e.preventDefault();
-      const r = new FileReader();
-      r.onload = () => setImages((im) => [...im, { type: "image", source: { type: "base64", media_type: f.type, data: String(r.result).split(",")[1] } }]);
-      r.readAsDataURL(f);
-    }
+    for (const f of Array.from(e.clipboardData.files)) { if (f.type.startsWith("image/")) { e.preventDefault(); addImage(f); } }
   };
   const openSessions = async () => setSessions(sessions ? null : await api.invoke("sessions:list", state!.workspace));
 
   return (
     <div className="chat">
       <div className="chat-head">
-        <div className="row">
-          <button onClick={() => chat.start()} title="Start a new session">New</button>
-          <button onClick={openSessions} title="Switch session">Sessions</button>
-          <button onClick={() => session.id && chat.start(session.id, true)} title="Fork the current session" disabled={!session.id}>Fork</button>
-          <span className="spacer" />
-          <button className="folder" onClick={chat.pickFolder} title={`Agent folder: ${state?.workspace}`}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 6h6l2 2h10v11H3z" /></svg>
-            {state?.workspace.split("/").pop()}
-          </button>
-        </div>
-        <div className="row">
-          <label>Model
-            <select value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)}>
-              {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{m ? m.replace(/^claude-/, "") : "default"}</option>)}
-            </select>
-          </label>
-          <label>Effort
-            <select value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)}>{EFFORTS.map((m) => <option key={m} value={m}>{m || "default"}</option>)}</select>
-          </label>
-          <label>Mode
-            <select value={session.mode ?? state?.permissionMode ?? "default"} onChange={(e) => chat.setMode(e.target.value as PermissionMode)}>{MODES.map((m) => <option key={m} value={m}>{m}</option>)}</select>
-          </label>
-        </div>
+        <button onClick={() => chat.start()} title="Start a new session">New</button>
+        <button onClick={openSessions} title="Switch session">Sessions</button>
+        <button onClick={() => session.id && chat.start(session.id, true)} title="Fork the current session" disabled={!session.id}>Fork</button>
       </div>
       {sessions && (
         <div className="sessions">
@@ -331,25 +313,39 @@ export function ChatPanel({ chat }: { chat: Chat }) {
           }
         })}
       </div>
-      {(attached.length > 0 || images.length > 0) && (
+      <div className="composer">
         <div className="chips">
-          {attached.length > 0 && <span className="chip">{attached.length} elements attached <button onClick={() => setAttached([])}>×</button></span>}
+          <button className="chip" onClick={chat.pickFolder} title={`Agent folder: ${state?.workspace}`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 6h6l2 2h10v11H3z" /></svg>
+            {state?.workspace.split("/").pop()}
+          </button>
+          {session.id && <span className="chip" title={session.id}>#{session.id.slice(0, 8)}</span>}
+          {attached.length > 0 && <span className="chip active">{attached.length} elements attached <button onClick={() => setAttached([])}>×</button></span>}
           {images.map((im, i) => <span key={i} className="chip"><img src={`data:${im.source.media_type};base64,${im.source.data}`} /><button onClick={() => setImages(images.filter((_, j) => j !== i))}>×</button></span>)}
         </div>
-      )}
-      <div className="chat-input">
-        {slash.length > 0 && (
-          <div className="popup">{slash.map((c, i) => <div key={c.name} className={i === active ? "active" : ""} onMouseDown={() => { setInput(`/${c.name} `); setActive(0); }}>/{c.name} <span>{c.description}</span></div>)}</div>
-        )}
-        <textarea ref={ta} value={input} placeholder={attached.length ? "Ask about the attached elements" : "Ask the agent. / for commands"} onChange={(e) => { setInput(e.target.value); setActive(0); }} onKeyDown={onKey} onPaste={onPaste} rows={2} />
-        {running && <button className="stop" onClick={chat.stop} title="Interrupt the agent">Stop</button>}
-      </div>
-      <div className="chat-foot">
-        <span className={"dot " + (running ? "running" : "ok")} />
-        <span>{status ?? (running ? "working" : "idle")}</span>
-        <span>{session.model}</span>
-        <span>${cost.toFixed(3)}</span>
-        {session.id && <span title={session.id}>#{session.id.slice(0, 8)}</span>}
+        <div className="chat-input">
+          {slash.length > 0 && (
+            <div className="popup">{slash.map((c, i) => <div key={c.name} className={i === active ? "active" : ""} onMouseDown={() => { setInput(`/${c.name} `); setActive(0); }}>/{c.name} <span>{c.description}</span></div>)}</div>
+          )}
+          <textarea ref={ta} value={input} placeholder={attached.length ? "Ask about the attached elements" : "Describe a diagram or ask a question"} onChange={(e) => { setInput(e.target.value); setActive(0); }} onKeyDown={onKey} onPaste={onPaste} rows={2} />
+          {running ? <button className="stop" onClick={chat.stop} title="Interrupt the agent">Stop</button> : <button className="enter" onClick={submit} title="Send (Enter)">↵</button>}
+        </div>
+        <div className="composer-foot">
+          <select className="plain" value={session.mode ?? state?.permissionMode ?? "default"} onChange={(e) => chat.setMode(e.target.value as PermissionMode)} title="Permission mode">
+            {MODES.map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
+          </select>
+          <button className="plain plus" onClick={() => fileRef.current?.click()} title="Attach an image">+</button>
+          <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addImage(f); e.target.value = ""; }} />
+          <span className="spacer" />
+          <select className="plain" value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)} title="Model">
+            {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{m ? m.replace(/^claude-/, "") : "model"}</option>)}
+          </select>
+          <select className="plain" value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)} title="Effort">
+            {EFFORTS.map((m) => <option key={m} value={m}>{m || "effort"}</option>)}
+          </select>
+          <span className={"dot " + (running ? "running" : "ok")} title={status ?? (running ? "working" : "idle")} />
+          <span className="cost" title="Session cost (estimate)">${cost.toFixed(2)}</span>
+        </div>
       </div>
     </div>
   );

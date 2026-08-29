@@ -1,4 +1,18 @@
-import { CaptureUpdateAction, convertToExcalidrawElements, getCommonBounds, getVisibleSceneBounds, newElementWith, restoreElements } from "@excalidraw/excalidraw";
+import { CaptureUpdateAction, FONT_FAMILY, convertToExcalidrawElements, getCommonBounds, getVisibleSceneBounds, newElementWith, restoreElements } from "@excalidraw/excalidraw";
+
+/** Web fonts (Google Fonts, loaded in index.html) registered as extra Excalidraw font ids. Excalidraw resolves the id to the family name for canvas drawing and measuring. */
+export const FONTS = { "Playpen Sans": 101, Inter: 102 } as const;
+export const DEFAULT_FONT = FONTS["Playpen Sans"];
+Object.assign(FONT_FAMILY, FONTS);
+
+/** Apply the default font to skeleton text and labels that do not name one. */
+const withDefaultFont = (skeleton: El[]): El[] =>
+  skeleton.map((e) => {
+    const out = { ...e };
+    if (e.type === "text" && !e.fontFamily) out.fontFamily = DEFAULT_FONT;
+    if (e.label && !e.label.fontFamily) out.label = { ...e.label, fontFamily: DEFAULT_FONT };
+    return out;
+  });
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 // ponytail: excalidraw element types live in scattered subpaths; loose typing here, excalidraw validates at runtime
@@ -66,7 +80,11 @@ const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass
   const base: El[] = structuredClone(skeleton);
-  base.forEach((e, i) => { if (!e.id) e.id = `el-${Date.now().toString(36)}-${i}`; });
+  base.forEach((e, i) => {
+    if (!e.id) e.id = `el-${Date.now().toString(36)}-${i}`;
+    // an arrow bound at both ends is re-routed by the converter; explicit points would keep a stale length after shapes move
+    if (e.type === "arrow" && e.start?.id && e.end?.id) { delete e.points; delete e.x; delete e.y; }
+  });
   const off = base.map(() => ({ x: 0, y: 0 }));
   const build = () => convertToExcalidrawElements(
     structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) })),
@@ -118,7 +136,7 @@ function overlapWarnings(els: El[]) {
 export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, args: any, selectedIds: string[]) {
   switch (tool) {
     case "draw_elements": {
-      const els = spaceForLabels(args.elements);
+      const els = spaceForLabels(withDefaultFont(args.elements));
       const res = add(api, els, args.placement ?? "auto", selectedIds);
       const warnings = overlapWarnings(api.getSceneElements().filter((e) => res.created.some((c) => c.id === e.id)));
       return warnings.length ? { ...res, warnings, hint: "Fix with update_elements (move/shrink/reword) or delete_elements + redraw." } : res;
@@ -127,7 +145,7 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
       const { parseMermaidToExcalidraw } = await import("@excalidraw/mermaid-to-excalidraw");
       const { elements, files } = await parseMermaidToExcalidraw(args.definition);
       if (files) api.addFiles(Object.values(files) as any);
-      const els = convertToExcalidrawElements(elements as any, { regenerateIds: true });
+      const els = convertToExcalidrawElements(withDefaultFont(elements as any), { regenerateIds: true });
       return add(api, els, args.placement ?? "auto", selectedIds);
     }
     case "read_canvas": {

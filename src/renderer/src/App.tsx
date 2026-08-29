@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Excalidraw, MainMenu, Sidebar, WelcomeScreen, getCommonBounds, getSceneVersion, loadFromBlob, sceneCoordsToViewportCoords, serializeAsJSON } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
-import { runCanvasTool } from "./canvas";
+import { DEFAULT_FONT, runCanvasTool } from "./canvas";
 import { ChatPanel, useChat } from "./Chat";
 import type { AppState } from "../../shared/types";
 
@@ -33,7 +33,7 @@ export function App() {
     let libraryItems: any[] = [];
     try { libraryItems = JSON.parse(localStorage.getItem(LIB_KEY) ?? "[]"); } catch {}
     lastSaved.current = "";
-    setInitial({ ...data, libraryItems, scrollToContent: true });
+    setInitial({ ...data, appState: { ...data.appState, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: true });
     setFile(path);
     setState(await api.invoke("state:set", { lastFile: path }));
   }, []);
@@ -94,7 +94,7 @@ export function App() {
   const uiOptions = useMemo(() => ({ canvasActions: { loadScene: false, export: { saveFileToDisk: true, onExportToBackend: share as any } } }), [share]);
   const topRight = useCallback(() => <Button onSelect={() => xapiRef.current?.toggleSidebar({ name: "agent" })} title="Claude agent">✦ Agent</Button>, []);
   const onLibraryChange = useCallback((items: any) => localStorage.setItem(LIB_KEY, JSON.stringify(items)), []);
-  const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) (window as any).__xapi = a; }, []);
+  const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) { (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); } }, []);
 
   if (!initial || !file) return <div className="app" />;
   return (

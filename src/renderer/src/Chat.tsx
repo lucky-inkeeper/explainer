@@ -21,6 +21,9 @@ const MODES: PermissionMode[] = ["default", "acceptEdits", "plan", "auto", "bypa
 const MODE_LABELS: Record<PermissionMode, string> = { default: "Ask", acceptEdits: "Accept edits", plan: "Plan", auto: "Auto", bypassPermissions: "Bypass", dontAsk: "Don't ask" };
 let n = 0;
 const uid = () => `i${++n}`;
+const shortModel = (m: string) => (m ? m.replace(/^claude-/, "") : "model");
+/** A select is as wide as its widest option; size it to the chosen label so the chevron hugs the text. */
+const fit = (label: string) => ({ width: `calc(${label.length}ch + 22px)` });
 const stripAttach = (t: string) => t.replace(/\n*<selected_elements>[\s\S]*?<\/selected_elements>/g, "").trim();
 
 export function useChat({ xapi, file, state, setState, attached, setAttached }: {
@@ -278,6 +281,8 @@ export function ChatPanel({ chat }: { chat: Chat }) {
     for (const f of Array.from(e.clipboardData.files)) { if (f.type.startsWith("image/")) { e.preventDefault(); addImage(f); } }
   };
   const openSessions = async () => setSessions(sessions ? null : await api.invoke("sessions:list", state!.workspace));
+  const mode = session.mode ?? state?.permissionMode ?? "default";
+  const modelLabel = shortModel(session.model ?? state?.model ?? "");
 
   return (
     <div className="chat">
@@ -331,16 +336,16 @@ export function ChatPanel({ chat }: { chat: Chat }) {
           {running ? <button className="stop" onClick={chat.stop} title="Interrupt the agent">Stop</button> : <button className="enter" onClick={submit} title="Send (Enter)">↵</button>}
         </div>
         <div className="composer-foot">
-          <select className="plain" value={session.mode ?? state?.permissionMode ?? "default"} onChange={(e) => chat.setMode(e.target.value as PermissionMode)} title="Permission mode">
-            {MODES.map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
-          </select>
           <button className="plain plus" onClick={() => fileRef.current?.click()} title="Attach an image">+</button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addImage(f); e.target.value = ""; }} />
-          <span className="spacer" />
-          <select className="plain" value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)} title="Model">
-            {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{m ? m.replace(/^claude-/, "") : "model"}</option>)}
+          <select className="plain" style={fit(MODE_LABELS[mode])} value={mode} onChange={(e) => chat.setMode(e.target.value as PermissionMode)} title="Permission mode">
+            {MODES.map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
           </select>
-          <select className="plain" value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)} title="Effort">
+          <span className="spacer" />
+          <select className="plain" style={fit(modelLabel)} value={session.model ?? state?.model ?? ""} onChange={(e) => chat.setModel(e.target.value)} title="Model">
+            {[...new Set([...MODELS, session.model ?? ""])].map((m) => <option key={m} value={m}>{shortModel(m)}</option>)}
+          </select>
+          <select className="plain" style={fit(state?.effort || "effort")} value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)} title="Effort">
             {EFFORTS.map((m) => <option key={m} value={m}>{m || "effort"}</option>)}
           </select>
           <span className={"dot " + (running ? "running" : "ok")} title={status ?? (running ? "working" : "idle")} />

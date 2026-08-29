@@ -7,8 +7,8 @@
 `draw_mermaid` with `erDiagram` gives the layout for free. Use `draw_elements` when a focal entity or grouping matters.
 
 ## Layout conventions
-- Each entity is one database-kind rectangle (green, `roundness: {type: 3}`, label "DB: <Entity>") or a two-part box: a header rectangle with the entity name and a body rectangle below with the field list, `fontFamily 102`, one field per line, `textAlign "left"`. PK prefixed with `#`, FK prefixed with `->`.
-- Relationships: `line` elements (no arrowhead) between entities with cardinality at each end as small text, fontFamily 102, fontSize 14: `1`, `N`, `0..1`, `1..*`, placed 12 px from the entity edge.
+- Each entity is ONE database-kind rectangle (green, `roundness: {type: 3}`), tall enough for its fields (height 44 + 22 per field): label `{text: "DB: <Entity>", verticalAlign: "top"}`. The field list is a separate text element placed inside it (x + 16, y + 44, `fontFamily 102`, `fontSize 16`, `textAlign "left"`, one field per line), listed AFTER the rectangle and sharing a `groupIds` entry with it. PK prefixed with `#`, FK prefixed with `->`. Never two stacked boxes: a line bound to a header crosses the body.
+- Relationships: `line` elements (no arrowhead) bound to the entity rectangles, with cardinality at each end as small text, fontFamily 102, fontSize 14: `1`, `N`, `0..1`, `1..*`, placed 12 px outside the entity edge, never on a line.
 - Optional relationship label ("has", "belongs to") as the line label.
 - Group related entities close. Lay out so most relationships are straight lines.
 - Focal treatment on the aggregate root or central entity.

@@ -97,7 +97,7 @@ export function App() {
         const inside = p.x > 0 && p.y > 40 && p.x < appState.width && p.y < appState.height;
         btn.style.left = `${Math.round(p.x + 8)}px`; btn.style.top = `${Math.round(p.y - 36)}px`;
         btn.hidden = !inside;
-        btn.textContent = `✦ Ask agent (${sel.length})`;
+        btn.title = `Ask the agent about ${sel.length} selected element${sel.length > 1 ? "s" : ""}`;
       } else btn.hidden = true;
     }
     // autosave: scene version + the bits of appState worth keeping
@@ -169,7 +169,9 @@ export function App() {
         </Sidebar>
       </Excalidraw>
       <Minimap ref={minimap} api={xapi} />
-      <button ref={askBtn} className="ask-btn" hidden onClick={() => { setAttached(selRef.current); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }} />
+      <button ref={askBtn} className="ask-btn" hidden aria-label="Ask agent" onClick={() => { setAttached(selRef.current); xapiRef.current?.toggleSidebar({ name: "agent", force: true }); }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>
+      </button>
     </div>
   );
 }

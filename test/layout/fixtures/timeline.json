@@ -1,0 +1,372 @@
+{
+ "prompt": "Draw the timeline of an incident: alert 02:10, on-call paged 02:14, rollback started 02:40, resolved 03:05, postmortem two days later.",
+ "session": "64798f64-c930-4d6e-9f09-55277de6c734",
+ "at": "2026-08-29T11:25:38.786Z",
+ "frame": "Incident timeline",
+ "elements": [
+  {
+   "type": "line",
+   "id": "base1",
+   "x": 60,
+   "y": 300,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     550,
+     0
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
+   "roughness": 0
+  },
+  {
+   "type": "line",
+   "id": "base2",
+   "x": 670,
+   "y": 300,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     210,
+     0
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "brk",
+   "x": 624,
+   "y": 284,
+   "text": "//",
+   "fontSize": 20,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "brknote",
+   "x": 592,
+   "y": 316,
+   "text": "not to scale",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "ellipse",
+   "id": "d1",
+   "x": 94,
+   "y": 294,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "roughness": 0
+  },
+  {
+   "type": "line",
+   "id": "c1",
+   "x": 100,
+   "y": 264,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     30
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 72,
+   "y": 238,
+   "text": "02:10",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "n1",
+   "x": 40,
+   "y": 208,
+   "text": "Alert fires",
+   "fontSize": 20,
+   "fontFamily": 101
+  },
+  {
+   "type": "ellipse",
+   "id": "d2",
+   "x": 126,
+   "y": 294,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "roughness": 0
+  },
+  {
+   "type": "line",
+   "id": "c2",
+   "x": 132,
+   "y": 306,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     30
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "t2",
+   "x": 104,
+   "y": 338,
+   "text": "02:14",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "n2",
+   "x": 62,
+   "y": 364,
+   "text": "On-call paged",
+   "fontSize": 20,
+   "fontFamily": 101
+  },
+  {
+   "type": "ellipse",
+   "id": "d3",
+   "x": 332,
+   "y": 292,
+   "width": 16,
+   "height": 16,
+   "backgroundColor": "#e8590c",
+   "strokeColor": "#e8590c",
+   "fillStyle": "solid",
+   "roughness": 0
+  },
+  {
+   "type": "line",
+   "id": "c3",
+   "x": 340,
+   "y": 262,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     30
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 312,
+   "y": 236,
+   "text": "02:40",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "n3",
+   "x": 266,
+   "y": 206,
+   "text": "Rollback started",
+   "fontSize": 20,
+   "fontFamily": 101
+  },
+  {
+   "type": "ellipse",
+   "id": "d4",
+   "x": 532,
+   "y": 292,
+   "width": 16,
+   "height": 16,
+   "backgroundColor": "#e8590c",
+   "strokeColor": "#e8590c",
+   "fillStyle": "solid",
+   "roughness": 0
+  },
+  {
+   "type": "line",
+   "id": "c4",
+   "x": 540,
+   "y": 308,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     30
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "t4",
+   "x": 512,
+   "y": 340,
+   "text": "03:05",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "n4",
+   "x": 492,
+   "y": 366,
+   "text": "Resolved",
+   "fontSize": 20,
+   "fontFamily": 101
+  },
+  {
+   "type": "ellipse",
+   "id": "d5",
+   "x": 754,
+   "y": 294,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "strokeColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "roughness": 0
+  },
+  {
+   "type": "line",
+   "id": "c5",
+   "x": 760,
+   "y": 264,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     30
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 722,
+   "y": 238,
+   "text": "+2 days",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "n5",
+   "x": 686,
+   "y": 208,
+   "text": "Postmortem",
+   "fontSize": 20,
+   "fontFamily": 101
+  },
+  {
+   "type": "text",
+   "id": "note1",
+   "x": 150,
+   "y": 140,
+   "width": 210,
+   "text": "26 min from page to rollback",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "lead1",
+   "start": {
+    "id": "note1"
+   },
+   "end": {
+    "id": "d3"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot",
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "note2",
+   "x": 430,
+   "y": 420,
+   "width": 260,
+   "text": "Total time to resolve: 55 min",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "lead2",
+   "start": {
+    "id": "note2"
+   },
+   "end": {
+    "id": "d4"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot",
+   "roughness": 0
+  }
+ ],
+ "todo": [
+  "arrow lead2 crosses text t4 \"03:05\"",
+  "arrow lead2 crosses text n4 \"Resolved\""
+ ]
+}

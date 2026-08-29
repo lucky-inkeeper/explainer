@@ -18,6 +18,7 @@ Explainer is a Mac app: the Excalidraw editor with a Claude agent in a side pane
 - **Notation** - fixed shape + color per kind (user action, system step, decision, data, DB, external service, note) Lives in the agent system prompt (`src/shared/tools.ts`), colors also in its `KINDS` table.
 - **Legend strip** - built by the app under every framed diagram: the kinds and arrow styles the batch uses. The agent never draws one.
 - **Elbowed arrow** - `elbowed: true` on a bound arrow; the spacing pass gives it a right-angle route (facing sides, one bend pair).
+- **Layout** - the diagram math the app runs on a batch before it lands on the canvas: arrow routes, label spacing, note parking, the legend strip, the frame, and the overlap warnings. It works on the batch alone and does not read or write the scene.
 - **Label spacing** - after a `draw_elements` batch, arrows bound between two shapes get enough room for their label: the far shape and everything beyond it is pushed along the arrow axis, then the batch is re-converted. Remaining text/shape overlaps come back as `warnings` in the tool result.
 - **Diagram-design skill** - a Claude Code plugin in `agent/diagram-design/` (ported from cathrynlavery/diagram-design, MIT). Routing table + 16 type references + semantic patterns, rewritten for the skeleton. Loaded with `--plugin-dir`; the system prompt makes the agent invoke it before every new complete diagram. See ADR-0004 and `agent/diagram-design/UPSTREAM.md`.
 - **Note** - grey Inter text, no box, next to the element it explains or tied to it by a dashed leader arrow with a dot end. Max 2 per diagram.
@@ -40,5 +41,5 @@ docs/adr/      decisions
 
 - `pnpm dev` - dev app. `EXPLAINER_DEBUG_PORT=9222 pnpm dev` exposes CDP for testing.
 - `pnpm build` - unsigned `dist/mac-arm64/Explainer.app`. First open: right-click > Open.
-- `pnpm typecheck`, `pnpm check` (share-format self-test).
+- `pnpm typecheck`, `pnpm check` (share-format self-test; the Layout fixtures too when the dev app is up on 9222, see ADR-0005).
 - Login: the app uses the token from `claude login` in Terminal. Nothing else.

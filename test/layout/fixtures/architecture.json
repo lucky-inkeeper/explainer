@@ -1,0 +1,392 @@
+{
+ "prompt": "Draw the architecture of a URL shortener service: CDN, API, Postgres, Redis cache, and an analytics pipeline. Group by tier.",
+ "session": "ab39a155-1fb5-4885-ab55-f3907df8e0d2",
+ "at": "2026-08-29T11:15:46.428Z",
+ "frame": "URL shortener architecture",
+ "elements": [
+  {
+   "type": "rectangle",
+   "id": "sec-edge",
+   "x": 40,
+   "y": 40,
+   "width": 540,
+   "height": 160,
+   "backgroundColor": "#f8f9fa",
+   "strokeStyle": "dashed",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-edge"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-edge",
+   "x": 64,
+   "y": 52,
+   "text": "Edge tier",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-edge"
+   ]
+  },
+  {
+   "type": "ellipse",
+   "id": "browser",
+   "x": 100,
+   "y": 100,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "groupIds": [
+    "g-edge"
+   ],
+   "label": {
+    "text": "Visit short link"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "cdn",
+   "x": 380,
+   "y": 100,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#ffc9c9",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "groupIds": [
+    "g-edge"
+   ],
+   "label": {
+    "text": "CDN"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "sec-app",
+   "x": 40,
+   "y": 260,
+   "width": 540,
+   "height": 200,
+   "backgroundColor": "#f8f9fa",
+   "strokeStyle": "dashed",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-app",
+   "x": 64,
+   "y": 272,
+   "text": "Application tier",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "redis",
+   "x": 100,
+   "y": 320,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-app"
+   ],
+   "label": {
+    "text": "DB: Redis cache"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "api",
+   "x": 380,
+   "y": 320,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "groupIds": [
+    "g-app"
+   ],
+   "label": {
+    "text": "Redirect API"
+   }
+  },
+  {
+   "type": "text",
+   "id": "note-cache",
+   "x": 100,
+   "y": 400,
+   "width": 300,
+   "text": "Cache hit skips Postgres",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "sec-data",
+   "x": 40,
+   "y": 500,
+   "width": 1244,
+   "height": 220,
+   "backgroundColor": "#f8f9fa",
+   "strokeStyle": "dashed",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-data",
+   "x": 64,
+   "y": 512,
+   "text": "Data and analytics tier",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "pg",
+   "x": 380,
+   "y": 560,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "groupIds": [
+    "g-data"
+   ],
+   "label": {
+    "text": "DB: Postgres"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "queue",
+   "x": 620,
+   "y": 560,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "groupIds": [
+    "g-data"
+   ],
+   "label": {
+    "text": "Event queue"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "worker",
+   "x": 860,
+   "y": 560,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "groupIds": [
+    "g-data"
+   ],
+   "label": {
+    "text": "Stream worker"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "olap",
+   "x": 1100,
+   "y": 560,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-data"
+   ],
+   "label": {
+    "text": "DB: ClickHouse"
+   }
+  },
+  {
+   "type": "text",
+   "id": "note-async",
+   "x": 620,
+   "y": 660,
+   "width": 300,
+   "text": "Async: never blocks redirect",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "arrow",
+   "id": "a1",
+   "start": {
+    "id": "browser"
+   },
+   "end": {
+    "id": "cdn"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "GET /abc",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a2",
+   "start": {
+    "id": "cdn"
+   },
+   "end": {
+    "id": "api"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "miss",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a3",
+   "start": {
+    "id": "api"
+   },
+   "end": {
+    "id": "redis"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "lookup",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a4",
+   "start": {
+    "id": "api"
+   },
+   "end": {
+    "id": "pg"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "on miss",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a5",
+   "start": {
+    "id": "api"
+   },
+   "end": {
+    "id": "queue"
+   },
+   "elbowed": true,
+   "strokeStyle": "dashed",
+   "endArrowhead": "arrow",
+   "label": {
+    "text": "click event",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a6",
+   "start": {
+    "id": "queue"
+   },
+   "end": {
+    "id": "worker"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "consume",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a7",
+   "start": {
+    "id": "worker"
+   },
+   "end": {
+    "id": "olap"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "write",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a8",
+   "start": {
+    "id": "note-async"
+   },
+   "end": {
+    "id": "queue"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  }
+ ]
+}

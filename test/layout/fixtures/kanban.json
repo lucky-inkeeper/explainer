@@ -1,0 +1,621 @@
+{
+ "prompt": "Draw a kanban board for a platform team: backlog with 3 items, in progress with limit 3 and 4 items, review with limit 2 and 1 item, done with 2 items. One item in progress is blocked.",
+ "session": "96ffea08-6481-4f31-9e6f-67dc03c59d39",
+ "at": "2026-08-29T11:36:15.580Z",
+ "frame": "Platform team - board snapshot",
+ "elements": [
+  {
+   "id": "col-backlog",
+   "type": "rectangle",
+   "x": 0,
+   "y": 0,
+   "width": 240,
+   "height": 396,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-backlog"
+   ]
+  },
+  {
+   "id": "col-prog",
+   "type": "rectangle",
+   "x": 272,
+   "y": 0,
+   "width": 240,
+   "height": 396,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-prog"
+   ]
+  },
+  {
+   "id": "col-review",
+   "type": "rectangle",
+   "x": 544,
+   "y": 0,
+   "width": 240,
+   "height": 396,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-review"
+   ]
+  },
+  {
+   "id": "col-done",
+   "type": "rectangle",
+   "x": 816,
+   "y": 0,
+   "width": 240,
+   "height": 396,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-done"
+   ]
+  },
+  {
+   "id": "t-backlog",
+   "type": "text",
+   "x": 16,
+   "y": 12,
+   "text": "Backlog",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-backlog"
+   ]
+  },
+  {
+   "id": "c-backlog",
+   "type": "text",
+   "x": 176,
+   "y": 14,
+   "width": 48,
+   "text": "3",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "right",
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-backlog"
+   ]
+  },
+  {
+   "id": "t-prog",
+   "type": "text",
+   "x": 288,
+   "y": 12,
+   "text": "In Progress",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-prog"
+   ]
+  },
+  {
+   "id": "c-prog",
+   "type": "text",
+   "x": 448,
+   "y": 14,
+   "width": 48,
+   "text": "4/3",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "right",
+   "strokeColor": "#e8590c",
+   "groupIds": [
+    "g-prog"
+   ]
+  },
+  {
+   "id": "t-review",
+   "type": "text",
+   "x": 560,
+   "y": 12,
+   "text": "Review",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-review"
+   ]
+  },
+  {
+   "id": "c-review",
+   "type": "text",
+   "x": 720,
+   "y": 14,
+   "width": 48,
+   "text": "1/2",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "right",
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-review"
+   ]
+  },
+  {
+   "id": "t-done",
+   "type": "text",
+   "x": 832,
+   "y": 12,
+   "text": "Done",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-done"
+   ]
+  },
+  {
+   "id": "c-done",
+   "type": "text",
+   "x": 992,
+   "y": 14,
+   "width": 48,
+   "text": "2",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "textAlign": "right",
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-done"
+   ]
+  },
+  {
+   "id": "b1",
+   "type": "rectangle",
+   "x": 16,
+   "y": 48,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-b1",
+    "g-backlog"
+   ],
+   "label": {
+    "text": "Log retention policy",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "b1s",
+   "type": "text",
+   "x": 28,
+   "y": 92,
+   "text": "PLAT-412   mira",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-b1",
+    "g-backlog"
+   ]
+  },
+  {
+   "id": "b2",
+   "type": "rectangle",
+   "x": 16,
+   "y": 132,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-b2",
+    "g-backlog"
+   ],
+   "label": {
+    "text": "Bump base image",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "b2s",
+   "type": "text",
+   "x": 28,
+   "y": 176,
+   "text": "PLAT-418   sam",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-b2",
+    "g-backlog"
+   ]
+  },
+  {
+   "id": "b3",
+   "type": "rectangle",
+   "x": 16,
+   "y": 216,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-b3",
+    "g-backlog"
+   ],
+   "label": {
+    "text": "Split Terraform module",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "b3s",
+   "type": "text",
+   "x": 28,
+   "y": 260,
+   "text": "PLAT-421   unassigned",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-b3",
+    "g-backlog"
+   ]
+  },
+  {
+   "id": "p1",
+   "type": "rectangle",
+   "x": 288,
+   "y": 48,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-p1",
+    "g-prog"
+   ],
+   "label": {
+    "text": "Multi-region failover",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "p1s",
+   "type": "text",
+   "x": 300,
+   "y": 92,
+   "text": "PLAT-390   dana",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-p1",
+    "g-prog"
+   ]
+  },
+  {
+   "id": "p2",
+   "type": "rectangle",
+   "x": 288,
+   "y": 132,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-p2",
+    "g-prog"
+   ],
+   "label": {
+    "text": "CI cache rewrite",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "p2s",
+   "type": "text",
+   "x": 300,
+   "y": 176,
+   "text": "PLAT-395   sam   BLOCKED",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-p2",
+    "g-prog"
+   ]
+  },
+  {
+   "id": "p3",
+   "type": "rectangle",
+   "x": 288,
+   "y": 216,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-p3",
+    "g-prog"
+   ],
+   "label": {
+    "text": "Secrets rotation",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "p3s",
+   "type": "text",
+   "x": 300,
+   "y": 260,
+   "text": "PLAT-401   mira",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-p3",
+    "g-prog"
+   ]
+  },
+  {
+   "id": "p4",
+   "type": "rectangle",
+   "x": 288,
+   "y": 300,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-p4",
+    "g-prog"
+   ],
+   "label": {
+    "text": "Upgrade K8s to 1.31",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "p4s",
+   "type": "text",
+   "x": 300,
+   "y": 344,
+   "text": "PLAT-405   dana",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-p4",
+    "g-prog"
+   ]
+  },
+  {
+   "id": "r1",
+   "type": "rectangle",
+   "x": 560,
+   "y": 48,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-r1",
+    "g-review"
+   ],
+   "label": {
+    "text": "Audit log export",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "r1s",
+   "type": "text",
+   "x": 572,
+   "y": 92,
+   "text": "PLAT-377   dana",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-r1",
+    "g-review"
+   ]
+  },
+  {
+   "id": "d1",
+   "type": "rectangle",
+   "x": 832,
+   "y": 48,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "opacity": 60,
+   "groupIds": [
+    "g-d1",
+    "g-done"
+   ],
+   "label": {
+    "text": "Runner autoscaling",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "d1s",
+   "type": "text",
+   "x": 844,
+   "y": 92,
+   "text": "PLAT-360   sam",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "opacity": 60,
+   "groupIds": [
+    "g-d1",
+    "g-done"
+   ]
+  },
+  {
+   "id": "d2",
+   "type": "rectangle",
+   "x": 832,
+   "y": 132,
+   "width": 208,
+   "height": 72,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "opacity": 60,
+   "groupIds": [
+    "g-d2",
+    "g-done"
+   ],
+   "label": {
+    "text": "Drop legacy VPN",
+    "fontSize": 16,
+    "textAlign": "left",
+    "verticalAlign": "top"
+   }
+  },
+  {
+   "id": "d2s",
+   "type": "text",
+   "x": 844,
+   "y": 176,
+   "text": "PLAT-352   mira   archived Fri",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "opacity": 60,
+   "groupIds": [
+    "g-d2",
+    "g-done"
+   ]
+  },
+  {
+   "id": "n1",
+   "type": "text",
+   "x": 288,
+   "y": -48,
+   "width": 300,
+   "text": "WIP 4 over limit 3: stop starting, start finishing",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "n2",
+   "type": "text",
+   "x": 288,
+   "y": 424,
+   "width": 300,
+   "text": "Blocked 4 days: waiting on vendor quota",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "lead2",
+   "type": "arrow",
+   "start": {
+    "id": "n2"
+   },
+   "end": {
+    "id": "p2"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  }
+ ],
+ "todo": [
+  "arrow lead2 crosses text p3s \"PLAT-401   mira\"",
+  "arrow lead2 crosses rectangle p4",
+  "arrow lead2 crosses text UvKAJFd1mEPY4VPaXpRYB \"Secrets rotation\"",
+  "arrow lead2 crosses text pJFUP1KOvJJkFxHXle0K5 \"Upgrade K8s to 1.31\""
+ ]
+}

@@ -1,0 +1,326 @@
+{
+ "prompt": "Draw the folder tree of a typical Electron app: src/main, src/preload, src/renderer with components and hooks, shared, docs.",
+ "session": "32527ee5-906f-4822-9b8e-d33e3240b071",
+ "at": "2026-08-29T11:53:26.563Z",
+ "frame": "Electron app: folder tree",
+ "elements": [
+  {
+   "id": "proc-zone",
+   "type": "rectangle",
+   "x": 456,
+   "y": -60,
+   "width": 228,
+   "height": 410,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "proc-title",
+   "type": "text",
+   "x": 468,
+   "y": -52,
+   "text": "three processes",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "root",
+   "type": "rectangle",
+   "x": 0,
+   "y": 312,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "label": {
+    "text": "my-app/",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "src",
+   "type": "rectangle",
+   "x": 240,
+   "y": 125,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "src/",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "shared",
+   "type": "rectangle",
+   "x": 240,
+   "y": 400,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "shared/",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "docs",
+   "type": "rectangle",
+   "x": 240,
+   "y": 500,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "docs/",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "main",
+   "type": "rectangle",
+   "x": 480,
+   "y": 0,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "main/",
+    "fontSize": 16
+   },
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "preload",
+   "type": "rectangle",
+   "x": 480,
+   "y": 100,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "preload/",
+    "fontSize": 16
+   },
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "renderer",
+   "type": "rectangle",
+   "x": 480,
+   "y": 250,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "label": {
+    "text": "renderer/",
+    "fontSize": 16
+   },
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "main-sub",
+   "type": "text",
+   "x": 480,
+   "y": 58,
+   "text": "Node process, windows, IPC",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "preload-sub",
+   "type": "text",
+   "x": 480,
+   "y": 158,
+   "text": "contextBridge, safe API",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "renderer-sub",
+   "type": "text",
+   "x": 480,
+   "y": 308,
+   "text": "React UI, sandboxed",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "procgrp"
+   ]
+  },
+  {
+   "id": "shared-sub",
+   "type": "text",
+   "x": 240,
+   "y": 458,
+   "text": "types + constants, both sides",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "components",
+   "type": "rectangle",
+   "x": 720,
+   "y": 200,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "components/",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "hooks",
+   "type": "rectangle",
+   "x": 720,
+   "y": 300,
+   "width": 180,
+   "height": 52,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "label": {
+    "text": "hooks/",
+    "fontSize": 16
+   }
+  },
+  {
+   "id": "a1",
+   "type": "arrow",
+   "start": {
+    "id": "root"
+   },
+   "end": {
+    "id": "src"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a2",
+   "type": "arrow",
+   "start": {
+    "id": "root"
+   },
+   "end": {
+    "id": "shared"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a3",
+   "type": "arrow",
+   "start": {
+    "id": "root"
+   },
+   "end": {
+    "id": "docs"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a4",
+   "type": "arrow",
+   "start": {
+    "id": "src"
+   },
+   "end": {
+    "id": "main"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a5",
+   "type": "arrow",
+   "start": {
+    "id": "src"
+   },
+   "end": {
+    "id": "preload"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a6",
+   "type": "arrow",
+   "start": {
+    "id": "src"
+   },
+   "end": {
+    "id": "renderer"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a7",
+   "type": "arrow",
+   "start": {
+    "id": "renderer"
+   },
+   "end": {
+    "id": "components"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  },
+  {
+   "id": "a8",
+   "type": "arrow",
+   "start": {
+    "id": "renderer"
+   },
+   "end": {
+    "id": "hooks"
+   },
+   "elbowed": true,
+   "endArrowhead": null
+  }
+ ],
+ "todo": [
+  "arrow a3 crosses text shared-sub \"types + constants, both \""
+ ]
+}

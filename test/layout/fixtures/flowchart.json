@@ -1,0 +1,388 @@
+{
+ "prompt": "Show the decision logic for a password reset request: known email, rate limit, token valid, token expired.",
+ "session": "77a97a6e-856c-4a5d-a027-73c81967a3db",
+ "at": "2026-08-29T11:17:06.310Z",
+ "frame": "Password reset: decision logic",
+ "elements": [
+  {
+   "id": "start",
+   "type": "ellipse",
+   "x": 400,
+   "y": 0,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Reset requested"
+   }
+  },
+  {
+   "id": "d_email",
+   "type": "diamond",
+   "x": 400,
+   "y": 120,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "label": {
+    "text": "Email known?"
+   }
+  },
+  {
+   "id": "generic",
+   "type": "rectangle",
+   "x": 760,
+   "y": 140,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Send generic reply"
+   }
+  },
+  {
+   "id": "d_rate",
+   "type": "diamond",
+   "x": 400,
+   "y": 280,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Rate limit ok?"
+   }
+  },
+  {
+   "id": "throttle",
+   "type": "rectangle",
+   "x": 760,
+   "y": 300,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Too many attempts"
+   }
+  },
+  {
+   "id": "mint",
+   "type": "rectangle",
+   "x": 400,
+   "y": 440,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Mint token, mail link"
+   }
+  },
+  {
+   "id": "db",
+   "type": "rectangle",
+   "x": 80,
+   "y": 440,
+   "width": 200,
+   "height": 60,
+   "roundness": {
+    "type": 3
+   },
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "label": {
+    "text": "DB: reset tokens"
+   }
+  },
+  {
+   "id": "click",
+   "type": "ellipse",
+   "x": 400,
+   "y": 560,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "label": {
+    "text": "User opens link"
+   }
+  },
+  {
+   "id": "d_valid",
+   "type": "diamond",
+   "x": 400,
+   "y": 680,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Token valid?"
+   }
+  },
+  {
+   "id": "invalid",
+   "type": "rectangle",
+   "x": 760,
+   "y": 700,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Invalid token page"
+   }
+  },
+  {
+   "id": "d_exp",
+   "type": "diamond",
+   "x": 400,
+   "y": 840,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Token expired?"
+   }
+  },
+  {
+   "id": "resend",
+   "type": "rectangle",
+   "x": 760,
+   "y": 860,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Offer fresh link"
+   }
+  },
+  {
+   "id": "setpw",
+   "type": "rectangle",
+   "x": 400,
+   "y": 1000,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "label": {
+    "text": "Set new password"
+   }
+  },
+  {
+   "id": "note1",
+   "type": "text",
+   "x": 1020,
+   "y": 146,
+   "width": 300,
+   "text": "Reply is identical either way.\nNo account enumeration.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "note2",
+   "type": "text",
+   "x": 60,
+   "y": 1006,
+   "width": 300,
+   "text": "Token is single use.\nDelete it after the reset.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "start"
+   },
+   "end": {
+    "id": "d_email"
+   },
+   "endArrowhead": "triangle"
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_email"
+   },
+   "end": {
+    "id": "generic"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "No",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_email"
+   },
+   "end": {
+    "id": "d_rate"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "Yes",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_rate"
+   },
+   "end": {
+    "id": "throttle"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "No",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_rate"
+   },
+   "end": {
+    "id": "mint"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "Yes",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "mint"
+   },
+   "end": {
+    "id": "db"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "store hash",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "mint"
+   },
+   "end": {
+    "id": "click"
+   },
+   "endArrowhead": "triangle"
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "click"
+   },
+   "end": {
+    "id": "d_valid"
+   },
+   "endArrowhead": "triangle"
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_valid"
+   },
+   "end": {
+    "id": "invalid"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "No",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_valid"
+   },
+   "end": {
+    "id": "d_exp"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "Yes",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_exp"
+   },
+   "end": {
+    "id": "resend"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "Yes",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "d_exp"
+   },
+   "end": {
+    "id": "setpw"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "No",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "note1"
+   },
+   "end": {
+    "id": "generic"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  },
+  {
+   "type": "arrow",
+   "start": {
+    "id": "note2"
+   },
+   "end": {
+    "id": "setpw"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  }
+ ]
+}

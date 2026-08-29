@@ -1,0 +1,335 @@
+{
+ "prompt": "Draw the layer stack of a web request: browser, CDN, load balancer, app server, ORM, database. Mark the layer where most latency is spent.",
+ "session": "0e0b83d3-3cbb-4c47-9518-91a359eb2bfd",
+ "at": "2026-08-29T11:34:17.828Z",
+ "frame": "Web request layer stack",
+ "elements": [
+  {
+   "type": "rectangle",
+   "id": "l1",
+   "x": 200,
+   "y": 100,
+   "width": 720,
+   "height": 64,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "Browser",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "l2",
+   "x": 200,
+   "y": 164,
+   "width": 720,
+   "height": 64,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "CDN / Edge",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "l3",
+   "x": 200,
+   "y": 228,
+   "width": 720,
+   "height": 64,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "Load balancer",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "l4",
+   "x": 200,
+   "y": 292,
+   "width": 720,
+   "height": 64,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "App server",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "l5",
+   "x": 200,
+   "y": 356,
+   "width": 720,
+   "height": 64,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "ORM",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "l6",
+   "x": 200,
+   "y": 420,
+   "width": 720,
+   "height": 64,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "label": {
+    "text": "DB: Postgres",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 216,
+   "y": 122,
+   "width": 40,
+   "text": "L1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "t2",
+   "x": 216,
+   "y": 186,
+   "width": 40,
+   "text": "L2",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 216,
+   "y": 250,
+   "width": 40,
+   "text": "L3",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "t4",
+   "x": 216,
+   "y": 314,
+   "width": 40,
+   "text": "L4",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 216,
+   "y": 378,
+   "width": 40,
+   "text": "L5",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "t6",
+   "x": 216,
+   "y": 442,
+   "width": 40,
+   "text": "L6",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "s1",
+   "x": 684,
+   "y": 122,
+   "width": 220,
+   "textAlign": "right",
+   "text": "parse, render, paint",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "s2",
+   "x": 684,
+   "y": 186,
+   "width": 220,
+   "textAlign": "right",
+   "text": "cache hit ends here",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "s3",
+   "x": 684,
+   "y": 250,
+   "width": 220,
+   "textAlign": "right",
+   "text": "TLS, routing",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "s4",
+   "x": 684,
+   "y": 314,
+   "width": 220,
+   "textAlign": "right",
+   "text": "business logic",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "s5",
+   "x": 684,
+   "y": 378,
+   "width": 220,
+   "textAlign": "right",
+   "text": "query build, N+1 risk",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "s6",
+   "x": 684,
+   "y": 442,
+   "width": 220,
+   "textAlign": "right",
+   "text": "disk I/O, locks",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "dir",
+   "x": 140,
+   "y": 104,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     376
+    ]
+   ],
+   "strokeColor": "#868e96",
+   "strokeWidth": 1,
+   "endArrowhead": "arrow"
+  },
+  {
+   "type": "text",
+   "id": "dirlab",
+   "x": 40,
+   "y": 280,
+   "width": 88,
+   "textAlign": "right",
+   "text": "request down",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "note1",
+   "x": 960,
+   "y": 344,
+   "width": 300,
+   "text": "ORM turns one call into many round trips.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "note2",
+   "x": 960,
+   "y": 432,
+   "width": 300,
+   "text": "Most latency lives here: disk seeks, lock waits, unindexed scans.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "lead1",
+   "start": {
+    "id": "note1"
+   },
+   "end": {
+    "id": "l5"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  },
+  {
+   "type": "arrow",
+   "id": "lead2",
+   "start": {
+    "id": "note2"
+   },
+   "end": {
+    "id": "l6"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  }
+ ],
+ "todo": [
+  "text \"TLS, routing\" (s3) overlaps text \"Load balancer\" (wLlSCNdCtc9S840ED_5DH)",
+  "text \"Browser\" (8GaeJIaTVWkoyWiKJwcHN) overlaps text \"parse, render, paint\" (s1)",
+  "text \"CDN / Edge\" (K3PPkbWifTjYr1xHrfK25) overlaps text \"cache hit ends here\" (s2)",
+  "text \"App server\" (OtdKxfALfhyVk1SoHZfOo) overlaps text \"business logic\" (s4)",
+  "text \"ORM\" (OSuWmI6jJ2pfL7RvVyuG4) overlaps text \"query build, N+1 risk\" (s5)",
+  "text \"DB: Postgres\" (ju0lkyQGJoi7aH8gCoFQq) overlaps text \"disk I/O, locks\" (s6)"
+ ]
+}

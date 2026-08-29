@@ -94,8 +94,9 @@ export function App() {
   };
 
   const uiOptions = useMemo(() => ({ canvasActions: { loadScene: false, export: { saveFileToDisk: true, onExportToBackend: share as any } } }), [share]);
+  // Excalidraw memoizes renderTopRightUI, so visibility is driven by CSS (.app.sidebar-open .agent-trigger)
   const topRight = useCallback(() => (
-    <Sidebar.Trigger name="agent" title="Claude agent" icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>}>
+    <Sidebar.Trigger name="agent" className="agent-trigger" title="Claude agent" icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>}>
       Agent
     </Sidebar.Trigger>
   ), []);

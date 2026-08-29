@@ -24,10 +24,12 @@ export const withDefaultFont = (skeleton: El[]): El[] =>
 export type El = any;
 
 type Box = { x: number; y: number; w: number; h: number };
+/** Estimated text width: 0.6 em per character of the longest line plus padding. The spacing pass swaps in measured widths after conversion. */
+const textWidth = (text: unknown, fontSize: number) => Math.max(...String(text).split("\n").map((l) => l.length)) * fontSize * 0.6 + 8;
 /** Geometry box; an arrow label gets the box of its visible text (Excalidraw pads labels to 11 x font size). */
 const box = (e: El): Box => {
   if (e.type === "text" && e.containerId && e.text) {
-    const w = Math.min(e.width, Math.max(...String(e.text).split("\n").map((l: string) => l.length)) * (e.fontSize ?? 16) * 0.6 + 8);
+    const w = Math.min(e.width, textWidth(e.text, e.fontSize ?? 16));
     return { x: e.x + (e.width - w) / 2, y: e.y, w, h: e.height };
   }
   return { x: e.x, y: e.y, w: e.width, h: e.height };
@@ -51,7 +53,7 @@ function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number, gapPx 
   return [cx + dx * (t + gap), cy + dy * (t + gap)];
 }
 
-type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh"; frac?: number };
+type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh"; frac?: number; elbowed?: boolean };
 
 /** Free space between two boxes on each axis (negative when their ranges overlap). Decides sideways vs up/down. */
 const gaps = (s: El, t: El) => ({
@@ -93,63 +95,85 @@ function routeCost(r: Route, obstacles: El[], placed: Seg[], label: { w: number;
   return cost;
 }
 
+/** Ids of the two ends of an arrow in either vocabulary: skeleton start/end, Excalidraw bindings, or leader links to a text kept in customData. */
+const endIds = (a: El): [string | undefined, string | undefined] => [a.start?.id ?? a.startBinding?.elementId ?? a.customData?.leaderStart, a.end?.id ?? a.endBinding?.elementId ?? a.customData?.leaderEnd];
+
+/** One bound arrow as the router sees it, whichever vocabulary it came from. */
+type Edge = { a: El; s: El; t: El; elbowed: boolean; dotEnd: boolean; label: { w: number; h: number } | null };
+/** What a route is scored against: nodes it must not run through, sections whose border a label must not straddle, segments of arrows already placed. */
+type Field = { obstacles: El[]; sections: El[]; placed: Seg[] };
+
 /**
- * Attach points and shape of a bound arrow. Straight edge to edge unless `elbowed`. An elbow tries a z-route on the dominant
- * axis, the two single-bend routes and the other z-route, and takes the cheapest (shapes it runs through, then arrows it runs
- * along or crosses); ties go to the first. ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
+ * The two vocabularies meet here. A skeleton arrow carries its label inline (estimated width); a scene arrow's label is a bound text in
+ * `labels` (measured width). An arrow whose ends are missing or unplaced is not routed.
  */
-function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = [], sections: El[] = []): Route {
+function edgeOf(a: El, byId: Map<string, El>, labels: Map<string, El>): Edge | null {
+  const [sid, tid] = endIds(a);
+  const s = sid ? byId.get(sid) : undefined, t = tid ? byId.get(tid) : undefined;
+  if (!s || s.x == null || !t || t.x == null) return null;
+  const bound = labels.get(a.id);
+  const label = bound ? { w: box(bound).w, h: bound.height } : a.label?.text ? { w: textWidth(a.label.text, a.label.fontSize ?? 20), h: 24 } : null;
+  return { a, s, t, elbowed: !!a.elbowed, dotEnd: a.endArrowhead === "dot", label };
+}
+
+/**
+ * Attach points and shape of a bound arrow. Straight edge to edge unless elbowed; ends whose centers are off on both axes are elbowed
+ * (no diagonals). An elbow tries a z-route on the dominant axis, the two single-bend routes and the other z-route, and takes the cheapest
+ * (shapes it runs through, then arrows it runs along or crosses, then where its label lands); ties go to the first.
+ * ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
+ */
+function routeEdge(edge: Edge, f: Field): Route {
+  const { s, t, dotEnd, label } = edge;
   const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
   const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
-  const gap = 6, endGap = a.endArrowhead === "dot" ? 12 : gap; // a dot head needs room or it sits on the target
+  const gap = 6, endGap = dotEnd ? 12 : gap; // a dot head needs room or it sits on the target
+  const others = f.obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
+  const dx = cx(t) - cx(s), dy = cy(t) - cy(s);
+  const elbowed = edge.elbowed || (Math.abs(dx) > 24 && Math.abs(dy) > 24);
   // a text leaves and enters through the side that faces the other end, never through its own glyphs
   const textPort = (e: El, o: El, g: number): [number, number] => {
     const ddx = cx(o) - cx(e), ddy = cy(o) - cy(e), { gx, gy } = gaps(e, o);
     return gx >= gy ? [ddx > 0 ? e.x + w(e) + g : e.x - g, cy(e)] : [cx(e), ddy > 0 ? e.y + h(e) + g : e.y - g];
   };
-  if (!a.elbowed) {
+  if (!elbowed) {
     const p1 = s.type === "text" ? textPort(s, t, gap) : edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap);
     const p2 = t.type === "text" ? textPort(t, s, endGap) : edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap);
     const straight: Route = { p1, p2, kind: "straight" };
-    if (!a.label?.text) return straight;
+    if (!label) return straight;
     // a straight line with a collinear middle point: same line, label at 30 or 70 percent instead of the midpoint
-    const dx = straight.p2[0] - straight.p1[0], dy = straight.p2[1] - straight.p1[1];
-    const slid: Route[] = Math.abs(dy) <= 2 ? [{ ...straight, kind: "zh", frac: 0.3 }, { ...straight, kind: "zh", frac: 0.7 }] : Math.abs(dx) <= 2 ? [{ ...straight, kind: "zv", frac: 0.3 }, { ...straight, kind: "zv", frac: 0.7 }] : [];
-    const cands = [straight, ...slid], label = { w: String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8, h: 24 };
-    const costs = cands.map((r) => routeCost(r, obstacles.filter((o) => o.id !== s.id && o.id !== t.id), placed, label, sections));
+    const ldx = straight.p2[0] - straight.p1[0], ldy = straight.p2[1] - straight.p1[1];
+    const slid: Route[] = Math.abs(ldy) <= 2 ? [{ ...straight, kind: "zh", frac: 0.3 }, { ...straight, kind: "zh", frac: 0.7 }] : Math.abs(ldx) <= 2 ? [{ ...straight, kind: "zv", frac: 0.3 }, { ...straight, kind: "zv", frac: 0.7 }] : [];
+    const cands = [straight, ...slid];
+    const costs = cands.map((r) => routeCost(r, others, f.placed, label, f.sections));
     return cands[costs.indexOf(Math.min(...costs))];
   }
-  const dx = cx(t) - cx(s), dy = cy(t) - cy(s), sx = Math.sign(dx) || 1, sy = Math.sign(dy) || 1;
+  const sx = Math.sign(dx) || 1, sy = Math.sign(dy) || 1;
   const sideX = (e: El, sign: number, g: number): number => (sign > 0 ? e.x + w(e) + g : e.x - g);
   const sideY = (e: El, sign: number, g: number): number => (sign > 0 ? e.y + h(e) + g : e.y - g);
-  const zh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "zh" };
-  const zv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "zv" };
-  const lv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "lv" }; // down, then into the side
-  const lh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "lh" }; // sideways, then into top or bottom
+  const zh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "zh", elbowed: true };
+  const zv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "zv", elbowed: true };
+  const lv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "lv", elbowed: true }; // down, then into the side
+  const lh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "lh", elbowed: true }; // sideways, then into top or bottom
   const bends = (z: Route) => [z, { ...z, frac: 0.3 }, { ...z, frac: 0.7 }]; // a z-route can bend early or late to dodge another arrow
   const { gx, gy } = gaps(s, t);
   const order = gx >= gy ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
-  const others = obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
-  const label = a.label?.text ? { w: String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8, h: 24 } : null; // estimate; measured later by the spacing pass
-  const costs = order.map((r) => routeCost(r, others, placed, label, sections));
+  const costs = order.map((r) => routeCost(r, others, f.placed, label, f.sections));
   return order[costs.indexOf(Math.min(...costs))];
 }
 
-const route = (a: El, s: El, t: El, obstacles: El[] = []) => geometry(ports(a, s, t, obstacles));
-
 /** Arrows that attach to the same side of one shape are spread 24 px apart along that side, so heads and labels do not stack. */
-function fan(routed: { a: El; r: Route; s: El; t: El }[]) {
+function fan(routed: { e: Edge; r: Route }[]) {
   const side = (e: El, p: [number, number]) => {
     const d: [string, number][] = [["l", Math.abs(p[0] - e.x)], ["r", Math.abs(p[0] - (e.x + (e.width ?? 100)))], ["t", Math.abs(p[1] - e.y)], ["b", Math.abs(p[1] - (e.y + (e.height ?? 100)))]];
     return d.sort((x, y) => x[1] - y[1])[0][0];
   };
   const groups = new Map<string, { r: Route; key: "p1" | "p2"; e: El; other: [number, number]; label: number }[]>();
-  for (const { a, r, s, t } of routed) {
-    const label = a.label?.text ? String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8 : 0; // estimate; the spacing pass measures the real width later
-    for (const [key, e, other] of [["p1", s, r.p2], ["p2", t, r.p1]] as ["p1" | "p2", El, [number, number]][]) {
-      const k = `${e.id}:${side(e, r[key])}`;
+  for (const { e, r } of routed) {
+    const label = e.label?.w ?? 0; // estimate; the spacing pass measures the real width later
+    for (const [key, n, other] of [["p1", e.s, r.p2], ["p2", e.t, r.p1]] as ["p1" | "p2", El, [number, number]][]) {
+      const k = `${n.id}:${side(n, r[key])}`;
       if (!groups.has(k)) groups.set(k, []);
-      groups.get(k)!.push({ r, key, e, other, label });
+      groups.get(k)!.push({ r, key, e: n, other, label });
     }
   }
   for (const [k, g] of groups) {
@@ -166,7 +190,7 @@ function fan(routed: { a: El; r: Route; s: El; t: El }[]) {
 
 /**
  * After update_elements moves or resizes shapes, arrows bound to them keep stale endpoints (Excalidraw only re-routes on user drags).
- * Re-route every arrow bound at both ends to a touched element and recenter its label.
+ * Re-route every arrow bound to a touched element and recenter its label. Untouched arrows keep their points and count as obstacles.
  */
 export function followBindings(els: El[], touched: Set<string>): El[] {
   const byId = new Map(els.map((e) => [e.id, e]));
@@ -180,15 +204,20 @@ export function followBindings(els: El[], touched: Set<string>): El[] {
       if (label) moved.set(label.id, newElementWith(label, { x: c.x + (c.width - label.width) / 2, y: c.y + (c.height - label.height) / 2 }));
     }
   }
-  for (const a of els) {
-    if (a.type !== "arrow") continue;
-    const [sid, tid] = endIds(a);
-    if (!sid || !tid) continue;
-    const s = byId.get(sid), t = byId.get(tid);
-    if (!s || !t || !(touched.has(s.id) || touched.has(t.id))) continue;
-    const next = newElementWith(a, route(a, s, t, els.filter((e) => SHAPES.has(e.type) && !e.isDeleted && !isSection(e))));
+  const live = els.filter((e) => !e.isDeleted);
+  const labels = new Map<string, El>(live.filter((e) => e.type === "text" && e.containerId).map((e) => [e.containerId, e]));
+  const field: Field = { obstacles: live.filter((e) => SHAPES.has(e.type) && !isSection(e)), sections: live.filter((e) => SHAPES.has(e.type) && isSection(e)), placed: [] };
+  const arrows = live.filter((a) => a.type === "arrow");
+  const redo = arrows.filter((a) => endIds(a).some((id) => id && touched.has(id)));
+  for (const a of arrows) if (!redo.includes(a) && a.points) field.placed.push(...segsOf(a));
+  for (const a of redo) {
+    const edge = edgeOf(a, byId, labels);
+    if (!edge) continue;
+    const r = routeEdge(edge, field), g = geometry(r);
+    field.placed.push(...segsOf(g));
+    const next = newElementWith(a, { ...g, ...(r.elbowed && !a.elbowed && { elbowed: true }) });
     moved.set(a.id, next);
-    const label = els.find((e) => e.type === "text" && e.containerId === a.id);
+    const label = labels.get(a.id);
     if (label) {
       const pts = next.points, m = pts[Math.floor((pts.length - 1) / 2)], n = pts[Math.ceil((pts.length - 1) / 2)];
       moved.set(label.id, newElementWith(label, { x: next.x + (m[0] + n[0]) / 2 - label.width / 2, y: next.y + (m[1] + n[1]) / 2 - label.height / 2 }));
@@ -196,9 +225,6 @@ export function followBindings(els: El[], touched: Set<string>): El[] {
   }
   return moved.size ? els.map((e) => moved.get(e.id) ?? e) : els;
 }
-
-/** Ids of the two ends of an arrow: Excalidraw bindings, or leader links to a text kept in customData. */
-const endIds = (a: El): [string | undefined, string | undefined] => [a.startBinding?.elementId ?? a.customData?.leaderStart, a.endBinding?.elementId ?? a.customData?.leaderEnd];
 
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass
@@ -216,27 +242,19 @@ function spaceForLabels(skeleton: El[]): El[] {
     const sk: El[] = structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) }));
     const byId = new Map(sk.map((e) => [e.id, e]));
     // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
-    const routed: { a: El; r: Route; s: El; t: El }[] = [];
-    const placed: Seg[] = [];
-    const obstacles = sk.filter((e) => SHAPES.has(e.type) && e.x != null && !isSection(e));
-    const sections = sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e));
+    const field: Field = { obstacles: sk.filter((e) => SHAPES.has(e.type) && e.x != null && !isSection(e)), sections: sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e)), placed: [] };
+    const routed: { e: Edge; r: Route }[] = [];
     for (const a of sk) {
       if (a.type !== "arrow") continue;
-      const sid = a.start?.id ?? a.customData?.leaderStart, tid = a.end?.id ?? a.customData?.leaderEnd;
-      if (!sid || !tid) continue;
-      const s = byId.get(sid), t = byId.get(tid);
-      if (!s || s.x == null || !t || t.x == null) continue;
-      // no diagonals: ends whose centers are off on both axes get a right-angle route
-      const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
-      const [sx, sy] = c(s), [tx, ty] = c(t);
-      if (!a.elbowed && Math.abs(tx - sx) > 24 && Math.abs(ty - sy) > 24) a.elbowed = true;
-      const r = ports(a, s, t, obstacles, placed, sections);
-      routed.push({ a, r, s, t });
-      const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
-      placed.push(...pts.slice(1).map((p, i) => [pts[i], p] as Seg));
+      const e = edgeOf(a, byId, new Map());
+      if (!e) continue;
+      const r = routeEdge(e, field);
+      if (r.elbowed) a.elbowed = true; // no diagonals: the converter gets an elbowed arrow with our points
+      routed.push({ e, r });
+      field.placed.push(...segsOf(geometry(r)));
     }
     fan(routed);
-    for (const { a, r } of routed) Object.assign(a, geometry(r));
+    for (const { e, r } of routed) Object.assign(e.a, geometry(r));
     return convertToExcalidrawElements(sk, { regenerateIds: false });
   };
   let els = build();
@@ -293,7 +311,7 @@ function spaceForLabels(skeleton: El[]): El[] {
 /**
  * Legend strip under a framed diagram: one swatch + label per notation kind used, one sample per arrow style used, focal if present.
  * Built by the app so every diagram carries the same legend and the agent never spends tokens on it.
- * ponytail: label widths are estimated (7.5 px per char at 14 px Inter); the 40 px item gap absorbs the error.
+ * ponytail: label widths come from textWidth; the 40 px item gap absorbs the error.
  */
 export function legendFor(els: El[]): El[] {
   const lc = (c?: string) => (c ?? "").toLowerCase();
@@ -315,7 +333,7 @@ export function legendFor(els: El[]): El[] {
   ];
   let x = x1, y = y2 + 68;
   for (const it of items) {
-    const sw = it.swatch ? 28 : 44, w = sw + 8 + it.label.length * 7.5;
+    const sw = it.swatch ? 28 : 44, w = sw + 8 + textWidth(it.label, 14);
     if (x + w > x2 && x > x1) { x = x1; y += 32; }
     if (it.swatch) out.push({ ...it.swatch, x, y, width: sw, height: 20, fillStyle: "solid", roughness: 0, groupIds });
     else out.push({ type: "arrow", x, y: y + 10, width: sw, height: 0, points: [[0, 0], [sw, 0]], endArrowhead: "triangle", strokeWidth: 1, roughness: 0, groupIds, ...it.arrow });

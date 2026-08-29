@@ -3,3 +3,4 @@ out
 dist
 data/
 .DS_Store
+test/eval/out/

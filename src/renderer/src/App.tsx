@@ -26,22 +26,20 @@ export function App() {
   const fileRef = useRef(file); fileRef.current = file;
   const saveTimer = useRef<number>(undefined);
   const minimap = useRef<MinimapHandle>(null);
-  const appRef = useRef<HTMLDivElement>(null);
 
   // Excalidraw ignores wheel events whose target is not its canvas. Frame titles are DOM overlays (class-less
   // absolutely positioned divs directly under .excalidraw), so pan/zoom died while the cursor rested on a title.
   useEffect(() => {
-    const root = appRef.current; if (!root) return;
     const onWheel = (e: WheelEvent) => {
       const t = e.target as HTMLElement;
       if (!(t instanceof HTMLDivElement) || t.className || !t.parentElement?.classList.contains("excalidraw")) return;
-      const canvas = root.querySelector("canvas.excalidraw__canvas.interactive");
+      const canvas = document.querySelector("canvas.excalidraw__canvas.interactive");
       if (!canvas) return;
       e.preventDefault(); e.stopPropagation();
       canvas.dispatchEvent(new WheelEvent("wheel", { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey, clientX: e.clientX, clientY: e.clientY, bubbles: true, cancelable: true }));
     };
-    root.addEventListener("wheel", onWheel, { capture: true, passive: false });
-    return () => root.removeEventListener("wheel", onWheel, { capture: true } as any);
+    document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+    return () => document.removeEventListener("wheel", onWheel, { capture: true } as any);
   }, []);
   const lastSaved = useRef("");
 
@@ -139,7 +137,7 @@ export function App() {
 
   if (!initial || !file) return <div className="app" />;
   return (
-    <div ref={appRef} className={"app" + (sidebarOpen ? " sidebar-open" : "") + (dark ? " dark" : "")}>
+    <div className={"app" + (sidebarOpen ? " sidebar-open" : "") + (dark ? " dark" : "")}>
       <Excalidraw
         key={file}
         initialData={initial}

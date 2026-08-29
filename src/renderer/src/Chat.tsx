@@ -298,7 +298,9 @@ export function ChatPanel({ chat }: { chat: Chat }) {
     <div className="chat">
       <Sidebar.Header>
         <div className="agent-title">
-          <button onClick={openSessions} title="Switch session">Sessions</button>
+          <button className="menu" onClick={openSessions} title="Sessions" aria-label="Sessions">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
           <span className="title">Claude</span>
           <button className="new" onClick={() => chat.start()} title="New session">+</button>
         </div>

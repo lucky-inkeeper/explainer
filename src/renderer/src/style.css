@@ -1,5 +1,7 @@
 html, body, #root { height: 100%; margin: 0; }
 .app { height: 100vh; position: relative; }
+/* Excalidraw narrows its UI layer only when it deems the sidebar dockable (wide windows); do it whenever the panel is open */
+.app.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
 
 /* outside .excalidraw, so no CSS vars here */
 .ask-btn {
@@ -17,6 +19,7 @@ html, body, #root { height: 100%; margin: 0; }
 }
 .agent-title button:hover { background: var(--button-hover-bg); }
 .agent-title button.new { font-size: 16px; line-height: 1; padding: 2px 8px; }
+.agent-title button.menu { display: inline-flex; padding: 4px 6px; }
 .card button, .chat-input button {
   font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--default-border-color);
   background: var(--island-bg-color); color: var(--text-primary-color); cursor: pointer;

@@ -142,8 +142,6 @@ input.gnew { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px s
 .gprimary:hover { background: #5b57d1; }
 .gsecondary { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #1b1b1f; cursor: pointer; }
 .gsecondary:hover { background: #ececf1; }
-.gclose { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #4a4b52; cursor: pointer; }
-.gclose:hover { background: #ececf1; }
 .gbulk { display: flex; align-items: center; gap: 10px; margin: -6px 0 14px; padding: 8px 12px; border-radius: 10px; background: #eeeefc; color: #1b1b1f; font-size: 13px; }
 .gbulk select { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: inherit; }
 .gdanger { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid #f1c0c0; background: #fff0f0; color: #c92a2a; cursor: pointer; }
@@ -180,6 +178,6 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .app.dark .gallery { background: #121216; color: #e3e3e8; }
 .app.dark .gcrumb { color: #b9b9c2; } .app.dark button.gcrumb:hover { background: #232329; } .app.dark .gcrumb.on { color: #fff; }
 .app.dark .gcard { background: #1b1b21; border-color: #3a3a44; } .app.dark .gthumb { background: #fff; border-color: #2a2a32; } .app.dark .gcard.folder .gthumb { background: #232329; }
-.app.dark .gclose, .app.dark .gsecondary, .app.dark input.gnew, .app.dark input.gname { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
+.app.dark .gsecondary, .app.dark input.gnew, .app.dark input.gname { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
 .app.dark .gmore:hover { background: #2a2a32; color: #fff; }
 .app.dark .gmenu { background: #232329; border-color: #3a3a44; } .app.dark .gmenu button { color: #e3e3e8; } .app.dark .gmenu button:hover { background: #2a2a32; }

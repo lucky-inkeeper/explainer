@@ -1,0 +1,388 @@
+{
+ "prompt": "Draw the data model of a blog: users, posts, comments, tags, with cardinality.",
+ "session": "66589d16-3369-4c2f-81a4-95a71366f541",
+ "at": "2026-08-29T11:22:54.413Z",
+ "frame": "Blog data model",
+ "elements": [
+  {
+   "type": "rectangle",
+   "id": "e_user",
+   "x": 0,
+   "y": 100,
+   "width": 240,
+   "height": 110,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g_user"
+   ],
+   "label": {
+    "text": "DB: User",
+    "verticalAlign": "top",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "text",
+   "id": "t_user",
+   "x": 16,
+   "y": 144,
+   "width": 200,
+   "text": "# id\nemail\nname",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "textAlign": "left",
+   "groupIds": [
+    "g_user"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "e_post",
+   "x": 340,
+   "y": 78,
+   "width": 260,
+   "height": 154,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g_post"
+   ],
+   "label": {
+    "text": "DB: Post",
+    "verticalAlign": "top",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "text",
+   "id": "t_post",
+   "x": 356,
+   "y": 122,
+   "width": 220,
+   "text": "# id\n-> author_id\ntitle\nbody\npublished_at",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "textAlign": "left",
+   "groupIds": [
+    "g_post"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "e_comment",
+   "x": 0,
+   "y": 380,
+   "width": 240,
+   "height": 132,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g_comment"
+   ],
+   "label": {
+    "text": "DB: Comment",
+    "verticalAlign": "top",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "text",
+   "id": "t_comment",
+   "x": 16,
+   "y": 424,
+   "width": 200,
+   "text": "# id\n-> post_id\n-> author_id\nbody",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "textAlign": "left",
+   "groupIds": [
+    "g_comment"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "e_posttag",
+   "x": 700,
+   "y": 111,
+   "width": 220,
+   "height": 88,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g_posttag"
+   ],
+   "label": {
+    "text": "DB: PostTag",
+    "verticalAlign": "top",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "text",
+   "id": "t_posttag",
+   "x": 716,
+   "y": 155,
+   "width": 180,
+   "text": "-> post_id\n-> tag_id",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "textAlign": "left",
+   "groupIds": [
+    "g_posttag"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "e_tag",
+   "x": 1020,
+   "y": 100,
+   "width": 220,
+   "height": 110,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g_tag"
+   ],
+   "label": {
+    "text": "DB: Tag",
+    "verticalAlign": "top",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "text",
+   "id": "t_tag",
+   "x": 1036,
+   "y": 144,
+   "width": 180,
+   "text": "# id\nname\nslug",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "textAlign": "left",
+   "groupIds": [
+    "g_tag"
+   ]
+  },
+  {
+   "type": "arrow",
+   "id": "r_user_post",
+   "start": {
+    "id": "e_user"
+   },
+   "end": {
+    "id": "e_post"
+   },
+   "endArrowhead": null,
+   "startArrowhead": null,
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "writes",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "r_user_comment",
+   "start": {
+    "id": "e_user"
+   },
+   "end": {
+    "id": "e_comment"
+   },
+   "endArrowhead": null,
+   "startArrowhead": null,
+   "strokeWidth": 1,
+   "roughness": 0,
+   "label": {
+    "text": "writes",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "r_post_comment",
+   "start": {
+    "id": "e_comment"
+   },
+   "end": {
+    "id": "e_post"
+   },
+   "endArrowhead": null,
+   "startArrowhead": null,
+   "strokeWidth": 1,
+   "roughness": 0,
+   "elbowed": true,
+   "label": {
+    "text": "has",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "r_post_posttag",
+   "start": {
+    "id": "e_post"
+   },
+   "end": {
+    "id": "e_posttag"
+   },
+   "endArrowhead": null,
+   "startArrowhead": null,
+   "strokeWidth": 1,
+   "roughness": 0
+  },
+  {
+   "type": "arrow",
+   "id": "r_posttag_tag",
+   "start": {
+    "id": "e_posttag"
+   },
+   "end": {
+    "id": "e_tag"
+   },
+   "endArrowhead": null,
+   "startArrowhead": null,
+   "strokeWidth": 1,
+   "roughness": 0
+  },
+  {
+   "type": "text",
+   "id": "c1",
+   "x": 252,
+   "y": 126,
+   "text": "1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c2",
+   "x": 312,
+   "y": 126,
+   "text": "N",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c3",
+   "x": 132,
+   "y": 222,
+   "text": "1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c4",
+   "x": 132,
+   "y": 344,
+   "text": "N",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c5",
+   "x": 252,
+   "y": 416,
+   "text": "N",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c6",
+   "x": 484,
+   "y": 244,
+   "text": "1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c7",
+   "x": 612,
+   "y": 126,
+   "text": "1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c8",
+   "x": 672,
+   "y": 126,
+   "text": "N",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c9",
+   "x": 932,
+   "y": 126,
+   "text": "N",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "c10",
+   "x": 992,
+   "y": 126,
+   "text": "1",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "text",
+   "id": "n1",
+   "x": 700,
+   "y": 214,
+   "width": 300,
+   "text": "Join table: Post and Tag are\nmany-to-many.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  }
+ ]
+}

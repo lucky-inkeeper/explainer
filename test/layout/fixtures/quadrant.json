@@ -1,0 +1,243 @@
+{
+ "prompt": "Place these features on an impact versus effort quadrant: dark mode, SSO, export to CSV, mobile app, in-app search, billing portal. Mark what to do first.",
+ "session": "1c58b145-03c4-49e4-9bc4-4b808bfc686e",
+ "at": "2026-08-29T11:29:48.462Z",
+ "frame": "Feature priorities: impact vs effort",
+ "elements": [
+  {
+   "id": "axis-h",
+   "type": "line",
+   "x": 60,
+   "y": 320,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     800,
+     0
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
+   "endArrowhead": "arrow"
+  },
+  {
+   "id": "axis-v",
+   "type": "line",
+   "x": 450,
+   "y": 600,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     -560
+    ]
+   ],
+   "strokeWidth": 1,
+   "strokeColor": "#1e1e1e",
+   "endArrowhead": "arrow"
+  },
+  {
+   "id": "lbl-effort",
+   "type": "text",
+   "x": 875,
+   "y": 310,
+   "text": "EFFORT",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "lbl-impact",
+   "type": "text",
+   "x": 412,
+   "y": 8,
+   "text": "IMPACT",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "q-first",
+   "type": "text",
+   "x": 76,
+   "y": 52,
+   "text": "DO FIRST",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "q-plan",
+   "type": "text",
+   "x": 786,
+   "y": 52,
+   "text": "PLAN",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "q-fill",
+   "type": "text",
+   "x": 76,
+   "y": 566,
+   "text": "FILL IN",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "q-later",
+   "type": "text",
+   "x": 786,
+   "y": 566,
+   "text": "LATER",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "note-first",
+   "type": "text",
+   "x": 76,
+   "y": 76,
+   "width": 300,
+   "text": "Ship CSV export first: smallest build, unblocks reporting now.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "id": "dot-csv",
+   "type": "ellipse",
+   "x": 120,
+   "y": 150,
+   "width": 16,
+   "height": 16,
+   "backgroundColor": "#e8590c",
+   "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2
+  },
+  {
+   "id": "t-csv",
+   "type": "text",
+   "x": 148,
+   "y": 142,
+   "text": "1  Export to CSV",
+   "fontSize": 16
+  },
+  {
+   "id": "dot-search",
+   "type": "ellipse",
+   "x": 200,
+   "y": 215,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e"
+  },
+  {
+   "id": "t-search",
+   "type": "text",
+   "x": 224,
+   "y": 207,
+   "text": "2  In-app search",
+   "fontSize": 16
+  },
+  {
+   "id": "dot-billing",
+   "type": "ellipse",
+   "x": 250,
+   "y": 275,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e"
+  },
+  {
+   "id": "t-billing",
+   "type": "text",
+   "x": 274,
+   "y": 267,
+   "text": "3  Billing portal",
+   "fontSize": 16
+  },
+  {
+   "id": "dot-sso",
+   "type": "ellipse",
+   "x": 620,
+   "y": 160,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e"
+  },
+  {
+   "id": "t-sso",
+   "type": "text",
+   "x": 644,
+   "y": 152,
+   "text": "SSO",
+   "fontSize": 16
+  },
+  {
+   "id": "dot-dark",
+   "type": "ellipse",
+   "x": 170,
+   "y": 430,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e"
+  },
+  {
+   "id": "t-dark",
+   "type": "text",
+   "x": 194,
+   "y": 422,
+   "text": "Dark mode",
+   "fontSize": 16
+  },
+  {
+   "id": "dot-mobile",
+   "type": "ellipse",
+   "x": 640,
+   "y": 450,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e"
+  },
+  {
+   "id": "t-mobile",
+   "type": "text",
+   "x": 664,
+   "y": 442,
+   "text": "Mobile app",
+   "fontSize": 16
+  },
+  {
+   "id": "note-mobile",
+   "type": "text",
+   "x": 560,
+   "y": 492,
+   "width": 300,
+   "text": "Mobile app: highest cost, thinnest reach. Revisit after SSO.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  }
+ ]
+}

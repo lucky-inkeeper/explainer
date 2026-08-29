@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Excalidraw, MainMenu, Sidebar, WelcomeScreen, getCommonBounds, getSceneVersion, loadFromBlob, sceneCoordsToViewportCoords, serializeAsJSON } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
-import { DEFAULT_FONT, runCanvasTool } from "./canvas";
+import { runCanvasTool } from "./canvas";
+import { DEFAULT_FONT, inspect, layout } from "./layout";
 import { ChatPanel, useChat } from "./Chat";
 import { Minimap, type MinimapHandle } from "./Minimap";
 import { Gallery } from "./Gallery";
@@ -179,7 +180,7 @@ export function App() {
     </Sidebar.Trigger>
   ), []);
   const onLibraryChange = useCallback((items: any) => localStorage.setItem(LIB_KEY, JSON.stringify(items)), []);
-  const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) { (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); } }, []);
+  const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) { (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); (window as any).__layout = { layout, inspect }; } }, []);
 
   if (!initial || !file) return <div className="app" />;
   return (

@@ -1,0 +1,445 @@
+{
+ "prompt": "Draw the deployment of a web app on AWS: CloudFront, two ECS app replicas running api v2.4.1, RDS primary with a standby, S3 for uploads. Show ports.",
+ "session": "9bfe9f4e-ff23-4014-a894-1b3a08a2af75",
+ "at": "2026-08-29T11:40:26.570Z",
+ "frame": "Deployment: web app on AWS (eu-west-1)",
+ "elements": [
+  {
+   "type": "rectangle",
+   "id": "z-edge",
+   "x": 220,
+   "y": 176,
+   "width": 248,
+   "height": 194,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-edge"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-edge",
+   "x": 244,
+   "y": 186,
+   "text": "edge (global)",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-edge"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "cf",
+   "x": 244,
+   "y": 222,
+   "width": 200,
+   "height": 124,
+   "backgroundColor": "#ffc9c9",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "groupIds": [
+    "g-edge"
+   ],
+   "label": {
+    "text": "CloudFront",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "text",
+   "id": "cf-tag",
+   "x": 256,
+   "y": 232,
+   "text": "CDN / MANAGED",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-edge"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "z-app",
+   "x": 548,
+   "y": 176,
+   "width": 248,
+   "height": 194,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-app",
+   "x": 572,
+   "y": 186,
+   "text": "app tier / private subnet",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "ecs",
+   "x": 572,
+   "y": 222,
+   "width": 200,
+   "height": 124,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "groupIds": [
+    "g-app"
+   ],
+   "label": {
+    "text": "web-api service",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "text",
+   "id": "ecs-tag",
+   "x": 584,
+   "y": 232,
+   "text": "ECS FARGATE",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "ecs-badge",
+   "x": 736,
+   "y": 232,
+   "text": "x2",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-app"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "ecs-chip",
+   "x": 584,
+   "y": 304,
+   "width": 176,
+   "height": 28,
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "groupIds": [
+    "g-app"
+   ],
+   "label": {
+    "text": "api  v2.4.1",
+    "fontSize": 14
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "z-data",
+   "x": 876,
+   "y": 176,
+   "width": 248,
+   "height": 378,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-data",
+   "x": 900,
+   "y": 186,
+   "text": "data tier / private subnet",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "rds1",
+   "x": 900,
+   "y": 222,
+   "width": 200,
+   "height": 124,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "groupIds": [
+    "g-data"
+   ],
+   "label": {
+    "text": "DB: rds-primary",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "text",
+   "id": "rds1-tag",
+   "x": 912,
+   "y": 232,
+   "text": "MANAGED / AZ-a",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "rds2",
+   "x": 900,
+   "y": 406,
+   "width": 200,
+   "height": 124,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-data"
+   ],
+   "label": {
+    "text": "DB: rds-standby",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "text",
+   "id": "rds2-tag",
+   "x": 912,
+   "y": 416,
+   "text": "MANAGED / AZ-b",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-data"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "z-store",
+   "x": 548,
+   "y": 430,
+   "width": 248,
+   "height": 194,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-store"
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t-store",
+   "x": 572,
+   "y": 440,
+   "text": "object storage (regional)",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-store"
+   ]
+  },
+  {
+   "type": "rectangle",
+   "id": "s3",
+   "x": 572,
+   "y": 476,
+   "width": 200,
+   "height": 124,
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-store"
+   ],
+   "label": {
+    "text": "DB: s3-uploads",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "text",
+   "id": "s3-tag",
+   "x": 584,
+   "y": 486,
+   "text": "S3 / MANAGED",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "groupIds": [
+    "g-store"
+   ]
+  },
+  {
+   "type": "ellipse",
+   "id": "user",
+   "x": 0,
+   "y": 254,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Browser",
+    "fontSize": 20
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a1",
+   "start": {
+    "id": "user"
+   },
+   "end": {
+    "id": "cf"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "HTTPS:443",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a2",
+   "start": {
+    "id": "cf"
+   },
+   "end": {
+    "id": "ecs"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "HTTP:8080",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a3",
+   "start": {
+    "id": "ecs"
+   },
+   "end": {
+    "id": "rds1"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "TLS:5432",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a4",
+   "start": {
+    "id": "ecs"
+   },
+   "end": {
+    "id": "s3"
+   },
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "HTTPS:443",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "arrow",
+   "id": "a5",
+   "start": {
+    "id": "rds1"
+   },
+   "end": {
+    "id": "rds2"
+   },
+   "strokeStyle": "dashed",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "sync replication",
+    "fontSize": 16
+   }
+  },
+  {
+   "type": "text",
+   "id": "n1",
+   "x": 1164,
+   "y": 430,
+   "width": 300,
+   "text": "Standby takes the same port 5432 after failover; the endpoint DNS flips.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "n1-lead",
+   "start": {
+    "id": "n1"
+   },
+   "end": {
+    "id": "rds2"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
+  }
+ ],
+ "todo": [
+  "arrow a4 crosses text t-store \"object storage (regional\""
+ ]
+}

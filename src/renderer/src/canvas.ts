@@ -81,7 +81,14 @@ function add(api: ExcalidrawImperativeAPI, rawEls: El[], mode: string, selectedI
 }
 
 type Box = { x: number; y: number; w: number; h: number };
-const box = (e: El): Box => ({ x: e.x, y: e.y, w: e.width, h: e.height });
+/** Geometry box; an arrow label gets the box of its visible text (Excalidraw pads labels to 11 x font size). */
+const box = (e: El): Box => {
+  if (e.type === "text" && e.containerId && e.text) {
+    const w = Math.min(e.width, Math.max(...String(e.text).split("\n").map((l: string) => l.length)) * (e.fontSize ?? 16) * 0.6 + 8);
+    return { x: e.x + (e.width - w) / 2, y: e.y, w, h: e.height };
+  }
+  return { x: e.x, y: e.y, w: e.width, h: e.height };
+};
 const contains = (outer: Box, inner: Box) => inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.w <= outer.x + outer.w && inner.y + inner.h <= outer.y + outer.h;
 const hit = (a: Box, b: Box, pad = 2) => a.x + a.w > b.x + pad && b.x + b.w > a.x + pad && a.y + a.h > b.y + pad && b.y + b.h > a.y + pad;
 const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
@@ -146,7 +153,16 @@ function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = [], se
   const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
   const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
   const gap = 6, endGap = a.endArrowhead === "dot" ? 12 : gap; // a dot head needs room or it sits on the target
-  if (!a.elbowed) return { p1: edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap), p2: edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap), kind: "straight" };
+  if (!a.elbowed) {
+    const straight: Route = { p1: edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap), p2: edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap), kind: "straight" };
+    if (!a.label?.text) return straight;
+    // a straight line with a collinear middle point: same line, label at 30 or 70 percent instead of the midpoint
+    const dx = straight.p2[0] - straight.p1[0], dy = straight.p2[1] - straight.p1[1];
+    const slid: Route[] = Math.abs(dy) <= 2 ? [{ ...straight, kind: "zh", frac: 0.3 }, { ...straight, kind: "zh", frac: 0.7 }] : Math.abs(dx) <= 2 ? [{ ...straight, kind: "zv", frac: 0.3 }, { ...straight, kind: "zv", frac: 0.7 }] : [];
+    const cands = [straight, ...slid], label = { w: String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8, h: 24 };
+    const costs = cands.map((r) => routeCost(r, obstacles.filter((o) => o.id !== s.id && o.id !== t.id), placed, label, sections));
+    return cands[costs.indexOf(Math.min(...costs))];
+  }
   const dx = cx(t) - cx(s), dy = cy(t) - cy(s), sx = Math.sign(dx) || 1, sy = Math.sign(dy) || 1;
   const sideX = (e: El, sign: number, g: number): number => (sign > 0 ? e.x + w(e) + g : e.x - g);
   const sideY = (e: El, sign: number, g: number): number => (sign > 0 ? e.y + h(e) + g : e.y - g);
@@ -157,7 +173,7 @@ function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = [], se
   const bends = (z: Route) => [z, { ...z, frac: 0.3 }, { ...z, frac: 0.7 }]; // a z-route can bend early or late to dodge another arrow
   const order = Math.abs(dx) >= Math.abs(dy) ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
   const others = obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
-  const label = a.label?.text ? { w: String(a.label.text).length * 8 + 8, h: 24 } : null; // estimate; measured later by the spacing pass
+  const label = a.label?.text ? { w: String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8, h: 24 } : null; // estimate; measured later by the spacing pass
   const costs = order.map((r) => routeCost(r, others, placed, label, sections));
   return order[costs.indexOf(Math.min(...costs))];
 }
@@ -172,7 +188,7 @@ function fan(routed: { a: El; r: Route; s: El; t: El }[]) {
   };
   const groups = new Map<string, { r: Route; key: "p1" | "p2"; e: El; other: [number, number]; label: number }[]>();
   for (const { a, r, s, t } of routed) {
-    const label = a.label?.text ? String(a.label.text).length * 8 + 8 : 0; // estimate; the spacing pass measures the real width later
+    const label = a.label?.text ? String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8 : 0; // estimate; the spacing pass measures the real width later
     for (const [key, e, other] of [["p1", s, r.p2], ["p2", t, r.p1]] as ["p1" | "p2", El, [number, number]][]) {
       const k = `${e.id}:${side(e, r[key])}`;
       if (!groups.has(k)) groups.set(k, []);
@@ -265,9 +281,10 @@ function spaceForLabels(skeleton: El[]): El[] {
       const forward = horizontal ? t.x >= s.x : t.y >= s.y;
       const [near, far] = forward ? [s, t] : [t, s]; // near = upstream on the axis, far = the one we push
       const gap = horizontal ? far.x - (near.x + near.width) : far.y - (near.y + near.height);
-      const need = (horizontal ? label.width : label.height) + 32;
-      if (gap >= need) continue;
-      const delta = need - gap, threshold = horizontal ? far.x : far.y;
+      const lb = box(label), need = (horizontal ? lb.w : lb.h) + 32;
+      const touches = hit(lb, box(s)) || hit(lb, box(t)); // a label slid off-center can still lean on a shape
+      if (gap >= need && !touches) continue;
+      const delta = Math.max(gap < need ? need - gap : 0, touches ? 24 : 0), threshold = horizontal ? far.x : far.y;
       base.forEach((e, i) => {
         if (e.type === "arrow" && !e.points) return; // bound arrows follow their shapes
         const pos = horizontal ? (e.x ?? 0) + off[i].x : (e.y ?? 0) + off[i].y;

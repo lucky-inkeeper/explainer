@@ -95,3 +95,7 @@ button.chip:hover { background: var(--button-hover-bg); }
 
 /* Excalidraw help "?" corner button: hidden; Help stays in the main menu and on the ? key */
 .excalidraw .help-icon { display: none; }
+
+/* Excalidraw disables text selection on its container; the thread is text */
+.excalidraw .chat .chat-log, .excalidraw .chat .chat-log * { -webkit-user-select: text; user-select: text; cursor: auto; }
+.excalidraw .chat .chat-log button, .excalidraw .chat .chat-log summary { -webkit-user-select: none; user-select: none; cursor: pointer; }

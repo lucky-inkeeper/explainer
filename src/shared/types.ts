@@ -60,6 +60,8 @@ export interface Api {
   invoke(ch: "drawings:move", path: string, folder: string | null): Promise<string>;
   invoke(ch: "drawings:delete", path: string): Promise<void>;
   invoke(ch: "drawings:newFolder", name: string): Promise<void>;
+  invoke(ch: "drawings:renameFolder", name: string, next: string): Promise<void>;
+  invoke(ch: "drawings:deleteFolder", name: string): Promise<void>;
   invoke(ch: "drawings:thumb", path: string, mtime: number): Promise<string | null>;
   invoke(ch: "drawings:thumbSet", path: string, mtime: number, dataUrl: string): Promise<void>;
   invoke(ch: "file:openDialog"): Promise<string | null>;

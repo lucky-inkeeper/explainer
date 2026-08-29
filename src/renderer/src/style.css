@@ -111,45 +111,49 @@ button.chip:hover { background: var(--button-hover-bg); }
 /* ---- drawings gallery (outside .excalidraw: no CSS vars, light defaults, .app.dark overrides) */
 .gallery-btn { position: absolute; top: 14px; left: 64px; z-index: 5; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #1b1b1f; font: 13px system-ui, sans-serif; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.08); max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gallery-btn:hover { background: #f1f0ff; }
-.app.sidebar-open .gallery-btn { display: inline-flex; }
 .gallery { position: absolute; inset: 0; z-index: 6; overflow: auto; background: #f7f7f9; color: #1b1b1f; font: 14px/1.4 system-ui, sans-serif; padding: 20px 28px 48px; }
 .ghead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-.gtabs { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
-.gtab { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: #4a4b52; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
-.gtab span { font-size: 11px; color: #8a8b93; }
-.gtab:hover { background: #ececf1; }
-.gtab.on { background: #fff; border-color: #d5d6dd; color: #1b1b1f; font-weight: 600; }
-.gtab.plus { color: #6965db; }
-.gnew, .gname { font: inherit; }
-input.gnew { padding: 5px 10px; border-radius: 8px; border: 1px solid #6965db; background: #fff; color: inherit; width: 160px; }
+.gcrumbs { display: flex; align-items: center; gap: 6px; font-size: 15px; }
+.gcrumb { font: inherit; padding: 6px 10px; border-radius: 8px; border: 0; background: transparent; color: #4a4b52; cursor: pointer; }
+button.gcrumb:hover { background: #ececf1; }
+.gcrumb.on { color: #1b1b1f; font-weight: 600; }
+.gsep { color: #b0b1b8; }
 .gactions { display: flex; gap: 8px; align-items: center; }
+input.gnew { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #6965db; background: #fff; color: inherit; width: 160px; }
 .gprimary { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid #6965db; background: #6965db; color: #fff; cursor: pointer; }
 .gprimary:hover { background: #5b57d1; }
+.gsecondary { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #1b1b1f; cursor: pointer; }
+.gsecondary:hover { background: #ececf1; }
 .gclose { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid #d5d6dd; background: #fff; color: #4a4b52; cursor: pointer; }
 .gclose:hover { background: #ececf1; }
 .gerror { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: #fff0f0; color: #c92a2a; font-size: 13px; }
-.ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-.gcard { display: flex; flex-direction: column; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; overflow: hidden; }
+.ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.gcard { position: relative; display: flex; flex-direction: column; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; }
 .gcard.current { border-color: #6965db; box-shadow: 0 0 0 2px rgba(105,101,219,.25); }
-.gthumb { display: block; width: 100%; aspect-ratio: 16 / 10; padding: 0; border: 0; border-bottom: 1px solid #ececf1; background: #fff; cursor: pointer; overflow: hidden; }
+.gthumb { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 16 / 10; padding: 0; border: 0; border-bottom: 1px solid #ececf1; border-radius: 12px 12px 0 0; background: #fff; cursor: pointer; overflow: hidden; }
+.gcard.folder .gthumb { background: #f4f4fb; }
 .gthumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.gthumb:hover img { opacity: .9; }
-.gempty { display: flex; height: 100%; align-items: center; justify-content: center; color: #b0b1b8; font-size: 12px; }
-.gmeta { padding: 10px 12px 10px; display: flex; flex-direction: column; gap: 6px; }
-button.gname { text-align: left; padding: 0; border: 0; background: none; color: inherit; font-weight: 600; font-size: 14px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gthumb:hover img, .gcard.folder .gthumb:hover svg { opacity: .85; }
+.gempty { color: #b0b1b8; font-size: 12px; }
+.gmeta { padding: 10px 12px 8px; display: flex; flex-direction: column; gap: 4px; }
+button.gname { text-align: left; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 button.gname:hover { color: #6965db; }
-input.gname { padding: 2px 6px; border-radius: 6px; border: 1px solid #6965db; background: #fff; color: inherit; font-weight: 600; }
-.gfoot { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8a8b93; }
-.gfoot select { font: inherit; font-size: 12px; max-width: 120px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #4a4b52; padding: 2px 4px; cursor: pointer; }
-.gfoot select:hover { border-color: #d5d6dd; background: #fff; }
-.gdate { margin-left: auto; white-space: nowrap; }
-.gicon { font: inherit; font-size: 13px; padding: 2px 5px; border-radius: 6px; border: 0; background: transparent; color: #8a8b93; cursor: pointer; }
-.gicon:hover { background: #ececf1; color: #1b1b1f; }
+input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px solid #6965db; background: #fff; color: inherit; font-weight: 600; }
+.gfoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #8a8b93; }
+.gdate { white-space: nowrap; }
+.gmore { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border-radius: 6px; border: 0; background: transparent; color: #8a8b93; cursor: pointer; }
+.gmore:hover { background: #ececf1; color: #1b1b1f; }
+.gmenu { position: absolute; right: 8px; bottom: 40px; z-index: 2; min-width: 160px; padding: 4px; border-radius: 10px; border: 1px solid #d5d6dd; background: #fff; box-shadow: 0 6px 20px rgba(0,0,0,.14); display: flex; flex-direction: column; }
+.gmenu button { font: inherit; font-size: 13px; text-align: left; padding: 7px 10px; border: 0; border-radius: 6px; background: transparent; color: #1b1b1f; cursor: pointer; }
+.gmenu button:hover { background: #f1f0ff; }
+.gmenu button.danger { color: #c92a2a; }
+.gmenu button.danger:hover { background: #fff0f0; }
+.gmenu .ghead-item { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #8a8b93; padding: 8px 10px 2px; border-top: 1px solid #ececf1; margin-top: 2px; }
 .gnone { color: #8a8b93; padding: 40px 0; grid-column: 1 / -1; text-align: center; }
 .app.dark .gallery-btn { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
 .app.dark .gallery { background: #121216; color: #e3e3e8; }
-.app.dark .gtab { color: #b9b9c2; } .app.dark .gtab:hover { background: #232329; } .app.dark .gtab.on { background: #232329; border-color: #3a3a44; color: #fff; }
-.app.dark .gcard { background: #1b1b21; border-color: #3a3a44; } .app.dark .gthumb { background: #fff; border-color: #2a2a32; }
-.app.dark .gclose, .app.dark input.gnew, .app.dark input.gname { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
-.app.dark .gfoot select { color: #b9b9c2; } .app.dark .gfoot select:hover { background: #232329; border-color: #3a3a44; }
-.app.dark .gicon:hover { background: #2a2a32; color: #fff; }
+.app.dark .gcrumb { color: #b9b9c2; } .app.dark button.gcrumb:hover { background: #232329; } .app.dark .gcrumb.on { color: #fff; }
+.app.dark .gcard { background: #1b1b21; border-color: #3a3a44; } .app.dark .gthumb { background: #fff; border-color: #2a2a32; } .app.dark .gcard.folder .gthumb { background: #232329; }
+.app.dark .gclose, .app.dark .gsecondary, .app.dark input.gnew, .app.dark input.gname { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
+.app.dark .gmore:hover { background: #2a2a32; color: #fff; }
+.app.dark .gmenu { background: #232329; border-color: #3a3a44; } .app.dark .gmenu button { color: #e3e3e8; } .app.dark .gmenu button:hover { background: #2a2a32; }

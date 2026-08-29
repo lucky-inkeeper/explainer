@@ -3,7 +3,6 @@ import { exportToBlob, restoreElements } from "@excalidraw/excalidraw";
 import { api } from "./api";
 import type { DrawingInfo, DrawingList } from "../../shared/types";
 
-const ALL = "\0all", ROOT = "\0root";
 const when = (ms: number) => {
   const d = new Date(ms), today = new Date();
   if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -27,11 +26,19 @@ async function thumbnail(f: DrawingInfo): Promise<string | null> {
   } catch (e) { console.error("thumbnail failed", f.path, e); return null; }
 }
 
+const FolderIcon = () => (
+  <svg viewBox="0 0 64 48" width="72" height="54" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#dcdcff" stroke="#8e8bd6" strokeWidth="2" /><path d="M4 18h56" stroke="#8e8bd6" strokeWidth="2" /></svg>
+);
+const Dots = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>;
+
+type MenuItem = { label: string; onClick: () => void; danger?: boolean; head?: boolean };
+
 export function Gallery({ current, onOpen, onClose }: { current: string | null; onOpen: (path: string) => void; onClose: () => void }) {
   const [list, setList] = useState<DrawingList>({ folders: [], files: [] });
-  const [filter, setFilter] = useState<string>(ALL);
+  const [cwd, setCwd] = useState<string | null>(null); // folder name, or null at the root
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
-  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null); // file path or "folder:<name>"
+  const [menu, setMenu] = useState<string | null>(null); // same keys
   const [addingFolder, setAddingFolder] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const alive = useRef(true);
@@ -50,34 +57,44 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
 
   useEffect(() => { alive.current = true; reload(); return () => { alive.current = false; }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !renaming && !addingFolder) onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, renaming, addingFolder]);
+    const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return; if (menu) setMenu(null); else if (!renaming && !addingFolder) onClose(); };
+    const onClick = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest(".gmenu, .gmore")) setMenu(null); };
+    window.addEventListener("keydown", onKey); window.addEventListener("mousedown", onClick);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mousedown", onClick); };
+  }, [onClose, renaming, addingFolder, menu]);
 
-  const act = async (fn: () => Promise<unknown>) => { setError(null); try { await fn(); await reload(); } catch (e: any) { setError(e?.message?.replace(/^.*Error: /, "") ?? String(e)); } };
-  const rename = (f: DrawingInfo, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== f.name) act(async () => { const p = await api.invoke("drawings:rename", f.path, name); if (f.path === current) onOpen(p); }); };
+  const act = async (fn: () => Promise<unknown>) => { setMenu(null); setError(null); try { await fn(); await reload(); } catch (e: any) { setError(e?.message?.replace(/^.*Error: /, "") ?? String(e)); } };
+  const renameFile = (f: DrawingInfo, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== f.name) act(async () => { const p = await api.invoke("drawings:rename", f.path, name); if (f.path === current) onOpen(p); }); };
+  const renameFolder = (d: string, name: string) => { setRenaming(null); if (name.trim() && name.trim() !== d) act(async () => { await api.invoke("drawings:renameFolder", d, name); if (cwd === d) setCwd(name.trim()); }); };
   const move = (f: DrawingInfo, folder: string | null) => act(async () => { const p = await api.invoke("drawings:move", f.path, folder); if (f.path === current) onOpen(p); });
-  const remove = (f: DrawingInfo) => { if (!confirm(`Move "${f.name}" to the Trash?`)) return; act(async () => { await api.invoke("drawings:delete", f.path); if (f.path === current) onOpen(await api.invoke("file:new")); }); };
-  const create = () => act(async () => onOpen(await api.invoke("file:new", filter === ALL || filter === ROOT ? null : filter)));
+  const removeFile = (f: DrawingInfo) => { setMenu(null); if (!confirm(`Move "${f.name}" to the Trash?`)) return; act(async () => { await api.invoke("drawings:delete", f.path); if (f.path === current) onOpen(await api.invoke("file:new")); }); };
+  const removeFolder = (d: string) => { setMenu(null); const n = list.files.filter((f) => f.folder === d).length; if (!confirm(`Move the folder "${d}"${n ? ` and its ${n} drawing${n > 1 ? "s" : ""}` : ""} to the Trash?`)) return; act(async () => { const inside = list.files.some((f) => f.folder === d && f.path === current); await api.invoke("drawings:deleteFolder", d); if (cwd === d) setCwd(null); if (inside) onOpen(await api.invoke("file:new")); }); };
+  const create = () => act(async () => onOpen(await api.invoke("file:new", cwd)));
 
-  const visible = list.files.filter((f) => filter === ALL || (filter === ROOT ? f.folder === null : f.folder === filter));
-  const tab = (key: string, label: string, count: number) => (
-    <button key={key} className={"gtab" + (filter === key ? " on" : "")} onClick={() => setFilter(key)}>{label}<span>{count}</span></button>
+  const files = list.files.filter((f) => f.folder === cwd);
+  const folders = cwd === null ? list.folders : [];
+  const Menu = ({ id, items }: { id: string; items: MenuItem[] }) => (
+    <>
+      <button className="gmore" onClick={() => setMenu(menu === id ? null : id)} aria-label="More" title="More"><Dots /></button>
+      {menu === id && (
+        <div className="gmenu" role="menu">
+          {items.map((it, i) => it.head ? <div key={i} className="ghead-item">{it.label}</div> : <button key={i} role="menuitem" className={it.danger ? "danger" : ""} onClick={it.onClick}>{it.label}</button>)}
+        </div>
+      )}
+    </>
   );
 
   return (
     <div className="gallery" role="dialog" aria-label="Drawings">
       <header className="ghead">
-        <div className="gtabs">
-          {tab(ALL, "All", list.files.length)}
-          {tab(ROOT, "No folder", list.files.filter((f) => f.folder === null).length)}
-          {list.folders.map((d) => tab(d, d, list.files.filter((f) => f.folder === d).length))}
-          {addingFolder ? (
-            <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
-          ) : <button className="gtab plus" onClick={() => setAddingFolder(true)}>+ folder</button>}
-        </div>
+        <nav className="gcrumbs" aria-label="Folder">
+          <button className={"gcrumb" + (cwd === null ? " on" : "")} onClick={() => setCwd(null)}>Drawings</button>
+          {cwd !== null && <><span className="gsep">/</span><span className="gcrumb on">{cwd}</span></>}
+        </nav>
         <div className="gactions">
+          {cwd === null && (addingFolder ? (
+            <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
+          ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
           <button className="gprimary" onClick={create}>+ New drawing</button>
           <button className="gclose" onClick={onClose} aria-label="Close" title="Close (Esc)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -86,8 +103,30 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
       </header>
       {error && <div className="gerror">{error}</div>}
       <div className="ggrid">
-        {visible.map((f) => {
+        {folders.map((d) => {
+          const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
+          return (
+            <article key={key} className="gcard folder">
+              <button className="gthumb" onClick={() => setCwd(d)} title={`Open ${d}`}><FolderIcon /></button>
+              <div className="gmeta">
+                {renaming === key ? (
+                  <input className="gname" autoFocus defaultValue={d} onKeyDown={(e) => { if (e.key === "Enter") renameFolder(d, e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => renameFolder(d, e.currentTarget.value)} />
+                ) : <button className="gname" onClick={() => setCwd(d)} onDoubleClick={() => setRenaming(key)}>{d}</button>}
+                <div className="gfoot">
+                  <span className="gdate">{n} drawing{n === 1 ? "" : "s"}</span>
+                  <Menu id={key} items={[
+                    { label: "Open", onClick: () => { setMenu(null); setCwd(d); } },
+                    { label: "Rename", onClick: () => { setMenu(null); setRenaming(key); } },
+                    { label: "Move to Trash", onClick: () => removeFolder(d), danger: true },
+                  ]} />
+                </div>
+              </div>
+            </article>
+          );
+        })}
+        {files.map((f) => {
           const t = thumbs[`${f.path}@${f.mtime}`];
+          const targets = [null, ...list.folders].filter((d) => d !== f.folder);
           return (
             <article key={f.path} className={"gcard" + (f.path === current ? " current" : "")}>
               <button className="gthumb" onClick={() => onOpen(f.path)} title={`Open ${f.name}`}>
@@ -95,24 +134,22 @@ export function Gallery({ current, onOpen, onClose }: { current: string | null; 
               </button>
               <div className="gmeta">
                 {renaming === f.path ? (
-                  <input className="gname" autoFocus defaultValue={f.name} onKeyDown={(e) => { if (e.key === "Enter") rename(f, e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => rename(f, e.currentTarget.value)} />
-                ) : (
-                  <button className="gname" onClick={() => onOpen(f.path)} onDoubleClick={() => setRenaming(f.path)} title="Open (double-click to rename)">{f.name}</button>
-                )}
+                  <input className="gname" autoFocus defaultValue={f.name} onKeyDown={(e) => { if (e.key === "Enter") renameFile(f, e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => renameFile(f, e.currentTarget.value)} />
+                ) : <button className="gname" onClick={() => onOpen(f.path)} onDoubleClick={() => setRenaming(f.path)} title="Open (double-click to rename)">{f.name}</button>}
                 <div className="gfoot">
-                  <select value={f.folder ?? ""} onChange={(e) => move(f, e.target.value || null)} title="Folder">
-                    <option value="">No folder</option>
-                    {list.folders.map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
                   <span className="gdate" title={new Date(f.mtime).toLocaleString()}>{f.hasSession ? "● " : ""}{when(f.mtime)}</span>
-                  <button className="gicon" onClick={() => setRenaming(f.path)} title="Rename" aria-label="Rename">✎</button>
-                  <button className="gicon" onClick={() => remove(f)} title="Move to Trash" aria-label="Move to Trash">🗑</button>
+                  <Menu id={f.path} items={[
+                    { label: "Open", onClick: () => onOpen(f.path) },
+                    { label: "Rename", onClick: () => { setMenu(null); setRenaming(f.path); } },
+                    ...(targets.length ? [{ label: "Move to", onClick: () => {}, head: true }, ...targets.map((d) => ({ label: d ?? "No folder", onClick: () => move(f, d) }))] : []),
+                    { label: "Move to Trash", onClick: () => removeFile(f), danger: true },
+                  ]} />
                 </div>
               </div>
             </article>
           );
         })}
-        {!visible.length && <div className="gnone">No drawings here yet.</div>}
+        {!folders.length && !files.length && <div className="gnone">No drawings here yet.</div>}
       </div>
     </div>
   );

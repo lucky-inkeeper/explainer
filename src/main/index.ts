@@ -153,6 +153,21 @@ ipcMain.handle("drawings:rename", (_e, p: string, name: string) => moveDrawing(p
 ipcMain.handle("drawings:move", (_e, p: string, folder: string | null) => moveDrawing(p, path.join(folder ? path.join(DIRS.drawings, safeName(folder)) : DIRS.drawings, path.basename(p))));
 ipcMain.handle("drawings:delete", async (_e, p: string) => { await shell.trashItem(p); retarget(p, null); });
 ipcMain.handle("drawings:newFolder", (_e, name: string) => { fs.mkdirSync(path.join(DIRS.drawings, safeName(name)), { recursive: true }); });
+const folderFiles = (dir: string) => fs.readdirSync(dir).filter((f) => f.endsWith(EXT)).map((f) => path.join(dir, f));
+ipcMain.handle("drawings:renameFolder", (_e, name: string, next: string) => {
+  const from = path.join(DIRS.drawings, safeName(name)), to = path.join(DIRS.drawings, safeName(next));
+  if (from === to) return;
+  if (fs.existsSync(to)) throw new Error(`${safeName(next)} already exists`);
+  const files = folderFiles(from);
+  fs.renameSync(from, to);
+  for (const f of files) retarget(f, path.join(to, path.basename(f)));
+});
+ipcMain.handle("drawings:deleteFolder", async (_e, name: string) => {
+  const dir = path.join(DIRS.drawings, safeName(name));
+  const files = folderFiles(dir);
+  await shell.trashItem(dir);
+  for (const f of files) retarget(f, null);
+});
 ipcMain.handle("drawings:thumb", (_e, p: string, mtime: number) => {
   const f = thumbFile(p, mtime);
   return fs.existsSync(f) ? `data:image/jpeg;base64,${fs.readFileSync(f).toString("base64")}` : null;

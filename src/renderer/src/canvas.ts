@@ -101,27 +101,31 @@ function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number, gapPx 
   return [cx + dx * (t + gap), cy + dy * (t + gap)];
 }
 
-type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh" };
+type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh"; frac?: number };
 
 /** Skeleton geometry for a route: z = one bend pair halfway, l = one bend, straight otherwise. */
 function geometry(r: Route) {
-  const dx = r.p2[0] - r.p1[0], dy = r.p2[1] - r.p1[1];
-  const mid = r.kind === "zh" ? [[dx / 2, 0], [dx / 2, dy]] : r.kind === "zv" ? [[0, dy / 2], [dx, dy / 2]] : r.kind === "lv" ? [[0, dy]] : r.kind === "lh" ? [[dx, 0]] : [];
+  const dx = r.p2[0] - r.p1[0], dy = r.p2[1] - r.p1[1], f = r.frac ?? 0.5;
+  const mid = r.kind === "zh" ? [[dx * f, 0], [dx * f, dy]] : r.kind === "zv" ? [[0, dy * f], [dx, dy * f]] : r.kind === "lv" ? [[0, dy]] : r.kind === "lh" ? [[dx, 0]] : [];
   return { x: r.p1[0], y: r.p1[1], width: Math.abs(dx), height: Math.abs(dy), points: [[0, 0], ...mid.filter((m, i, all) => i === 0 || m[0] !== all[i - 1][0] || m[1] !== all[i - 1][1]), [dx, dy]] };
 }
 
-/** Does this route run through a shape other than its own two ends? */
-function routeCrosses(r: Route, obstacles: El[]) {
+/** Route cost: 100 per shape it runs through (other than its own two ends), 10 per arrow it runs along, 1 per arrow it crosses. */
+function routeCost(r: Route, obstacles: El[], placed: Seg[]) {
   const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
-  return obstacles.some((o) => pts.slice(1).some((p, i) => segCrosses(pts[i], p, box(o))));
+  const segs: Seg[] = pts.slice(1).map((p, i) => [pts[i], p]);
+  let cost = 0;
+  for (const o of obstacles) if (segs.some((sg) => segCrosses(sg[0], sg[1], box(o)))) cost += 100;
+  for (const sh of placed) for (const sg of segs) { if (segsAlong(sg, sh)) cost += 10; else if (segsCross(sg, sh)) cost += 1; }
+  return cost;
 }
 
 /**
- * Attach points and shape of a bound arrow. Straight edge to edge unless `elbowed`. An elbow tries, in order: a z-route on the
- * dominant axis, the two single-bend routes, the other z-route; the first that crosses no other shape wins.
- * ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
+ * Attach points and shape of a bound arrow. Straight edge to edge unless `elbowed`. An elbow tries a z-route on the dominant
+ * axis, the two single-bend routes and the other z-route, and takes the cheapest (shapes it runs through, then arrows it runs
+ * along or crosses); ties go to the first. ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
  */
-function ports(a: El, s: El, t: El, obstacles: El[] = []): Route {
+function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = []): Route {
   const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
   const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
   const gap = 6, endGap = a.endArrowhead === "dot" ? 12 : gap; // a dot head needs room or it sits on the target
@@ -133,9 +137,11 @@ function ports(a: El, s: El, t: El, obstacles: El[] = []): Route {
   const zv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "zv" };
   const lv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "lv" }; // down, then into the side
   const lh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "lh" }; // sideways, then into top or bottom
-  const order = Math.abs(dx) >= Math.abs(dy) ? [zh, lh, lv, zv] : [zv, lv, lh, zh];
+  const bends = (z: Route) => [z, { ...z, frac: 0.3 }, { ...z, frac: 0.7 }]; // a z-route can bend early or late to dodge another arrow
+  const order = Math.abs(dx) >= Math.abs(dy) ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
   const others = obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
-  return order.find((r) => !routeCrosses(r, others)) ?? order[0];
+  const costs = order.map((r) => routeCost(r, others, placed));
+  return order[costs.indexOf(Math.min(...costs))];
 }
 
 const route = (a: El, s: El, t: El, obstacles: El[] = []) => geometry(ports(a, s, t, obstacles));
@@ -208,6 +214,7 @@ function spaceForLabels(skeleton: El[]): El[] {
     const byId = new Map(sk.map((e) => [e.id, e]));
     // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
     const routed: { a: El; r: Route; s: El; t: El }[] = [];
+    const placed: Seg[] = [];
     const obstacles = sk.filter((e) => SHAPES.has(e.type) && e.x != null && (e.backgroundColor ?? "").toLowerCase() !== "#f8f9fa");
     for (const a of sk) {
       if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
@@ -217,7 +224,10 @@ function spaceForLabels(skeleton: El[]): El[] {
       const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
       const [sx, sy] = c(s), [tx, ty] = c(t);
       if (!a.elbowed && Math.abs(tx - sx) > 24 && Math.abs(ty - sy) > 24) a.elbowed = true;
-      routed.push({ a, r: ports(a, s, t, obstacles), s, t });
+      const r = ports(a, s, t, obstacles, placed);
+      routed.push({ a, r, s, t });
+      const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
+      placed.push(...pts.slice(1).map((p, i) => [pts[i], p] as Seg));
     }
     fan(routed);
     for (const { a, r } of routed) Object.assign(a, geometry(r));
@@ -350,7 +360,7 @@ function dedupeIds(api: ExcalidrawImperativeAPI, skeleton: El[]): string[] {
   return [...map].map(([from, to]) => `${from} -> ${to}`);
 }
 
-/** True when the segment enters AND leaves the box. Touching an edge or ending inside is an attachment, not a crossing. */
+/** True when the segment passes through the inside of the box (shrunk by 4 px, so touching an edge does not count). */
 function segCrosses([x1, y1]: number[], [x2, y2]: number[], b: Box): boolean {
   const pad = 4, bx1 = b.x + pad, by1 = b.y + pad, bx2 = b.x + b.w - pad, by2 = b.y + b.h - pad;
   if (bx2 <= bx1 || by2 <= by1) return false;
@@ -361,22 +371,44 @@ function segCrosses([x1, y1]: number[], [x2, y2]: number[], b: Box): boolean {
     const r = q / p;
     if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
   }
-  return t0 > 0.02 && t1 < 0.98;
+  return t1 - t0 > 0.02;
 }
 
-/** Arrows that run through a node they do not connect, or over a text that is not their own label. Sections are transparent. */
+const inBox = (p: number[], b: Box) => p[0] >= b.x && p[0] <= b.x + b.w && p[1] >= b.y && p[1] <= b.y + b.h;
+type Seg = [number[], number[]];
+const segsOf = (a: El): Seg[] => { const pts = a.points.map((p: number[]) => [a.x + p[0], a.y + p[1]]); return pts.slice(1).map((p: number[], i: number) => [pts[i], p] as Seg); };
+
+/** Proper crossing of two segments (shared endpoints and touching do not count). */
+function segsCross([a, b]: Seg, [c, d]: Seg): boolean {
+  const o = (p: number[], q: number[], r: number[]) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  const o1 = o(a, b, c), o2 = o(a, b, d), o3 = o(c, d, a), o4 = o(c, d, b);
+  return o1 !== 0 && o2 !== 0 && o3 !== 0 && o4 !== 0 && o1 !== o2 && o3 !== o4;
+}
+
+/** Two axis-aligned segments that run along the same line and overlap for more than 8 px. */
+function segsAlong([a, b]: Seg, [c, d]: Seg): boolean {
+  const flat = (p: number[], q: number[]) => Math.abs(p[1] - q[1]) < 2, tall = (p: number[], q: number[]) => Math.abs(p[0] - q[0]) < 2;
+  if (flat(a, b) && flat(c, d) && Math.abs(a[1] - c[1]) < 4) return Math.min(Math.max(a[0], b[0]), Math.max(c[0], d[0])) - Math.max(Math.min(a[0], b[0]), Math.min(c[0], d[0])) > 8;
+  if (tall(a, b) && tall(c, d) && Math.abs(a[0] - c[0]) < 4) return Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1])) > 8;
+  return false;
+}
+
+/** Arrows that run through a node they do not connect, over a text that is not their label, or along another arrow. Sections are transparent. */
 function crossingWarnings(els: El[]) {
   const out: string[] = [];
   const isSection = (e: El) => (e.backgroundColor ?? "").toLowerCase() === "#f8f9fa";
-  for (const a of els) {
-    if (a.type !== "arrow" || a.isDeleted) continue;
+  const arrows = els.filter((a) => a.type === "arrow" && !a.isDeleted);
+  for (const a of arrows) {
     const ends = new Set([a.startBinding?.elementId, a.endBinding?.elementId]);
-    const pts = a.points.map((p: number[]) => [a.x + p[0], a.y + p[1]]);
+    const segs = segsOf(a), first = segs[0][0], last = segs[segs.length - 1][1];
     for (const e of els) {
       if (e.isDeleted || e.id === a.id || ends.has(e.id) || isSection(e)) continue;
       if (e.type === "text" ? e.containerId === a.id || ends.has(e.containerId) : !SHAPES.has(e.type)) continue;
-      for (let i = 1; i < pts.length; i++) if (segCrosses(pts[i - 1], pts[i], box(e))) { out.push(`arrow ${a.id} crosses ${e.type} ${e.id}${e.text ? ` "${e.text.slice(0, 24)}"` : ""}`); break; }
+      const b = box(e);
+      if (inBox(first, b) || inBox(last, b)) continue; // the arrow attaches to it
+      if (segs.some((sg) => segCrosses(sg[0], sg[1], b))) out.push(`arrow ${a.id} crosses ${e.type} ${e.id}${e.text ? ` "${e.text.slice(0, 24)}"` : ""}`);
     }
+    for (const o of arrows) if (o.id > a.id && segs.some((sg) => segsOf(o).some((sh) => segsAlong(sg, sh)))) out.push(`arrow ${a.id} runs along arrow ${o.id}`);
   }
   return out;
 }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
@@ -30,6 +30,9 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, "../preload/index.js"), contextIsolation: true, sandbox: false },
   });
   win.maximize(); // Excalidraw docks the sidebar only above ~1229px editor width
+  // page zoom stays fixed: pinch and Cmd+wheel must zoom the canvas (Excalidraw), not the UI
+  win.webContents.setVisualZoomLevelLimits(1, 1);
+  win.webContents.on("did-finish-load", () => win.webContents.setZoomFactor(1));
   if (process.env.ELECTRON_RENDERER_URL) win.loadURL(process.env.ELECTRON_RENDERER_URL);
   else win.loadFile(path.join(__dirname, "../renderer/index.html"));
 }
@@ -140,5 +143,14 @@ ipcMain.handle("shell:terminal", (_e, cmd: string) =>
   execFile("osascript", ["-e", 'tell application "Terminal" to activate', "-e", `tell application "Terminal" to do script "${cmd}"`]));
 ipcMain.handle("shell:openExternal", (_e, url: string) => shell.openExternal(url));
 
-app.whenReady().then(createWindow);
+// no zoomIn/zoomOut/resetZoom roles: Cmd+= Cmd+- Cmd+0 belong to Excalidraw's canvas zoom
+const menu = Menu.buildFromTemplate([
+  { role: "appMenu" },
+  { role: "fileMenu" },
+  { role: "editMenu" },
+  { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }, { type: "separator" }, { role: "togglefullscreen" }] },
+  { role: "windowMenu" },
+]);
+
+app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); });
 app.on("window-all-closed", () => { session?.kill(); app.quit(); });

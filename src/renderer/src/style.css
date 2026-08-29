@@ -63,7 +63,7 @@ button.chip:hover { background: var(--button-hover-bg); }
 .composer-foot { display: flex; align-items: center; gap: 10px; font-size: 12px; }
 .composer-foot .spacer { flex: 1; }
 .composer-foot .plain { border: none; background: transparent; color: var(--text-primary-color); font: inherit; font-size: 12px; padding: 2px 0; cursor: pointer; }
-.composer-foot select.plain { appearance: none; -webkit-appearance: none; padding-right: 14px; background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right center; }
+.composer-foot select.plain { appearance: none; -webkit-appearance: none; padding-right: 12px; background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right center; }
 .composer-foot .plus { font-size: 16px; line-height: 1; padding: 0 4px; opacity: .8; }
 .composer-foot .cost { opacity: .7; }
 .popup { position: absolute; bottom: 100%; left: 10px; right: 10px; max-height: 240px; overflow: auto; background: var(--island-bg-color); border: 1px solid var(--default-border-color); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 10; }

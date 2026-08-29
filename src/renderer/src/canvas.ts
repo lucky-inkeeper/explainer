@@ -52,13 +52,25 @@ function place(api: ExcalidrawImperativeAPI, els: El[], mode: string, selectedId
   return els.map((e) => ({ ...e, x: e.x + dx, y: e.y + dy }));
 }
 
-function add(api: ExcalidrawImperativeAPI, els: El[], mode: string, selectedIds: string[]) {
+/** A frame given only `children` converts with no bounds: fit it around them. */
+function fitFrames(els: El[]): El[] {
+  return els.map((f) => {
+    if (f.type !== "frame" || (Number.isFinite(f.x) && Number.isFinite(f.y) && f.width > 0)) return f;
+    const kids = els.filter((e) => e.frameId === f.id && Number.isFinite(e.x));
+    if (!kids.length) return f;
+    const [x1, y1, x2, y2] = getCommonBounds(kids);
+    return { ...f, x: x1 - 24, y: y1 - 24, width: x2 - x1 + 48, height: y2 - y1 + 48 };
+  });
+}
+
+function add(api: ExcalidrawImperativeAPI, rawEls: El[], mode: string, selectedIds: string[]) {
+  const els = fitFrames(rawEls);
+  const bad = els.filter((e) => ![e.x, e.y, e.width, e.height].every(Number.isFinite));
+  if (bad.length) throw new Error(`invalid geometry on ${bad.map((e) => `${e.id} (${e.type})`).join(", ")}; every element needs numeric x, y, width, height`);
   const live = new Set(api.getSceneElements().map((e) => e.id));
   const dup = els.filter((e) => live.has(e.id)).map((e) => e.id);
   if (dup.length) throw new Error(`ids already exist on canvas: ${dup.join(", ")}. Use update_elements or pick new ids.`);
   const placed = place(api, els, mode, selectedIds);
-  const bad = placed.filter((e) => !Number.isFinite(e.x) || !Number.isFinite(e.y));
-  if (bad.length) throw new Error(`invalid coordinates on ${bad.map((e) => e.id).join(", ")}; every element needs numeric x and y`);
   const incoming = new Set(placed.map((e) => e.id));
   // a deleted element may be re-created under the same id: drop the tombstone so ids stay unique
   const base = api.getSceneElementsIncludingDeleted().filter((e) => !(e.isDeleted && incoming.has(e.id)));
@@ -77,19 +89,36 @@ const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
  * Fix on the skeleton: push the target shape (and everything beyond it on that axis) until the label fits, then re-convert
  * so Excalidraw re-routes the arrows and recenters labels. ponytail: axis-aligned push only; a real layout engine if diagrams get dense.
  */
+/** Point on the boundary of `e` (centre cx,cy) along the ray toward (ox,oy), pushed out by a small gap. */
+function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number): [number, number] {
+  const dx = ox - cx, dy = oy - cy, hw = (e.width ?? 100) / 2, hh = (e.height ?? 100) / 2;
+  if (!dx && !dy) return [cx, cy];
+  const ax = Math.abs(dx) / hw, ay = Math.abs(dy) / hh;
+  const t = e.type === "ellipse" ? 1 / Math.hypot(ax, ay) : e.type === "diamond" ? 1 / (ax + ay) : 1 / Math.max(ax, ay);
+  const len = Math.hypot(dx, dy), gap = 6 / len;
+  return [cx + dx * (t + gap), cy + dy * (t + gap)];
+}
+
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass
   const base: El[] = structuredClone(skeleton);
-  base.forEach((e, i) => {
-    if (!e.id) e.id = `el-${Date.now().toString(36)}-${i}`;
-    // an arrow bound at both ends is re-routed by the converter; explicit points would keep a stale length after shapes move
-    if (e.type === "arrow" && e.start?.id && e.end?.id) { delete e.points; delete e.x; delete e.y; }
-  });
+  base.forEach((e, i) => { if (!e.id) e.id = `el-${Date.now().toString(36)}-${i}`; });
   const off = base.map(() => ({ x: 0, y: 0 }));
-  const build = () => convertToExcalidrawElements(
-    structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) })),
-    { regenerateIds: false },
-  );
+  const build = () => {
+    const sk: El[] = structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) }));
+    const byId = new Map(sk.map((e) => [e.id, e]));
+    // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
+    for (const a of sk) {
+      if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
+      const s = byId.get(a.start.id), t = byId.get(a.end.id);
+      if (!s || s.x == null || !t || t.x == null) continue;
+      const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
+      const [sx, sy] = c(s), [tx, ty] = c(t);
+      const p1 = edgePoint(s, sx, sy, tx, ty), p2 = edgePoint(t, tx, ty, sx, sy);
+      Object.assign(a, { x: p1[0], y: p1[1], width: Math.abs(p2[0] - p1[0]), height: Math.abs(p2[1] - p1[1]), points: [[0, 0], [p2[0] - p1[0], p2[1] - p1[1]]] });
+    }
+    return convertToExcalidrawElements(sk, { regenerateIds: false });
+  };
   let els = build();
   for (let iter = 0; iter < 8; iter++) {
     const byId = new Map(els.map((e: El) => [e.id, e]));

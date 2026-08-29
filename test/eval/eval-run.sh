@@ -1,7 +1,6 @@
 #!/bin/zsh
 cd "$(dirname "$0")"
 mkdir -p out out/png
-node cdp.mjs eval "localStorage.removeItem('evalSeen'); 'reset'" >/dev/null
 node cdp.mjs eval "(()=>{ if(!document.querySelector('.chat-log')) return 'closed'; return 'open'; })()" | grep -q open || node cdp.mjs click 1457 34
 typeset -a P
 P=(
@@ -29,8 +28,7 @@ for entry in "${P[@]}"; do
   node cdp.mjs eval "document.querySelector('.composer-foot button.new').click(); 'new'" >/dev/null; sleep 6
   node turn.mjs "$prompt" 360 > "out/$n-$slug.log" 2>&1
   sleep 2
-  frame=$(node cdp.mjs evalfile shot-new.js 2>&1); sleep 1
-  node cdp.mjs shot "out/$n-$slug.png" >/dev/null 2>&1
+  frame=$(node cdp.mjs eval "(()=>{ const f = window.__xapi.getSceneElements().filter(e => e.type === 'frame').sort((a, b) => b.x - a.x)[0]; return f ? f.name : 'no frame'; })()" 2>&1)
   last=$(grep "^msg text" "out/$n-$slug.log" | tail -1 | cut -c1-200)
   warn=$(grep -c "warnings" "out/$n-$slug.log")
   secs=$(grep -o "^--- [0-9]*s" "out/$n-$slug.log" | head -1)

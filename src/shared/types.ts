@@ -26,6 +26,7 @@ export interface DrawingInfo {
   /** subfolder of data/drawings, or null at the root */
   folder: string | null;
   mtime: number;
+  ctime: number;
   hasSession: boolean;
 }
 

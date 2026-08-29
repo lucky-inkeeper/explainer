@@ -129,7 +129,7 @@ function retarget(from: string, to: string | null) {
 }
 function listDrawings(): DrawingList {
   const st = readState();
-  const info = (p: string, folder: string | null): DrawingInfo => ({ path: p, name: path.basename(p, EXT), folder, mtime: fs.statSync(p).mtimeMs, hasSession: !!st.sessions[p] });
+  const info = (p: string, folder: string | null): DrawingInfo => { const st2 = fs.statSync(p); return { path: p, name: path.basename(p, EXT), folder, mtime: st2.mtimeMs, ctime: st2.birthtimeMs || st2.ctimeMs, hasSession: !!st.sessions[p] }; };
   const files: DrawingInfo[] = [], folders: string[] = [];
   for (const e of fs.readdirSync(DIRS.drawings, { withFileTypes: true })) {
     if (e.name.startsWith(".")) continue;

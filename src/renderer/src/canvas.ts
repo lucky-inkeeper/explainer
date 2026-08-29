@@ -149,7 +149,7 @@ function spaceForLabels(skeleton: El[]): El[] {
   return els;
 }
 
-/** Labels that still intersect a shape they are not bound to — reported back so the agent can fix them. */
+/** Labels that still intersect a shape they are not bound to - reported back so the agent can fix them. */
 function overlapWarnings(els: El[]) {
   const out: string[] = [];
   for (const t of els) {

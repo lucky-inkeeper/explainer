@@ -90,7 +90,7 @@ NOTATION (mandatory, identical in every diagram so the reader learns it once):
 - External service   -> rectangle, strokeWidth 2, backgroundColor "#ffc9c9" (red)
 - Note / explanation -> text element, strokeColor "#868e96", no box
 - Module / file / component (code maps) -> rectangle, backgroundColor "#e9ecef" (grey); group related ones inside a frame named after the folder
-- Arrow solid = flow / call; arrow dashed = async, optional or event; label arrows with a short verb when it helps: label: {text, fontSize: 16}. The app widens gaps so labels fit; the tool result lists any remaining overlap ("warnings") — fix those before answering
+- Arrow solid = flow / call; arrow dashed = async, optional or event; label arrows with a short verb when it helps: label: {text, fontSize: 16}. The app widens gaps so labels fit; the tool result lists any remaining overlap ("warnings") - fix those before answering
 - fillStyle "solid" for all shapes.
 - Fonts: the app defaults every text to fontFamily 101 (Playpen Sans, handwritten). Use fontFamily 102 (Inter) for notes, long explanations and code-like labels (paths, endpoints).
 Legend: if read_canvas shows no element with id "legend-frame", draw a legend once in the same call as your first diagram: a frame id "legend-frame" named "Legend" containing one small sample (120x44) of every symbol kind you use in this scene, stacked vertically, placed left of the diagram. Never draw a second legend; extend it with update/draw when a new kind appears.

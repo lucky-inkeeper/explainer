@@ -64,7 +64,7 @@ button.chip:hover { background: var(--button-hover-bg); }
 .chip img { height: 22px; border-radius: 3px; }
 .chip button { border: none; background: transparent; color: inherit; padding: 0 2px; cursor: pointer; font-size: 12px; }
 .chat-input { position: relative; display: flex; }
-.chat-input textarea { flex: 1; min-width: 0; resize: none; font: inherit; padding: 8px 40px 8px 10px; border-radius: 10px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; min-height: 44px; max-height: 160px; }
+.excalidraw .chat .chat-input textarea { flex: 1; min-width: 0; resize: none; font: inherit; padding: 8px 40px 8px 10px; border-radius: 10px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; min-height: 44px; max-height: 180px; white-space: pre-wrap; overflow-wrap: break-word; overflow-x: hidden; overflow-y: auto; line-height: 1.4; }
 .chat-input textarea:focus { outline: none; border-color: var(--color-primary); }
 .chat-input button { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
 .chat-input button.enter { border: 1px solid var(--default-border-color); background: transparent; color: var(--text-primary-color); opacity: .6; }

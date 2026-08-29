@@ -279,6 +279,7 @@ export function ChatPanel({ chat }: { chat: Chat }) {
 
   useEffect(() => { const el = log.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 200) el.scrollTop = el.scrollHeight; }, [items]);
   useEffect(() => { if (attached.length) ta.current?.focus(); }, [attached]);
+  useEffect(() => { const el = ta.current; if (!el) return; el.style.height = "auto"; el.style.height = `${Math.min(el.scrollHeight, 180)}px`; }, [input]); // grow with content
 
   const slash = input.startsWith("/") && !/\s/.test(input) ? commands.filter((c) => c.name.startsWith(input.slice(1))).slice(0, 12) : [];
   const submit = () => { const t = input.trim(); if (!t) return; chat.send(t, images); setInput(""); setImages([]); };

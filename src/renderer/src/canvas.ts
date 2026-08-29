@@ -110,6 +110,12 @@ function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number, gapPx 
 
 type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh"; frac?: number };
 
+/** Free space between two boxes on each axis (negative when their ranges overlap). Decides sideways vs up/down. */
+const gaps = (s: El, t: El) => ({
+  gx: Math.max(t.x - (s.x + (s.width ?? 100)), s.x - (t.x + (t.width ?? 100))),
+  gy: Math.max(t.y - (s.y + (s.height ?? 100)), s.y - (t.y + (t.height ?? 100))),
+});
+
 /** Skeleton geometry for a route: z = one bend pair halfway, l = one bend, straight otherwise. */
 function geometry(r: Route) {
   const dx = r.p2[0] - r.p1[0], dy = r.p2[1] - r.p1[1], f = r.frac ?? 0.5;
@@ -153,8 +159,15 @@ function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = [], se
   const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
   const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
   const gap = 6, endGap = a.endArrowhead === "dot" ? 12 : gap; // a dot head needs room or it sits on the target
+  // a text leaves and enters through the side that faces the other end, never through its own glyphs
+  const textPort = (e: El, o: El, g: number): [number, number] => {
+    const ddx = cx(o) - cx(e), ddy = cy(o) - cy(e), { gx, gy } = gaps(e, o);
+    return gx >= gy ? [ddx > 0 ? e.x + w(e) + g : e.x - g, cy(e)] : [cx(e), ddy > 0 ? e.y + h(e) + g : e.y - g];
+  };
   if (!a.elbowed) {
-    const straight: Route = { p1: edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap), p2: edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap), kind: "straight" };
+    const p1 = s.type === "text" ? textPort(s, t, gap) : edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap);
+    const p2 = t.type === "text" ? textPort(t, s, endGap) : edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap);
+    const straight: Route = { p1, p2, kind: "straight" };
     if (!a.label?.text) return straight;
     // a straight line with a collinear middle point: same line, label at 30 or 70 percent instead of the midpoint
     const dx = straight.p2[0] - straight.p1[0], dy = straight.p2[1] - straight.p1[1];
@@ -171,7 +184,8 @@ function ports(a: El, s: El, t: El, obstacles: El[] = [], placed: Seg[] = [], se
   const lv: Route = { p1: [cx(s), sideY(s, sy, gap)], p2: [sideX(t, -sx, endGap), cy(t)], kind: "lv" }; // down, then into the side
   const lh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "lh" }; // sideways, then into top or bottom
   const bends = (z: Route) => [z, { ...z, frac: 0.3 }, { ...z, frac: 0.7 }]; // a z-route can bend early or late to dodge another arrow
-  const order = Math.abs(dx) >= Math.abs(dy) ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
+  const { gx, gy } = gaps(s, t);
+  const order = gx >= gy ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
   const others = obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
   const label = a.label?.text ? { w: String(a.label.text).length * (a.label.fontSize ?? 20) * 0.6 + 8, h: 24 } : null; // estimate; measured later by the spacing pass
   const costs = order.map((r) => routeCost(r, others, placed, label, sections));
@@ -224,8 +238,10 @@ function followBindings(els: El[], touched: Set<string>): El[] {
     }
   }
   for (const a of els) {
-    if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
-    const s = byId.get(a.startBinding.elementId), t = byId.get(a.endBinding.elementId);
+    if (a.type !== "arrow") continue;
+    const [sid, tid] = endIds(a);
+    if (!sid || !tid) continue;
+    const s = byId.get(sid), t = byId.get(tid);
     if (!s || !t || !(touched.has(s.id) || touched.has(t.id))) continue;
     const next = newElementWith(a, route(a, s, t, els.filter((e) => SHAPES.has(e.type) && !e.isDeleted && !isSection(e))));
     moved.set(a.id, next);
@@ -238,10 +254,20 @@ function followBindings(els: El[], touched: Set<string>): El[] {
   return moved.size ? els.map((e) => moved.get(e.id) ?? e) : els;
 }
 
+/** Ids of the two ends of an arrow: Excalidraw bindings, or leader links to a text kept in customData. */
+const endIds = (a: El): [string | undefined, string | undefined] => [a.startBinding?.elementId ?? a.customData?.leaderStart, a.endBinding?.elementId ?? a.customData?.leaderEnd];
+
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass
   const base: El[] = structuredClone(skeleton);
   base.forEach((e, i) => { if (!e.id) e.id = `el-${Date.now().toString(36)}-${i}`; });
+  // Excalidraw relocates a text that is given as a binding target (it parks it at the arrow's start): keep such links in customData and route them here
+  const textIds = new Set(base.filter((e) => e.type === "text").map((e) => e.id));
+  for (const a of base) {
+    if (a.type !== "arrow") continue;
+    if (a.start?.id && textIds.has(a.start.id)) { a.customData = { ...(a.customData ?? {}), leaderStart: a.start.id }; delete a.start; }
+    if (a.end?.id && textIds.has(a.end.id)) { a.customData = { ...(a.customData ?? {}), leaderEnd: a.end.id }; delete a.end; }
+  }
   const off = base.map(() => ({ x: 0, y: 0 }));
   const build = () => {
     const sk: El[] = structuredClone(base).map((e: El, i: number) => ({ ...e, ...(e.x != null && { x: e.x + off[i].x }), ...(e.y != null && { y: e.y + off[i].y }) }));
@@ -252,10 +278,12 @@ function spaceForLabels(skeleton: El[]): El[] {
     const obstacles = sk.filter((e) => SHAPES.has(e.type) && e.x != null && !isSection(e));
     const sections = sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e));
     for (const a of sk) {
-      if (a.type !== "arrow" || !a.start?.id || !a.end?.id) continue;
-      const s = byId.get(a.start.id), t = byId.get(a.end.id);
+      if (a.type !== "arrow") continue;
+      const sid = a.start?.id ?? a.customData?.leaderStart, tid = a.end?.id ?? a.customData?.leaderEnd;
+      if (!sid || !tid) continue;
+      const s = byId.get(sid), t = byId.get(tid);
       if (!s || s.x == null || !t || t.x == null) continue;
-      // no diagonals: ends that share neither a row nor a column get a right-angle route
+      // no diagonals: ends whose centers are off on both axes get a right-angle route
       const c = (e: El) => [e.x + (e.width ?? 100) / 2, e.y + (e.height ?? 100) / 2];
       const [sx, sy] = c(s), [tx, ty] = c(t);
       if (!a.elbowed && Math.abs(tx - sx) > 24 && Math.abs(ty - sy) > 24) a.elbowed = true;
@@ -269,15 +297,25 @@ function spaceForLabels(skeleton: El[]): El[] {
     return convertToExcalidrawElements(sk, { regenerateIds: false });
   };
   let els = build();
+  // texts get their measured size on conversion: copy it back so routes and parking see real boxes, then rebuild once
+  let measured = false;
+  for (const b of base) {
+    if (b.type !== "text" || b.width) continue;
+    const m = (els as El[]).find((e) => e.id === b.id);
+    if (m) { b.width = m.width; b.height = m.height; measured = true; }
+  }
+  if (measured) els = build();
   for (let iter = 0; iter < 8; iter++) {
     const byId = new Map(els.map((e: El) => [e.id, e]));
     const sects = (els as El[]).filter((e) => SHAPES.has(e.type) && isSection(e));
     const sectionOf = (e: El) => sects.find((sc) => contains(box(sc), box(e)));
     let moved = false;
     for (const a of els as El[]) {
-      if (a.type !== "arrow" || !a.startBinding || !a.endBinding) continue;
+      if (a.type !== "arrow") continue;
+      const [sid, tid] = endIds(a);
+      if (!sid || !tid) continue;
       const label = (els as El[]).find((t) => t.type === "text" && t.containerId === a.id);
-      const s = byId.get(a.startBinding.elementId), t = byId.get(a.endBinding.elementId);
+      const s = byId.get(sid), t = byId.get(tid);
       if (!label || !s || !t) continue;
       const horizontal = Math.abs(t.x + t.width / 2 - (s.x + s.width / 2)) >= Math.abs(t.y + t.height / 2 - (s.y + s.height / 2));
       const forward = horizontal ? t.x >= s.x : t.y >= s.y;
@@ -463,7 +501,7 @@ function crossingWarnings(els: El[]) {
   const out: string[] = [];
   const arrows = els.filter((a) => a.type === "arrow" && !a.isDeleted);
   for (const a of arrows) {
-    const ends = new Set([a.startBinding?.elementId, a.endBinding?.elementId]);
+    const ends = new Set(endIds(a));
     const segs = segsOf(a), first = segs[0][0], last = segs[segs.length - 1][1];
     for (const e of els) {
       if (e.isDeleted || e.id === a.id || ends.has(e.id) || isSection(e)) continue;

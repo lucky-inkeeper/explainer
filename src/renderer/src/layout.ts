@@ -82,8 +82,8 @@ function labelCenter(pts: number[][]): number[] {
 }
 
 /**
- * Route cost: 100 per shape it runs through (other than its own two ends), 10 per arrow it runs along, 1 per arrow it crosses,
- * 20 when its label would sit on a node, 5 when the label would straddle a section border.
+ * Route cost: 100 per node or text it runs through (its own ends included: ports sit outside the box), 10 per arrow it runs along,
+ * 1 per arrow it crosses, 20 when its label would sit on a node, a text or another arrow, 5 when the label would straddle a section border.
  */
 function routeCost(r: Route, obstacles: El[], placed: Seg[], label: { w: number; h: number } | null, sections: El[]) {
   const g = geometry(r), pts = g.points.map((p) => [g.x + p[0], g.y + p[1]]);
@@ -94,6 +94,7 @@ function routeCost(r: Route, obstacles: El[], placed: Seg[], label: { w: number;
   if (label) {
     const c = labelCenter(pts), lb: Box = { x: c[0] - label.w / 2, y: c[1] - label.h / 2, w: label.w, h: label.h };
     for (const o of obstacles) if (hit(lb, box(o))) cost += 20;
+    for (const sh of placed) if (segCrosses(sh[0], sh[1], lb)) cost += 20;
     for (const sc of sections) if (hit(lb, box(sc)) && !contains(box(sc), lb)) cost += 5;
   }
   return cost;
@@ -101,6 +102,19 @@ function routeCost(r: Route, obstacles: El[], placed: Seg[], label: { w: number;
 
 /** Ids of the two ends of an arrow in either vocabulary: skeleton start/end, Excalidraw bindings, or leader links to a text kept in customData. */
 const endIds = (a: El): [string | undefined, string | undefined] => [a.start?.id ?? a.startBinding?.elementId ?? a.customData?.leaderStart, a.end?.id ?? a.endBinding?.elementId ?? a.customData?.leaderEnd];
+
+/** Obstacles among converted elements: nodes, free texts, and the bound labels of arrows and sections (a label inside a node is covered by the node). */
+function obstaclesOf(live: El[]): El[] {
+  const byId = new Map(live.map((e) => [e.id, e]));
+  const owner = (e: El) => (e.containerId ? byId.get(e.containerId) : undefined);
+  return [...live.filter(isObstacle), ...live.filter((e) => e.type === "text" && e.containerId && (owner(e)?.type === "arrow" || (owner(e) && isSection(owner(e)))))];
+}
+
+/** A bound label as an obstacle box before conversion: centered on (cx, cy), estimated size. `containerId` names the owner so its own arrow ignores it. */
+const labelBox = (ownerId: string, label: El, cx: number, cy: number): El => {
+  const w = textWidth(label.text, label.fontSize ?? 20), h = String(label.text).split("\n").length * (label.fontSize ?? 20) * 1.25;
+  return { id: `${ownerId}:label`, type: "text", containerId: ownerId, x: cx - w / 2, y: cy - h / 2, width: w, height: h };
+};
 
 /** One bound arrow as the router sees it, whichever vocabulary it came from. */
 type Edge = { a: El; s: El; t: El; elbowed: boolean; dotEnd: boolean; label: { w: number; h: number } | null };
@@ -131,7 +145,7 @@ function routeEdge(edge: Edge, f: Field): Route {
   const w = (e: El) => e.width ?? 100, h = (e: El) => e.height ?? 100;
   const cx = (e: El) => e.x + w(e) / 2, cy = (e: El) => e.y + h(e) / 2;
   const gap = 6, endGap = dotEnd ? 12 : gap; // a dot head needs room or it sits on the target
-  const others = f.obstacles.filter((o) => o.id !== s.id && o.id !== t.id);
+  const others = f.obstacles.filter((o) => o.containerId !== edge.a.id); // own ends stay: a route through the body of its own end costs like any node
   const dx = cx(t) - cx(s), dy = cy(t) - cy(s);
   const elbowed = edge.elbowed || (Math.abs(dx) > 24 && Math.abs(dy) > 24);
   // a text leaves and enters through the side that faces the other end, never through its own glyphs
@@ -210,7 +224,7 @@ export function followBindings(els: El[], touched: Set<string>): El[] {
   }
   const live = els.filter((e) => !e.isDeleted);
   const labels = new Map<string, El>(live.filter((e) => e.type === "text" && e.containerId).map((e) => [e.containerId, e]));
-  const field: Field = { obstacles: live.filter(isObstacle), sections: live.filter((e) => SHAPES.has(e.type) && isSection(e)), placed: [] };
+  const field: Field = { obstacles: obstaclesOf(live), sections: live.filter((e) => SHAPES.has(e.type) && isSection(e)), placed: [] };
   const arrows = live.filter((a) => a.type === "arrow");
   const redo = arrows.filter((a) => endIds(a).some((id) => id && touched.has(id)));
   for (const a of arrows) if (!redo.includes(a) && a.points) field.placed.push(...segsOf(a));
@@ -247,6 +261,12 @@ function spaceForLabels(skeleton: El[]): El[] {
     const byId = new Map(sk.map((e) => [e.id, e]));
     // an arrow bound at both ends gets a fresh edge-to-edge line each pass (the converter keeps the points we give)
     const field: Field = { obstacles: sk.filter(isObstacle), sections: sk.filter((e) => SHAPES.has(e.type) && e.x != null && isSection(e)), placed: [] };
+    // labels do not exist before conversion: a section's label sits at its center, an arrow's label at the label point of its route
+    for (const sc of field.sections) {
+      if (!sc.label?.text) continue;
+      const w = (sc.width ?? 100), half = textWidth(sc.label.text, sc.label.fontSize ?? 20) / 2, align = sc.label.textAlign;
+      field.obstacles.push(labelBox(sc.id, sc.label, align === "left" ? sc.x + 5 + half : align === "right" ? sc.x + w - 5 - half : sc.x + w / 2, sc.y + (sc.height ?? 100) / 2));
+    }
     const routed: { e: Edge; r: Route }[] = [];
     for (const a of sk) {
       if (a.type !== "arrow") continue;
@@ -255,7 +275,9 @@ function spaceForLabels(skeleton: El[]): El[] {
       const r = routeEdge(e, field);
       if (r.elbowed) a.elbowed = true; // no diagonals: the converter gets an elbowed arrow with our points
       routed.push({ e, r });
-      field.placed.push(...segsOf(geometry(r)));
+      const g = geometry(r);
+      field.placed.push(...segsOf(g));
+      if (a.label?.text) { const c = labelCenter(g.points.map((p) => [g.x + p[0], g.y + p[1]])); field.obstacles.push(labelBox(a.id, a.label, c[0], c[1])); }
     }
     fan(routed);
     for (const { e, r } of routed) Object.assign(e.a, geometry(r));
@@ -375,7 +397,7 @@ function parkNotes(els: El[]): { els: El[]; parked: string[] } {
     y += t.height + 16;
   }
   let out = moved.size ? followBindings(els.map((e) => moved.get(e.id) ?? e), new Set(moved.keys())) : els;
-  const solid = out.filter((e) => !e.isDeleted && isObstacle(e));
+  const solid = obstaclesOf(out.filter((e) => !e.isDeleted));
   const sections = out.filter((e) => !e.isDeleted && SHAPES.has(e.type) && isSection(e));
   const crosses = (a: El, skip: Set<string>) => solid.some((o) => !skip.has(o.id) && segsOf(a).some((sg) => segCrosses(sg[0], sg[1], box(o))));
   // ponytail: four spots at 24 px, no wrapping to fit a lane; a note that fits nowhere keeps its warning for the agent
@@ -451,11 +473,11 @@ function segsCross([a, b]: Seg, [c, d]: Seg): boolean {
   return o1 !== 0 && o2 !== 0 && o3 !== 0 && o4 !== 0 && o1 !== o2 && o3 !== o4;
 }
 
-/** Two axis-aligned segments that run along the same line and overlap for more than 8 px. */
+/** Two axis-aligned segments that run along the same line and overlap for more than 24 px (less is a corner artifact). */
 function segsAlong([a, b]: Seg, [c, d]: Seg): boolean {
   const flat = (p: number[], q: number[]) => Math.abs(p[1] - q[1]) < 2, tall = (p: number[], q: number[]) => Math.abs(p[0] - q[0]) < 2;
-  if (flat(a, b) && flat(c, d) && Math.abs(a[1] - c[1]) < 4) return Math.min(Math.max(a[0], b[0]), Math.max(c[0], d[0])) - Math.max(Math.min(a[0], b[0]), Math.min(c[0], d[0])) > 8;
-  if (tall(a, b) && tall(c, d) && Math.abs(a[0] - c[0]) < 4) return Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1])) > 8;
+  if (flat(a, b) && flat(c, d) && Math.abs(a[1] - c[1]) < 4) return Math.min(Math.max(a[0], b[0]), Math.max(c[0], d[0])) - Math.max(Math.min(a[0], b[0]), Math.min(c[0], d[0])) > 24;
+  if (tall(a, b) && tall(c, d) && Math.abs(a[0] - c[0]) < 4) return Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1])) > 24;
   return false;
 }
 
@@ -467,7 +489,11 @@ function crossingWarnings(els: El[]) {
     const ends = new Set(endIds(a));
     const segs = segsOf(a), first = segs[0][0], last = segs[segs.length - 1][1];
     for (const e of els) {
-      if (e.isDeleted || e.id === a.id || ends.has(e.id) || isSection(e)) continue;
+      if (e.isDeleted || e.id === a.id || isSection(e)) continue;
+      if (ends.has(e.id)) { // an elbow's ports sit outside its ends; a leg inside the box means it runs through its own end
+        if (a.elbowed && SHAPES.has(e.type) && segs.some((sg) => segCrosses(sg[0], sg[1], box(e)))) out.push(`arrow ${a.id} runs through its own end ${e.type} ${e.id}`);
+        continue;
+      }
       if (e.type === "text" ? e.containerId === a.id || ends.has(e.containerId) : !SHAPES.has(e.type)) continue;
       const b = box(e);
       if (inBox(first, b) || inBox(last, b)) continue; // the arrow attaches to it

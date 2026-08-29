@@ -65,3 +65,6 @@ html, body, #root { height: 100%; margin: 0; }
 .sessions div:hover { background: var(--button-hover-bg); }
 .sessions div.cur { font-weight: 600; }
 .sessions small { opacity: .6; white-space: nowrap; }
+
+/* Excalidraw help "?" corner button: hidden; Help stays in the main menu and on the ? key */
+.excalidraw .help-icon { display: none; }

@@ -348,8 +348,7 @@ export function ChatPanel({ chat }: { chat: Chat }) {
           <select className="plain" style={fit(state?.effort || "effort")} value={state?.effort ?? ""} onChange={(e) => chat.setEffort(e.target.value)} title="Effort">
             {EFFORTS.map((m) => <option key={m} value={m}>{m || "effort"}</option>)}
           </select>
-          <span className={"dot " + (running ? "running" : "ok")} title={status ?? (running ? "working" : "idle")} />
-          <span className="cost" title="Session cost (estimate)">${cost.toFixed(2)}</span>
+          <span className={"dot " + (running ? "running" : "ok")} title={`${status ?? (running ? "working" : "idle")} · $${cost.toFixed(2)} this session`} />
         </div>
       </div>
     </div>

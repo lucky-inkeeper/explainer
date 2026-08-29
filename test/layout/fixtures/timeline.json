@@ -1,12 +1,12 @@
 {
  "prompt": "Draw the timeline of an incident: alert 02:10, on-call paged 02:14, rollback started 02:40, resolved 03:05, postmortem two days later.",
- "session": "64798f64-c930-4d6e-9f09-55277de6c734",
- "at": "2026-08-29T11:25:38.786Z",
+ "session": "93b07bc3-cd4a-4d15-9765-56035950e244",
+ "at": "2026-08-29T14:30:40.227Z",
  "frame": "Incident timeline",
  "elements": [
   {
-   "type": "line",
    "id": "base1",
+   "type": "line",
    "x": 60,
    "y": 300,
    "points": [
@@ -15,18 +15,18 @@
      0
     ],
     [
-     550,
+     540,
      0
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#1e1e1e",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
-   "type": "line",
    "id": "base2",
-   "x": 670,
+   "type": "line",
+   "x": 680,
    "y": 300,
    "points": [
     [
@@ -34,37 +34,41 @@
      0
     ],
     [
-     210,
+     200,
      0
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#1e1e1e",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
-   "type": "text",
    "id": "brk",
-   "x": 624,
-   "y": 284,
+   "type": "text",
+   "x": 614,
+   "y": 286,
+   "width": 52,
    "text": "//",
    "fontSize": 20,
    "fontFamily": 102,
-   "strokeColor": "#868e96"
+   "strokeColor": "#868e96",
+   "textAlign": "center"
   },
   {
+   "id": "brklbl",
    "type": "text",
-   "id": "brknote",
-   "x": 592,
+   "x": 600,
    "y": 316,
-   "text": "not to scale",
+   "width": 80,
+   "text": "~ 2 days",
    "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96"
+   "strokeColor": "#868e96",
+   "textAlign": "center"
   },
   {
-   "type": "ellipse",
    "id": "d1",
+   "type": "ellipse",
    "x": 94,
    "y": 294,
    "width": 12,
@@ -75,10 +79,10 @@
    "roughness": 0
   },
   {
-   "type": "line",
    "id": "c1",
+   "type": "line",
    "x": 100,
-   "y": 264,
+   "y": 254,
    "points": [
     [
      0,
@@ -86,35 +90,38 @@
     ],
     [
      0,
-     30
+     40
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#868e96",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
-   "type": "text",
    "id": "t1",
-   "x": 72,
-   "y": 238,
-   "text": "02:10",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
    "type": "text",
-   "id": "n1",
-   "x": 40,
-   "y": 208,
+   "x": 30,
+   "y": 204,
+   "width": 140,
    "text": "Alert fires",
-   "fontSize": 20,
-   "fontFamily": 101
+   "fontSize": 18,
+   "textAlign": "center"
   },
   {
-   "type": "ellipse",
+   "id": "m1",
+   "type": "text",
+   "x": 30,
+   "y": 230,
+   "width": 140,
+   "text": "02:10",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "textAlign": "center"
+  },
+  {
    "id": "d2",
+   "type": "ellipse",
    "x": 126,
    "y": 294,
    "width": 12,
@@ -125,8 +132,8 @@
    "roughness": 0
   },
   {
-   "type": "line",
    "id": "c2",
+   "type": "line",
    "x": 132,
    "y": 306,
    "points": [
@@ -136,49 +143,52 @@
     ],
     [
      0,
-     30
+     40
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#868e96",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
+   "id": "m2",
    "type": "text",
-   "id": "t2",
-   "x": 104,
-   "y": 338,
-   "text": "02:14",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "text",
-   "id": "n2",
    "x": 62,
-   "y": 364,
-   "text": "On-call paged",
-   "fontSize": 20,
-   "fontFamily": 101
+   "y": 352,
+   "width": 140,
+   "text": "02:14",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "textAlign": "center"
   },
   {
-   "type": "ellipse",
+   "id": "t2",
+   "type": "text",
+   "x": 62,
+   "y": 374,
+   "width": 140,
+   "text": "On-call paged",
+   "fontSize": 18,
+   "textAlign": "center"
+  },
+  {
    "id": "d3",
-   "x": 332,
-   "y": 292,
-   "width": 16,
-   "height": 16,
-   "backgroundColor": "#e8590c",
-   "strokeColor": "#e8590c",
+   "type": "ellipse",
+   "x": 334,
+   "y": 294,
+   "width": 12,
+   "height": 12,
+   "backgroundColor": "#1e1e1e",
+   "strokeColor": "#1e1e1e",
    "fillStyle": "solid",
    "roughness": 0
   },
   {
-   "type": "line",
    "id": "c3",
+   "type": "line",
    "x": 340,
-   "y": 262,
+   "y": 254,
    "points": [
     [
      0,
@@ -186,35 +196,38 @@
     ],
     [
      0,
-     30
+     40
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#868e96",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
-   "type": "text",
    "id": "t3",
-   "x": 312,
-   "y": 236,
-   "text": "02:40",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
    "type": "text",
-   "id": "n3",
-   "x": 266,
-   "y": 206,
-   "text": "Rollback started",
-   "fontSize": 20,
-   "fontFamily": 101
+   "x": 260,
+   "y": 204,
+   "width": 160,
+   "text": "Rollback starts",
+   "fontSize": 18,
+   "textAlign": "center"
   },
   {
-   "type": "ellipse",
+   "id": "m3",
+   "type": "text",
+   "x": 260,
+   "y": 230,
+   "width": 160,
+   "text": "02:40",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "textAlign": "center"
+  },
+  {
    "id": "d4",
+   "type": "ellipse",
    "x": 532,
    "y": 292,
    "width": 16,
@@ -225,8 +238,8 @@
    "roughness": 0
   },
   {
-   "type": "line",
    "id": "c4",
+   "type": "line",
    "x": 540,
    "y": 308,
    "points": [
@@ -235,37 +248,41 @@
      0
     ],
     [
-     0,
-     30
+     40,
+     0
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#868e96",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
+   "id": "m4",
    "type": "text",
-   "id": "t4",
-   "x": 512,
-   "y": 340,
+   "x": 450,
+   "y": 354,
+   "width": 180,
    "text": "03:05",
-   "fontSize": 16,
+   "fontSize": 14,
    "fontFamily": 102,
-   "strokeColor": "#868e96"
+   "strokeColor": "#868e96",
+   "textAlign": "center"
   },
   {
+   "id": "t4",
    "type": "text",
-   "id": "n4",
-   "x": 492,
-   "y": 366,
+   "x": 450,
+   "y": 376,
+   "width": 180,
    "text": "Resolved",
    "fontSize": 20,
-   "fontFamily": 101
+   "strokeColor": "#e8590c",
+   "textAlign": "center"
   },
   {
-   "type": "ellipse",
    "id": "d5",
-   "x": 754,
+   "type": "ellipse",
+   "x": 774,
    "y": 294,
    "width": 12,
    "height": 12,
@@ -275,10 +292,10 @@
    "roughness": 0
   },
   {
-   "type": "line",
    "id": "c5",
-   "x": 760,
-   "y": 264,
+   "type": "line",
+   "x": 780,
+   "y": 254,
    "points": [
     [
      0,
@@ -286,83 +303,45 @@
     ],
     [
      0,
-     30
+     40
     ]
    ],
-   "strokeWidth": 1,
    "strokeColor": "#868e96",
+   "strokeWidth": 1,
    "roughness": 0
   },
   {
-   "type": "text",
    "id": "t5",
-   "x": 722,
-   "y": 238,
-   "text": "+2 days",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
    "type": "text",
-   "id": "n5",
-   "x": 686,
-   "y": 208,
+   "x": 700,
+   "y": 204,
+   "width": 160,
    "text": "Postmortem",
-   "fontSize": 20,
-   "fontFamily": 101
+   "fontSize": 18,
+   "textAlign": "center"
   },
   {
+   "id": "m5",
    "type": "text",
-   "id": "note1",
-   "x": 150,
-   "y": 140,
-   "width": 210,
-   "text": "26 min from page to rollback",
+   "x": 700,
+   "y": 230,
+   "width": 160,
+   "text": "day + 2",
+   "fontSize": 14,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "textAlign": "center"
+  },
+  {
+   "id": "n1",
+   "type": "text",
+   "x": 180,
+   "y": 320,
+   "width": 200,
+   "text": "26 min page to first action",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
-  },
-  {
-   "type": "arrow",
-   "id": "lead1",
-   "start": {
-    "id": "note1"
-   },
-   "end": {
-    "id": "d3"
-   },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot",
-   "roughness": 0
-  },
-  {
-   "type": "text",
-   "id": "note2",
-   "x": 430,
-   "y": 420,
-   "width": 260,
-   "text": "Total time to resolve: 55 min",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "type": "arrow",
-   "id": "lead2",
-   "start": {
-    "id": "note2"
-   },
-   "end": {
-    "id": "d4"
-   },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot",
-   "roughness": 0
   }
  ]
 }

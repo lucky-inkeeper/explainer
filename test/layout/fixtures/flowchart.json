@@ -1,26 +1,27 @@
 {
  "prompt": "Show the decision logic for a password reset request: known email, rate limit, token valid, token expired.",
- "session": "77a97a6e-856c-4a5d-a027-73c81967a3db",
- "at": "2026-08-29T11:17:06.310Z",
+ "session": "8cb43930-2be3-4a51-945b-f7a9dff5157c",
+ "at": "2026-08-29T14:22:15.493Z",
  "frame": "Password reset: decision logic",
  "elements": [
   {
    "id": "start",
    "type": "ellipse",
-   "x": 400,
+   "x": 160,
    "y": 0,
    "width": 200,
    "height": 60,
    "backgroundColor": "#ffec99",
    "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
    "label": {
-    "text": "Reset requested"
+    "text": "Request reset"
    }
   },
   {
    "id": "d_email",
    "type": "diamond",
-   "x": 400,
+   "x": 160,
    "y": 120,
    "width": 200,
    "height": 100,
@@ -35,141 +36,8 @@
   {
    "id": "generic",
    "type": "rectangle",
-   "x": 760,
+   "x": 520,
    "y": 140,
-   "width": 200,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Send generic reply"
-   }
-  },
-  {
-   "id": "d_rate",
-   "type": "diamond",
-   "x": 400,
-   "y": 280,
-   "width": 200,
-   "height": 100,
-   "backgroundColor": "#ffd8a8",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Rate limit ok?"
-   }
-  },
-  {
-   "id": "throttle",
-   "type": "rectangle",
-   "x": 760,
-   "y": 300,
-   "width": 200,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Too many attempts"
-   }
-  },
-  {
-   "id": "mint",
-   "type": "rectangle",
-   "x": 400,
-   "y": 440,
-   "width": 200,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Mint token, mail link"
-   }
-  },
-  {
-   "id": "db",
-   "type": "rectangle",
-   "x": 80,
-   "y": 440,
-   "width": 200,
-   "height": 60,
-   "roundness": {
-    "type": 3
-   },
-   "backgroundColor": "#b2f2bb",
-   "fillStyle": "solid",
-   "label": {
-    "text": "DB: reset tokens"
-   }
-  },
-  {
-   "id": "click",
-   "type": "ellipse",
-   "x": 400,
-   "y": 560,
-   "width": 200,
-   "height": 60,
-   "backgroundColor": "#ffec99",
-   "fillStyle": "solid",
-   "label": {
-    "text": "User opens link"
-   }
-  },
-  {
-   "id": "d_valid",
-   "type": "diamond",
-   "x": 400,
-   "y": 680,
-   "width": 200,
-   "height": 100,
-   "backgroundColor": "#ffd8a8",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Token valid?"
-   }
-  },
-  {
-   "id": "invalid",
-   "type": "rectangle",
-   "x": 760,
-   "y": 700,
-   "width": 200,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Invalid token page"
-   }
-  },
-  {
-   "id": "d_exp",
-   "type": "diamond",
-   "x": 400,
-   "y": 840,
-   "width": 200,
-   "height": 100,
-   "backgroundColor": "#ffd8a8",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Token expired?"
-   }
-  },
-  {
-   "id": "resend",
-   "type": "rectangle",
-   "x": 760,
-   "y": 860,
-   "width": 200,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "label": {
-    "text": "Offer fresh link"
-   }
-  },
-  {
-   "id": "setpw",
-   "type": "rectangle",
-   "x": 400,
-   "y": 1000,
    "width": 200,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -177,30 +45,187 @@
    "strokeColor": "#e8590c",
    "strokeWidth": 2,
    "label": {
-    "text": "Set new password"
+    "text": "Show generic success"
    }
   },
   {
-   "id": "note1",
-   "type": "text",
-   "x": 1020,
-   "y": 146,
-   "width": 300,
-   "text": "Reply is identical either way.\nNo account enumeration.",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
+   "id": "d_rate",
+   "type": "diamond",
+   "x": 160,
+   "y": 280,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Rate limit ok?"
+   }
   },
   {
-   "id": "note2",
+   "id": "throttle",
+   "type": "rectangle",
+   "x": 520,
+   "y": 300,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "429 too many requests"
+   }
+  },
+  {
+   "id": "send",
+   "type": "rectangle",
+   "x": 160,
+   "y": 440,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Mail signed token"
+   }
+  },
+  {
+   "id": "open",
+   "type": "ellipse",
+   "x": 160,
+   "y": 560,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Open reset link"
+   }
+  },
+  {
+   "id": "d_valid",
+   "type": "diamond",
+   "x": 160,
+   "y": 680,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Token valid?"
+   }
+  },
+  {
+   "id": "invalid",
+   "type": "rectangle",
+   "x": 520,
+   "y": 700,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Reject: bad token"
+   }
+  },
+  {
+   "id": "d_exp",
+   "type": "diamond",
+   "x": 160,
+   "y": 840,
+   "width": 200,
+   "height": 100,
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Token expired?"
+   }
+  },
+  {
+   "id": "expired",
+   "type": "rectangle",
+   "x": 520,
+   "y": 860,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Reject: ask new link"
+   }
+  },
+  {
+   "id": "setpw",
+   "type": "rectangle",
+   "x": 160,
+   "y": 1000,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "Accept new password"
+   }
+  },
+  {
+   "id": "db",
+   "type": "rectangle",
+   "x": 160,
+   "y": 1120,
+   "width": 200,
+   "height": 60,
+   "roundness": {
+    "type": 3
+   },
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "DB: save hash, burn token"
+   }
+  },
+  {
+   "id": "end",
+   "type": "ellipse",
+   "x": 160,
+   "y": 1240,
+   "width": 200,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "strokeColor": "#1e1e1e",
+   "label": {
+    "text": "End"
+   }
+  },
+  {
+   "id": "note_enum",
    "type": "text",
-   "x": 60,
-   "y": 1006,
+   "x": 760,
+   "y": 140,
    "width": 300,
-   "text": "Token is single use.\nDelete it after the reset.",
    "fontSize": 16,
    "fontFamily": 102,
-   "strokeColor": "#868e96"
+   "strokeColor": "#868e96",
+   "text": "Same reply for known and unknown email. No account enumeration."
+  },
+  {
+   "id": "note_token",
+   "type": "text",
+   "x": 400,
+   "y": 1120,
+   "width": 300,
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "text": "Token is single use. Burn it and log the user out everywhere."
   },
   {
    "type": "arrow",
@@ -210,6 +235,7 @@
    "end": {
     "id": "d_email"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
@@ -220,6 +246,7 @@
    "end": {
     "id": "generic"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "No",
@@ -234,6 +261,7 @@
    "end": {
     "id": "d_rate"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "Yes",
@@ -248,6 +276,7 @@
    "end": {
     "id": "throttle"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "No",
@@ -260,8 +289,9 @@
     "id": "d_rate"
    },
    "end": {
-    "id": "mint"
+    "id": "send"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "Yes",
@@ -271,35 +301,23 @@
   {
    "type": "arrow",
    "start": {
-    "id": "mint"
+    "id": "send"
    },
    "end": {
-    "id": "db"
+    "id": "open"
    },
-   "endArrowhead": "triangle",
-   "label": {
-    "text": "store hash",
-    "fontSize": 16
-   }
-  },
-  {
-   "type": "arrow",
-   "start": {
-    "id": "mint"
-   },
-   "end": {
-    "id": "click"
-   },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
    "type": "arrow",
    "start": {
-    "id": "click"
+    "id": "open"
    },
    "end": {
     "id": "d_valid"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle"
   },
   {
@@ -310,6 +328,7 @@
    "end": {
     "id": "invalid"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "No",
@@ -324,6 +343,7 @@
    "end": {
     "id": "d_exp"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "Yes",
@@ -336,8 +356,9 @@
     "id": "d_exp"
    },
    "end": {
-    "id": "resend"
+    "id": "expired"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "Yes",
@@ -352,6 +373,7 @@
    "end": {
     "id": "setpw"
    },
+   "strokeColor": "#1e1e1e",
    "endArrowhead": "triangle",
    "label": {
     "text": "No",
@@ -361,28 +383,24 @@
   {
    "type": "arrow",
    "start": {
-    "id": "note1"
+    "id": "setpw"
    },
    "end": {
-    "id": "generic"
+    "id": "db"
    },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
+   "strokeColor": "#1e1e1e",
+   "endArrowhead": "triangle"
   },
   {
    "type": "arrow",
    "start": {
-    "id": "note2"
+    "id": "db"
    },
    "end": {
-    "id": "setpw"
+    "id": "end"
    },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
+   "strokeColor": "#1e1e1e",
+   "endArrowhead": "triangle"
   }
  ]
 }

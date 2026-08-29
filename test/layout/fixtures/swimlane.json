@@ -1,16 +1,16 @@
 {
  "prompt": "Map the hiring process across recruiter, hiring manager, and candidate, from job posting to signed offer.",
- "session": "f542a6ee-dfd2-43e2-9039-722f73093bb6",
- "at": "2026-08-29T11:28:07.926Z",
+ "session": "8d323a4c-b49d-4262-a96a-235e7c86a63c",
+ "at": "2026-08-29T14:32:33.943Z",
  "frame": "Hiring process: posting to signed offer",
  "elements": [
   {
-   "id": "lane-hm",
    "type": "rectangle",
-   "x": -24,
+   "id": "lane-hm",
+   "x": 0,
    "y": 0,
-   "width": 1968,
-   "height": 140,
+   "width": 1820,
+   "height": 180,
    "backgroundColor": "#f8f9fa",
    "fillStyle": "solid",
    "strokeStyle": "dashed",
@@ -23,45 +23,9 @@
    ]
   },
   {
-   "id": "lane-rec",
-   "type": "rectangle",
-   "x": -24,
-   "y": 140,
-   "width": 1968,
-   "height": 260,
-   "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
-   "strokeStyle": "dashed",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
-   "groupIds": [
-    "g-rec"
-   ]
-  },
-  {
-   "id": "lane-cand",
-   "type": "rectangle",
-   "x": -24,
-   "y": 400,
-   "width": 1968,
-   "height": 140,
-   "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
-   "strokeStyle": "dashed",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
-   "groupIds": [
-    "g-cand"
-   ]
-  },
-  {
-   "id": "t-hm",
    "type": "text",
-   "x": -12,
+   "id": "lane-hm-t",
+   "x": 16,
    "y": 8,
    "text": "Hiring manager",
    "fontSize": 14,
@@ -72,10 +36,28 @@
    ]
   },
   {
-   "id": "t-rec",
+   "type": "rectangle",
+   "id": "lane-rec",
+   "x": 0,
+   "y": 180,
+   "width": 1820,
+   "height": 180,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-rec"
+   ]
+  },
+  {
    "type": "text",
-   "x": -12,
-   "y": 148,
+   "id": "lane-rec-t",
+   "x": 16,
+   "y": 188,
    "text": "Recruiter",
    "fontSize": 14,
    "fontFamily": 102,
@@ -85,10 +67,28 @@
    ]
   },
   {
-   "id": "t-cand",
+   "type": "rectangle",
+   "id": "lane-cand",
+   "x": 0,
+   "y": 360,
+   "width": 1820,
+   "height": 180,
+   "backgroundColor": "#f8f9fa",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "roughness": 0,
+   "roundness": {
+    "type": 3
+   },
+   "groupIds": [
+    "g-cand"
+   ]
+  },
+  {
    "type": "text",
-   "x": -12,
-   "y": 408,
+   "id": "lane-cand-t",
+   "x": 16,
+   "y": 368,
    "text": "Candidate",
    "fontSize": 14,
    "fontFamily": 102,
@@ -98,10 +98,10 @@
    ]
   },
   {
-   "id": "hm-open",
    "type": "rectangle",
-   "x": 0,
-   "y": 44,
+   "id": "n1",
+   "x": 40,
+   "y": 70,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -110,14 +110,14 @@
     "g-hm"
    ],
    "label": {
-    "text": "Open req + job spec"
+    "text": "Define role"
    }
   },
   {
-   "id": "hm-loop",
    "type": "rectangle",
-   "x": 1100,
-   "y": 44,
+   "id": "n5",
+   "x": 920,
+   "y": 70,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -126,15 +126,15 @@
     "g-hm"
    ],
    "label": {
-    "text": "Interview loop"
+    "text": "Run interviews"
    }
   },
   {
-   "id": "hm-hire",
    "type": "diamond",
-   "x": 1310,
-   "y": 34,
-   "width": 180,
+   "id": "n7",
+   "x": 1140,
+   "y": 60,
+   "width": 160,
    "height": 80,
    "backgroundColor": "#ffd8a8",
    "fillStyle": "solid",
@@ -146,10 +146,10 @@
    }
   },
   {
-   "id": "rec-post",
    "type": "rectangle",
-   "x": 220,
-   "y": 184,
+   "id": "n2",
+   "x": 260,
+   "y": 250,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -158,14 +158,14 @@
     "g-rec"
    ],
    "label": {
-    "text": "Publish posting"
+    "text": "Post job"
    }
   },
   {
-   "id": "rec-screen",
    "type": "rectangle",
-   "x": 660,
-   "y": 184,
+   "id": "n4",
+   "x": 700,
+   "y": 250,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
@@ -174,34 +174,20 @@
     "g-rec"
    ],
    "label": {
-    "text": "Screen CV, phone call"
+    "text": "Screen call"
    }
   },
   {
-   "id": "rec-fit",
-   "type": "diamond",
-   "x": 870,
-   "y": 174,
-   "width": 180,
-   "height": 80,
-   "backgroundColor": "#ffd8a8",
-   "fillStyle": "solid",
-   "groupIds": [
-    "g-rec"
-   ],
-   "label": {
-    "text": "Fit?"
-   }
-  },
-  {
-   "id": "rec-offer",
    "type": "rectangle",
-   "x": 1540,
-   "y": 184,
+   "id": "n8",
+   "x": 1360,
+   "y": 250,
    "width": 160,
    "height": 60,
    "backgroundColor": "#a5d8ff",
    "fillStyle": "solid",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
    "groupIds": [
     "g-rec"
    ],
@@ -210,40 +196,10 @@
    }
   },
   {
-   "id": "rec-reject",
-   "type": "rectangle",
-   "x": 1320,
-   "y": 304,
-   "width": 160,
-   "height": 60,
-   "backgroundColor": "#a5d8ff",
-   "fillStyle": "solid",
-   "groupIds": [
-    "g-rec"
-   ],
-   "label": {
-    "text": "Send rejection"
-   }
-  },
-  {
-   "id": "note-reject",
-   "type": "text",
-   "x": 1540,
-   "y": 318,
-   "width": 320,
-   "text": "One rejection step serves both gates.",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "groupIds": [
-    "g-rec"
-   ]
-  },
-  {
-   "id": "cand-apply",
    "type": "ellipse",
-   "x": 440,
-   "y": 444,
+   "id": "n3",
+   "x": 480,
+   "y": 430,
    "width": 160,
    "height": 60,
    "backgroundColor": "#ffec99",
@@ -256,10 +212,43 @@
    }
   },
   {
-   "id": "cand-sign",
    "type": "ellipse",
-   "x": 1760,
-   "y": 444,
+   "id": "n6",
+   "x": 920,
+   "y": 430,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#ffec99",
+   "fillStyle": "solid",
+   "groupIds": [
+    "g-cand"
+   ],
+   "label": {
+    "text": "Attend interviews"
+   }
+  },
+  {
+   "type": "rectangle",
+   "id": "n9",
+   "x": 1140,
+   "y": 430,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#d0bfff",
+   "fillStyle": "solid",
+   "strokeStyle": "dashed",
+   "groupIds": [
+    "g-cand"
+   ],
+   "label": {
+    "text": "Rejection notice"
+   }
+  },
+  {
+   "type": "ellipse",
+   "id": "n10",
+   "x": 1580,
+   "y": 430,
    "width": 160,
    "height": 60,
    "backgroundColor": "#ffec99",
@@ -274,144 +263,173 @@
    }
   },
   {
+   "type": "arrow",
    "id": "a1",
-   "type": "arrow",
    "start": {
-    "id": "hm-open"
+    "id": "n1"
    },
    "end": {
-    "id": "rec-post"
+    "id": "n2"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "req approved",
+    "text": "requisition",
     "fontSize": 16
    }
   },
   {
+   "type": "arrow",
    "id": "a2",
-   "type": "arrow",
    "start": {
-    "id": "rec-post"
+    "id": "n2"
    },
    "end": {
-    "id": "cand-apply"
+    "id": "n3"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "posting live",
+    "text": "job ad live",
     "fontSize": 16
    }
   },
   {
-   "id": "a3",
    "type": "arrow",
+   "id": "a3",
    "start": {
-    "id": "cand-apply"
+    "id": "n3"
    },
    "end": {
-    "id": "rec-screen"
+    "id": "n4"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
     "text": "application",
     "fontSize": 16
    }
   },
   {
+   "type": "arrow",
    "id": "a4",
-   "type": "arrow",
    "start": {
-    "id": "rec-screen"
+    "id": "n4"
    },
    "end": {
-    "id": "rec-fit"
+    "id": "n5"
+   },
+   "elbowed": true,
+   "endArrowhead": "triangle",
+   "label": {
+    "text": "shortlist",
+    "fontSize": 16
    }
   },
   {
+   "type": "arrow",
    "id": "a5",
-   "type": "arrow",
    "start": {
-    "id": "rec-fit"
+    "id": "n5"
    },
    "end": {
-    "id": "hm-loop"
+    "id": "n6"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "yes",
+    "text": "invite",
     "fontSize": 16
    }
   },
   {
+   "type": "arrow",
    "id": "a6",
-   "type": "arrow",
    "start": {
-    "id": "rec-fit"
+    "id": "n6"
    },
    "end": {
-    "id": "rec-reject"
+    "id": "n7"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
-    "text": "no",
+    "text": "scorecards",
     "fontSize": 16
    }
   },
   {
+   "type": "arrow",
    "id": "a7",
-   "type": "arrow",
    "start": {
-    "id": "hm-loop"
+    "id": "n7"
    },
    "end": {
-    "id": "hm-hire"
-   }
-  },
-  {
-   "id": "a8",
-   "type": "arrow",
-   "start": {
-    "id": "hm-hire"
-   },
-   "end": {
-    "id": "rec-offer"
+    "id": "n8"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
     "text": "yes",
     "fontSize": 16
    }
   },
   {
-   "id": "a9",
    "type": "arrow",
+   "id": "a8",
    "start": {
-    "id": "hm-hire"
+    "id": "n7"
    },
    "end": {
-    "id": "rec-reject"
+    "id": "n9"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
     "text": "no",
     "fontSize": 16
    }
   },
   {
-   "id": "a10",
    "type": "arrow",
+   "id": "a9",
    "start": {
-    "id": "rec-offer"
+    "id": "n8"
    },
    "end": {
-    "id": "cand-sign"
+    "id": "n10"
    },
    "elbowed": true,
+   "endArrowhead": "triangle",
    "label": {
     "text": "offer letter",
     "fontSize": 16
    }
+  },
+  {
+   "type": "text",
+   "id": "note1",
+   "x": 1400,
+   "y": 70,
+   "width": 320,
+   "text": "Offer stage: comp approval, then negotiation.",
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96"
+  },
+  {
+   "type": "arrow",
+   "id": "lead1",
+   "start": {
+    "id": "note1"
+   },
+   "end": {
+    "id": "n8"
+   },
+   "strokeStyle": "dashed",
+   "strokeWidth": 1,
+   "strokeColor": "#868e96",
+   "endArrowhead": "dot"
   }
  ]
 }

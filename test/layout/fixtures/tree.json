@@ -1,226 +1,134 @@
 {
  "prompt": "Draw the folder tree of a typical Electron app: src/main, src/preload, src/renderer with components and hooks, shared, docs.",
- "session": "32527ee5-906f-4822-9b8e-d33e3240b071",
- "at": "2026-08-29T11:53:26.563Z",
- "frame": "Electron app: folder tree",
+ "session": "74ee1228-2844-4c04-9d92-2d9ea9bdeea5",
+ "at": "2026-08-29T14:35:31.351Z",
+ "frame": "Electron app folder tree",
  "elements": [
-  {
-   "id": "proc-zone",
-   "type": "rectangle",
-   "x": 456,
-   "y": -60,
-   "width": 228,
-   "height": 410,
-   "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
-   "strokeStyle": "dashed",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
-   "groupIds": [
-    "procgrp"
-   ]
-  },
-  {
-   "id": "proc-title",
-   "type": "text",
-   "x": 468,
-   "y": -52,
-   "text": "three processes",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "groupIds": [
-    "procgrp"
-   ]
-  },
   {
    "id": "root",
    "type": "rectangle",
    "x": 0,
-   "y": 312,
-   "width": 180,
-   "height": 52,
+   "y": 52,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "strokeColor": "#e8590c",
-   "strokeWidth": 2,
+   "strokeWidth": 1,
    "label": {
-    "text": "my-app/",
-    "fontSize": 16
+    "text": "electron-app/"
    }
   },
   {
    "id": "src",
    "type": "rectangle",
-   "x": 240,
-   "y": 125,
-   "width": 180,
-   "height": 52,
+   "x": 280,
+   "y": -52,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "src/",
-    "fontSize": 16
+    "text": "src/"
    }
   },
   {
    "id": "shared",
    "type": "rectangle",
-   "x": 240,
-   "y": 400,
-   "width": 180,
-   "height": 52,
+   "x": 280,
+   "y": 52,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "shared/",
-    "fontSize": 16
+    "text": "shared/"
    }
   },
   {
    "id": "docs",
    "type": "rectangle",
-   "x": 240,
-   "y": 500,
-   "width": 180,
-   "height": 52,
+   "x": 280,
+   "y": 156,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "docs/",
-    "fontSize": 16
+    "text": "docs/"
    }
   },
   {
    "id": "main",
    "type": "rectangle",
-   "x": 480,
-   "y": 0,
-   "width": 180,
-   "height": 52,
+   "x": 560,
+   "y": -156,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "main/",
-    "fontSize": 16
-   },
-   "groupIds": [
-    "procgrp"
-   ]
+    "text": "main/"
+   }
   },
   {
    "id": "preload",
    "type": "rectangle",
-   "x": 480,
-   "y": 100,
-   "width": 180,
-   "height": 52,
+   "x": 560,
+   "y": -52,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "preload/",
-    "fontSize": 16
-   },
-   "groupIds": [
-    "procgrp"
-   ]
+    "text": "preload/"
+   }
   },
   {
    "id": "renderer",
    "type": "rectangle",
-   "x": 480,
-   "y": 250,
-   "width": 180,
-   "height": 52,
+   "x": 560,
+   "y": 52,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
    "strokeColor": "#e8590c",
    "strokeWidth": 2,
    "label": {
-    "text": "renderer/",
-    "fontSize": 16
-   },
-   "groupIds": [
-    "procgrp"
-   ]
-  },
-  {
-   "id": "main-sub",
-   "type": "text",
-   "x": 480,
-   "y": 58,
-   "text": "Node process, windows, IPC",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "groupIds": [
-    "procgrp"
-   ]
-  },
-  {
-   "id": "preload-sub",
-   "type": "text",
-   "x": 480,
-   "y": 158,
-   "text": "contextBridge, safe API",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "groupIds": [
-    "procgrp"
-   ]
-  },
-  {
-   "id": "renderer-sub",
-   "type": "text",
-   "x": 480,
-   "y": 308,
-   "text": "React UI, sandboxed",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96",
-   "groupIds": [
-    "procgrp"
-   ]
-  },
-  {
-   "id": "shared-sub",
-   "type": "text",
-   "x": 240,
-   "y": 458,
-   "text": "types + constants, both sides",
-   "fontSize": 14,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
+    "text": "renderer/"
+   }
   },
   {
    "id": "components",
    "type": "rectangle",
-   "x": 720,
-   "y": 200,
-   "width": 180,
-   "height": 52,
+   "x": 840,
+   "y": 0,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "components/",
-    "fontSize": 16
+    "text": "components/"
    }
   },
   {
    "id": "hooks",
    "type": "rectangle",
-   "x": 720,
-   "y": 300,
-   "width": 180,
-   "height": 52,
+   "x": 840,
+   "y": 104,
+   "width": 160,
+   "height": 56,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
+   "strokeWidth": 1,
    "label": {
-    "text": "hooks/",
-    "fontSize": 16
+    "text": "hooks/"
    }
   },
   {
@@ -318,6 +226,28 @@
    },
    "elbowed": true,
    "endArrowhead": null
+  },
+  {
+   "id": "n1",
+   "type": "text",
+   "x": 560,
+   "y": -232,
+   "width": 320,
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "text": "main = Node process. renderer = Chromium window. preload bridges them."
+  },
+  {
+   "id": "n2",
+   "type": "text",
+   "x": 1036,
+   "y": 104,
+   "width": 260,
+   "fontSize": 16,
+   "fontFamily": 102,
+   "strokeColor": "#868e96",
+   "text": "Renderer-only: UI pieces and reusable state logic."
   }
  ]
 }

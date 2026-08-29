@@ -1,8 +1,8 @@
 {
  "prompt": "Draw a kanban board for a platform team: backlog with 3 items, in progress with limit 3 and 4 items, review with limit 2 and 1 item, done with 2 items. One item in progress is blocked.",
- "session": "96ffea08-6481-4f31-9e6f-67dc03c59d39",
- "at": "2026-08-29T11:36:15.580Z",
- "frame": "Platform team - board snapshot",
+ "session": "a1afa166-f1af-4ea2-9a39-457d60112014",
+ "at": "2026-08-29T14:39:08.151Z",
+ "frame": "Platform team board",
  "elements": [
   {
    "id": "col-backlog",
@@ -10,10 +10,10 @@
    "x": 0,
    "y": 0,
    "width": 240,
-   "height": 396,
+   "height": 408,
    "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
    "strokeStyle": "dashed",
+   "fillStyle": "solid",
    "roughness": 0,
    "roundness": {
     "type": 3
@@ -23,21 +23,21 @@
    ]
   },
   {
-   "id": "col-prog",
+   "id": "col-wip",
    "type": "rectangle",
    "x": 272,
    "y": 0,
    "width": 240,
-   "height": 396,
+   "height": 408,
    "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
    "strokeStyle": "dashed",
+   "fillStyle": "solid",
    "roughness": 0,
    "roundness": {
     "type": 3
    },
    "groupIds": [
-    "g-prog"
+    "g-wip"
    ]
   },
   {
@@ -46,10 +46,10 @@
    "x": 544,
    "y": 0,
    "width": 240,
-   "height": 396,
+   "height": 408,
    "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
    "strokeStyle": "dashed",
+   "fillStyle": "solid",
    "roughness": 0,
    "roundness": {
     "type": 3
@@ -64,10 +64,10 @@
    "x": 816,
    "y": 0,
    "width": 240,
-   "height": 396,
+   "height": 408,
    "backgroundColor": "#f8f9fa",
-   "fillStyle": "solid",
    "strokeStyle": "dashed",
+   "fillStyle": "solid",
    "roughness": 0,
    "roundness": {
     "type": 3
@@ -80,9 +80,9 @@
    "id": "t-backlog",
    "type": "text",
    "x": 16,
-   "y": 12,
+   "y": 16,
    "text": "Backlog",
-   "fontSize": 16,
+   "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
@@ -92,9 +92,9 @@
   {
    "id": "c-backlog",
    "type": "text",
-   "x": 176,
-   "y": 14,
-   "width": 48,
+   "x": 160,
+   "y": 16,
+   "width": 64,
    "text": "3",
    "fontSize": 14,
    "fontFamily": 102,
@@ -105,40 +105,40 @@
    ]
   },
   {
-   "id": "t-prog",
+   "id": "t-wip",
    "type": "text",
    "x": 288,
-   "y": 12,
+   "y": 16,
    "text": "In Progress",
-   "fontSize": 16,
+   "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
-    "g-prog"
+    "g-wip"
    ]
   },
   {
-   "id": "c-prog",
+   "id": "c-wip",
    "type": "text",
-   "x": 448,
-   "y": 14,
-   "width": 48,
+   "x": 432,
+   "y": 16,
+   "width": 64,
    "text": "4/3",
    "fontSize": 14,
    "fontFamily": 102,
    "textAlign": "right",
    "strokeColor": "#e8590c",
    "groupIds": [
-    "g-prog"
+    "g-wip"
    ]
   },
   {
    "id": "t-review",
    "type": "text",
    "x": 560,
-   "y": 12,
+   "y": 16,
    "text": "Review",
-   "fontSize": 16,
+   "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
@@ -148,9 +148,9 @@
   {
    "id": "c-review",
    "type": "text",
-   "x": 720,
-   "y": 14,
-   "width": 48,
+   "x": 704,
+   "y": 16,
+   "width": 64,
    "text": "1/2",
    "fontSize": 14,
    "fontFamily": 102,
@@ -164,9 +164,9 @@
    "id": "t-done",
    "type": "text",
    "x": 832,
-   "y": 12,
+   "y": 16,
    "text": "Done",
-   "fontSize": 16,
+   "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
@@ -176,9 +176,9 @@
   {
    "id": "c-done",
    "type": "text",
-   "x": 992,
-   "y": 14,
-   "width": 48,
+   "x": 976,
+   "y": 16,
+   "width": 64,
    "text": "2",
    "fontSize": 14,
    "fontFamily": 102,
@@ -192,21 +192,17 @@
    "id": "b1",
    "type": "rectangle",
    "x": 16,
-   "y": 48,
+   "y": 60,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
     "g-b1",
     "g-backlog"
    ],
    "label": {
-    "text": "Log retention policy",
+    "text": "Secrets rotation v2",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
@@ -216,8 +212,8 @@
    "id": "b1s",
    "type": "text",
    "x": 28,
-   "y": 92,
-   "text": "PLAT-412   mira",
+   "y": 104,
+   "text": "PLAT-412  maya",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -230,21 +226,17 @@
    "id": "b2",
    "type": "rectangle",
    "x": 16,
-   "y": 132,
+   "y": 144,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
     "g-b2",
     "g-backlog"
    ],
    "label": {
-    "text": "Bump base image",
+    "text": "Cost dashboard",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
@@ -254,8 +246,8 @@
    "id": "b2s",
    "type": "text",
    "x": 28,
-   "y": 176,
-   "text": "PLAT-418   sam",
+   "y": 188,
+   "text": "PLAT-418  lena",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -268,21 +260,17 @@
    "id": "b3",
    "type": "rectangle",
    "x": 16,
-   "y": 216,
+   "y": 228,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
     "g-b3",
     "g-backlog"
    ],
    "label": {
-    "text": "Split Terraform module",
+    "text": "Runner autoscaling",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
@@ -292,8 +280,8 @@
    "id": "b3s",
    "type": "text",
    "x": 28,
-   "y": 260,
-   "text": "PLAT-421   unassigned",
+   "y": 272,
+   "text": "PLAT-421  sam",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -303,62 +291,51 @@
    ]
   },
   {
-   "id": "p1",
+   "id": "w1",
    "type": "rectangle",
    "x": 288,
-   "y": 48,
+   "y": 60,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
-    "g-p1",
-    "g-prog"
+    "g-w1",
+    "g-wip"
    ],
    "label": {
-    "text": "Multi-region failover",
+    "text": "K8s 1.31 upgrade",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
    }
   },
   {
-   "id": "p1s",
+   "id": "w1s",
    "type": "text",
    "x": 300,
-   "y": 92,
-   "text": "PLAT-390   dana",
+   "y": 104,
+   "text": "PLAT-390  arun",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
-    "g-p1",
-    "g-prog"
+    "g-w1",
+    "g-wip"
    ]
   },
   {
-   "id": "p2",
+   "id": "w2",
    "type": "rectangle",
    "x": 288,
-   "y": 132,
+   "y": 144,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "strokeStyle": "dashed",
-   "strokeColor": "#e8590c",
-   "strokeWidth": 2,
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
-    "g-p2",
-    "g-prog"
+    "g-w2",
+    "g-wip"
    ],
    "label": {
     "text": "CI cache rewrite",
@@ -368,114 +345,105 @@
    }
   },
   {
-   "id": "p2s",
+   "id": "w2s",
    "type": "text",
    "x": 300,
-   "y": 176,
-   "text": "PLAT-395   sam   BLOCKED",
+   "y": 188,
+   "text": "PLAT-395  iris",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
-    "g-p2",
-    "g-prog"
+    "g-w2",
+    "g-wip"
    ]
   },
   {
-   "id": "p3",
+   "id": "w3",
    "type": "rectangle",
    "x": 288,
-   "y": 216,
+   "y": 228,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
-    "g-p3",
-    "g-prog"
+    "g-w3",
+    "g-wip"
    ],
    "label": {
-    "text": "Secrets rotation",
+    "text": "Terraform split",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
    }
   },
   {
-   "id": "p3s",
+   "id": "w3s",
    "type": "text",
    "x": 300,
-   "y": 260,
-   "text": "PLAT-401   mira",
+   "y": 272,
+   "text": "PLAT-401  tomas",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
-    "g-p3",
-    "g-prog"
+    "g-w3",
+    "g-wip"
    ]
   },
   {
-   "id": "p4",
+   "id": "w4",
    "type": "rectangle",
    "x": 288,
-   "y": 300,
+   "y": 312,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
+   "strokeStyle": "dashed",
+   "strokeColor": "#e8590c",
+   "strokeWidth": 2,
    "groupIds": [
-    "g-p4",
-    "g-prog"
+    "g-w4",
+    "g-wip"
    ],
    "label": {
-    "text": "Upgrade K8s to 1.31",
+    "text": "SSO for internal apps",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
    }
   },
   {
-   "id": "p4s",
+   "id": "w4s",
    "type": "text",
    "x": 300,
-   "y": 344,
-   "text": "PLAT-405   dana",
+   "y": 356,
+   "text": "PLAT-388  maya  BLOCKED",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
    "groupIds": [
-    "g-p4",
-    "g-prog"
+    "g-w4",
+    "g-wip"
    ]
   },
   {
    "id": "r1",
    "type": "rectangle",
    "x": 560,
-   "y": 48,
+   "y": 60,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "groupIds": [
     "g-r1",
     "g-review"
    ],
    "label": {
-    "text": "Audit log export",
+    "text": "Log pipeline cutover",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
@@ -485,8 +453,8 @@
    "id": "r1s",
    "type": "text",
    "x": 572,
-   "y": 92,
-   "text": "PLAT-377   dana",
+   "y": 104,
+   "text": "PLAT-377  lena",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -499,22 +467,18 @@
    "id": "d1",
    "type": "rectangle",
    "x": 832,
-   "y": 48,
+   "y": 60,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "opacity": 60,
    "groupIds": [
     "g-d1",
     "g-done"
    ],
    "label": {
-    "text": "Runner autoscaling",
+    "text": "Base image hardening",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
@@ -524,8 +488,8 @@
    "id": "d1s",
    "type": "text",
    "x": 844,
-   "y": 92,
-   "text": "PLAT-360   sam",
+   "y": 104,
+   "text": "PLAT-360  arun",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -539,22 +503,18 @@
    "id": "d2",
    "type": "rectangle",
    "x": 832,
-   "y": 132,
+   "y": 144,
    "width": 208,
    "height": 72,
    "backgroundColor": "#e9ecef",
    "fillStyle": "solid",
-   "roughness": 0,
-   "roundness": {
-    "type": 3
-   },
    "opacity": 60,
    "groupIds": [
     "g-d2",
     "g-done"
    ],
    "label": {
-    "text": "Drop legacy VPN",
+    "text": "Alert routing v3",
     "fontSize": 16,
     "textAlign": "left",
     "verticalAlign": "top"
@@ -564,8 +524,8 @@
    "id": "d2s",
    "type": "text",
    "x": 844,
-   "y": 176,
-   "text": "PLAT-352   mira   archived Fri",
+   "y": 188,
+   "text": "PLAT-368  sam",
    "fontSize": 14,
    "fontFamily": 102,
    "strokeColor": "#868e96",
@@ -576,46 +536,15 @@
    ]
   },
   {
-   "id": "n1",
-   "type": "text",
-   "x": 288,
-   "y": -48,
-   "width": 300,
-   "text": "WIP 4 over limit 3: stop starting, start finishing",
-   "fontSize": 16,
-   "fontFamily": 102,
-   "strokeColor": "#868e96"
-  },
-  {
-   "id": "n2",
+   "id": "note1",
    "type": "text",
    "x": 288,
    "y": 424,
    "width": 300,
-   "text": "Blocked 4 days: waiting on vendor quota",
+   "text": "WIP 4 over limit 3. Pull nothing new until SSO unblocks.",
    "fontSize": 16,
    "fontFamily": 102,
    "strokeColor": "#868e96"
-  },
-  {
-   "id": "lead2",
-   "type": "arrow",
-   "start": {
-    "id": "n2"
-   },
-   "end": {
-    "id": "p2"
-   },
-   "strokeStyle": "dashed",
-   "strokeWidth": 1,
-   "strokeColor": "#868e96",
-   "endArrowhead": "dot"
   }
- ],
- "todo": [
-  "arrow lead2 crosses text p3s \"PLAT-401   mira\"",
-  "arrow lead2 crosses rectangle p4",
-  "arrow lead2 crosses text DfE1u1QQm70xfrDkO032T \"Secrets rotation\"",
-  "arrow lead2 crosses text 016lZKcO6g4Dvha7Ym74c \"Upgrade K8s to 1.31\""
  ]
 }

@@ -19,6 +19,7 @@ const writeState = (s: AppState) => fs.writeFileSync(STATE_FILE, JSON.stringify(
 const FILTERS = [{ name: "Excalidraw", extensions: ["excalidraw", "json"] }];
 
 app.setName("Explainer"); // menu bar and About; the Dock label of the dev binary stays "Electron" until the app is packaged
+app.whenReady().then(() => { try { app.dock?.setIcon(path.join(__dirname, "../../build/icon.png")); } catch { /* packaged: the bundle has its own icon */ } }); // dev Dock icon
 if (process.env.EXPLAINER_DEBUG_PORT) app.commandLine.appendSwitch("remote-debugging-port", process.env.EXPLAINER_DEBUG_PORT);
 
 let win: BrowserWindow;

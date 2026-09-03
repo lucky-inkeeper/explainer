@@ -233,7 +233,7 @@ export function followBindings(els: El[], touched: Set<string>): El[] {
     if (!edge) continue;
     const r = routeEdge(edge, field), g = geometry(r);
     field.placed.push(...segsOf(g));
-    const next = newElementWith(a, { ...g, ...(r.elbowed && !a.elbowed && { elbowed: true }) });
+    const next = newElementWith(a, { ...g, fixedSegments: null, ...(r.elbowed && !a.elbowed && { elbowed: true }) }); // new points: a segment the user fixed on the old route is stale
     moved.set(a.id, next);
     const label = labels.get(a.id);
     if (label) {

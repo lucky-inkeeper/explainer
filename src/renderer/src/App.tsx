@@ -60,7 +60,11 @@ export function App() {
     let text = await api.invoke("file:read", path);
     let data: ExcalidrawInitialDataState = { elements: [], appState: {} };
     if (text) {
-      try { data = (await loadFromBlob(new Blob([text], { type: "application/json" }), null, null)) as any; }
+      try {
+        data = (await loadFromBlob(new Blob([text], { type: "application/json" }), null, null)) as any;
+        // an elbow arrow with a diagonal fixed segment makes Excalidraw (dev build) throw on every pointer event: drop the segments, it re-routes
+        data.elements = (data.elements ?? []).map((e: any) => e.fixedSegments?.some((s: any) => s.start[0] !== s.end[0] && s.start[1] !== s.end[1]) ? { ...e, fixedSegments: null } : e);
+      }
       catch (e) {
         // never let an unreadable file become an empty scene that autosaves over it: leave it alone, open a fresh drawing
         console.error("load failed", e);

@@ -143,6 +143,7 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
         if (!u) return e;
         const { id: _id, ...props } = u;
         if (props.text !== undefined && e.type === "text") props.originalText = props.text;
+        if (props.points && e.type === "arrow") props.fixedSegments = null; // new points: old fixed segments are stale
         return newElementWith(e, props);
       });
       const restored = restoreElements(next, null, { refreshDimensions: true, repairBindings: true }) as El[];

@@ -4,7 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { ClaudeSession } from "./claude";
+import { ClaudeSession, serveMcp } from "./claude";
 import { shareScene } from "./share";
 import type { AppState, DrawingInfo, DrawingList, SessionInfo, StartOpts } from "../shared/types";
 
@@ -16,6 +16,7 @@ const STATE_FILE = path.join(DIRS.app, "state.json");
 const DEFAULTS: AppState = { workspace: DIRS.workspace, permissionMode: "default", sessions: {} };
 const readState = (): AppState => { try { return { ...DEFAULTS, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }; } catch { return { ...DEFAULTS }; } };
 const writeState = (s: AppState) => fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
+const MCP_PORT = Number(process.env.EXPLAINER_MCP_PORT ?? 7331); // `claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user`
 const FILTERS = [{ name: "Excalidraw", extensions: ["excalidraw", "json"] }];
 
 app.setName("Explainer"); // menu bar and About; the Dock label of the dev binary stays "Electron" until the app is packaged
@@ -202,17 +203,15 @@ ipcMain.handle("file:openDialog", async () => (await dialog.showOpenDialog(win, 
 ipcMain.handle("file:saveAsDialog", async (_e, cur: string) => (await dialog.showSaveDialog(win, { defaultPath: cur || DIRS.drawings, filters: FILTERS })).filePath || null);
 ipcMain.handle("file:pickFolder", async (_e, cur: string) => (await dialog.showOpenDialog(win, { defaultPath: cur, properties: ["openDirectory", "createDirectory"] })).filePaths[0] ?? null);
 
+const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, reject) => {
+  const callId = randomUUID();
+  pendingCanvas.set(callId, { resolve, reject });
+  win.webContents.send("canvas:call", { callId, tool, args });
+  setTimeout(() => { if (pendingCanvas.delete(callId)) reject(new Error(`canvas did not answer ${tool} within 60s (window reloaded?)`)); }, 60_000);
+});
 ipcMain.handle("claude:start", (_e, opts: StartOpts) => {
   session?.kill();
-  session = new ClaudeSession(opts, {
-    onEvent: (m) => win.webContents.send("claude:event", m),
-    onCanvas: (tool, args) => new Promise((resolve, reject) => {
-      const callId = randomUUID();
-      pendingCanvas.set(callId, { resolve, reject });
-      win.webContents.send("canvas:call", { callId, tool, args });
-      setTimeout(() => { if (pendingCanvas.delete(callId)) reject(new Error(`canvas did not answer ${tool} within 60s (window reloaded?)`)); }, 60_000);
-    }),
-  });
+  session = new ClaudeSession(opts, { onEvent: (m) => win.webContents.send("claude:event", m), onCanvas: callCanvas });
 });
 ipcMain.on("canvas:result", (_e, { callId, result, error }: { callId: string; result?: any; error?: string }) => {
   const p = pendingCanvas.get(callId);
@@ -248,5 +247,5 @@ let beat = Date.now();
 setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
 ipcMain.on("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
-app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); });
+app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, callCanvas); });
 app.on("window-all-closed", () => { session?.kill(); app.quit(); });

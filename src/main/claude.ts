@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import readline from "node:readline";
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { CANVAS_SERVER, SYSTEM_PROMPT, TOOLS } from "../shared/tools";
@@ -21,10 +22,54 @@ export const spawnEnv = () => ({
   PATH: [process.env.PATH, "/opt/homebrew/bin", "/usr/local/bin", path.join(os.homedir(), ".local/bin")].filter(Boolean).join(":"),
 });
 
-type Handlers = {
-  onEvent: (msg: any) => void;
-  onCanvas: (tool: string, args: any) => Promise<any>;
-};
+export type CanvasCall = (tool: string, args: any) => Promise<any>;
+type Handlers = { onEvent: (msg: any) => void; onCanvas: CanvasCall };
+
+/** Minimal MCP server over JSON-RPC: initialize, tools/list, tools/call. Shared by the claude -p stdio path and the localhost HTTP bridge. */
+export async function handleMcp(msg: any, onCanvas: CanvasCall): Promise<any> {
+  if (msg.id === undefined) return { jsonrpc: "2.0", result: {}, id: 0 }; // notification
+  let result: unknown;
+  try {
+    switch (msg.method) {
+      case "initialize":
+        result = { protocolVersion: msg.params?.protocolVersion ?? "2024-11-05", capabilities: { tools: {} }, serverInfo: { name: CANVAS_SERVER, version: "1" } };
+        break;
+      case "tools/list":
+        result = { tools: TOOLS };
+        break;
+      case "tools/call": {
+        const out = await onCanvas(msg.params.name, msg.params.arguments ?? {});
+        result = { content: [{ type: "text", text: typeof out === "string" ? out : JSON.stringify(out) }] };
+        break;
+      }
+      default:
+        result = {};
+    }
+    return { jsonrpc: "2.0", id: msg.id, result };
+  } catch (e: any) {
+    return { jsonrpc: "2.0", id: msg.id, result: { content: [{ type: "text", text: `Error: ${e?.message ?? e}` }], isError: true } };
+  }
+}
+
+/** Streamable HTTP MCP endpoint on localhost so other Claude Code clients (Zed, CLI, VS Code) can use the canvas tools. Explainer must be running. */
+export function serveMcp(port: number, onCanvas: CanvasCall) {
+  const srv = http.createServer((req, res) => {
+    if (req.url !== "/mcp") { res.writeHead(404).end(); return; }
+    if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }).end(); return; } // no server-push stream: request/reply only
+    let body = "";
+    req.on("data", (d) => (body += d));
+    req.on("end", async () => {
+      let msg: any;
+      try { msg = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
+      const out = await handleMcp(msg, onCanvas);
+      if (msg.id === undefined) { res.writeHead(202).end(); return; }
+      res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(out));
+    });
+  });
+  srv.on("error", (e) => console.error(`mcp bridge: ${e.message}`)); // e.g. port taken by a second Explainer; the app still works without the bridge
+  srv.listen(port, "127.0.0.1");
+  return srv;
+}
 
 /** One long-lived `claude -p` process speaking stream-json on stdin/stdout. */
 export class ClaudeSession {
@@ -39,7 +84,7 @@ export class ClaudeSession {
       "--mcp-config", JSON.stringify({ mcpServers: { [CANVAS_SERVER]: { type: "sdk", name: CANVAS_SERVER, alwaysLoad: true } } }),
       "--plugin-dir", PLUGIN_DIR,
       // canvas tools always; reading the skill references must not prompt in default mode
-      "--allowedTools", `mcp__${CANVAS_SERVER}__*`, `Read(/${PLUGIN_DIR}/**)`,
+      "--allowedTools", `mcp__${CANVAS_SERVER}__*`, `Read(${PLUGIN_DIR}/**)`,
       "--append-system-prompt", SYSTEM_PROMPT,
       "--permission-mode", opts.permissionMode ?? "default",
     ];
@@ -66,31 +111,9 @@ export class ClaudeSession {
     this.h.onEvent(m); // renderer answers can_use_tool via respond()
   }
 
-  /** Minimal MCP server over JSON-RPC: initialize, tools/list, tools/call. */
   private async mcp(requestId: string, msg: any) {
-    const reply = (mcp_response: unknown) => this.write({ type: "control_response", response: { subtype: "success", request_id: requestId, response: { mcp_response } } });
-    if (msg.id === undefined) return reply({ jsonrpc: "2.0", result: {}, id: 0 }); // notification
-    let result: unknown;
-    try {
-      switch (msg.method) {
-        case "initialize":
-          result = { protocolVersion: msg.params?.protocolVersion ?? "2024-11-05", capabilities: { tools: {} }, serverInfo: { name: CANVAS_SERVER, version: "1" } };
-          break;
-        case "tools/list":
-          result = { tools: TOOLS };
-          break;
-        case "tools/call": {
-          const out = await this.h.onCanvas(msg.params.name, msg.params.arguments ?? {});
-          result = { content: [{ type: "text", text: typeof out === "string" ? out : JSON.stringify(out) }] };
-          break;
-        }
-        default:
-          result = {};
-      }
-      reply({ jsonrpc: "2.0", id: msg.id, result });
-    } catch (e: any) {
-      reply({ jsonrpc: "2.0", id: msg.id, result: { content: [{ type: "text", text: `Error: ${e?.message ?? e}` }], isError: true } });
-    }
+    const mcp_response = await handleMcp(msg, this.h.onCanvas);
+    this.write({ type: "control_response", response: { subtype: "success", request_id: requestId, response: { mcp_response } } });
   }
 
   send(content: UserContent) {

@@ -10,7 +10,7 @@ Explainer is a Mac app: the Excalidraw editor with a Claude agent in a side pane
 - **Agent** - one long-lived `claude -p` process (the user's own Claude Code install and login), speaking stream-json over stdin/stdout.
 - **Session** - a Claude Code conversation (`~/.claude/projects/<cwd-slug>/<id>.jsonl`). A drawing remembers its last session (`data/app/state.json`).
 - **Workspace** - the agent's working directory (`data/workspace/` by default). Repos get cloned here.
-- **Canvas tools** - MCP tools the app serves in-process to the agent: `draw_elements`, `draw_mermaid`, `read_canvas`, `update_elements`, `delete_elements`. Deleting a frame deletes everything inside it; `delete_elements` takes a `frame` name or id for a whole diagram, `read_canvas` takes `frame` or `ids` to stay small.
+- **Canvas tools** - MCP tools the app serves in-process to the agent: `draw_elements`, `draw_mermaid`, `read_canvas`, `update_elements`, `delete_elements`. Deleting a frame deletes everything inside it; `delete_elements` takes a `frame` name or id for a whole diagram, `read_canvas` takes `frame` or `ids` to stay small. The same tools are served over Streamable HTTP on `127.0.0.1:7331/mcp` (`EXPLAINER_MCP_PORT` to move it) so any other Claude Code client (Zed, CLI, VS Code) can draw on and read the open canvas: `claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user`. Explainer must be running; request/reply only, no push.
 - **Skeleton** - Excalidraw's element-skeleton input format (`convertToExcalidrawElements`). What the agent emits.
 - **Placement** - where a batch of new elements lands: `auto` (free space right of content), `selection` (next to the user's selected elements), `exact`.
 - **Attach** - the Figma-style flow: select elements, press "Ask agent", the selection is sent with the next message as `<selected_elements>` JSON.
@@ -40,6 +40,6 @@ docs/adr/      decisions
 ## Run
 
 - `pnpm dev` - dev app. `EXPLAINER_DEBUG_PORT=9222 pnpm dev` exposes CDP for testing.
-- `pnpm build` - unsigned `dist/mac-arm64/Explainer.app`. First open: right-click > Open.
+- `pnpm build` - unsigned `dist/mac-arm64/Explainer.app`. First open: right-click > Open. For CDP on the packaged app, launch the binary with the env var (`open -a` drops it): `EXPLAINER_DEBUG_PORT=9222 dist/mac-arm64/Explainer.app/Contents/MacOS/Explainer &`. `window.__xapi` / `__canvas` / `__layout` exist in both builds.
 - `pnpm typecheck`, `pnpm check` (share-format self-test; the Layout fixtures too when the dev app is up on 9222, see ADR-0005).
 - Login: the app uses the token from `claude login` in Terminal. Nothing else.

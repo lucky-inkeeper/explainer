@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Excalidraw, MainMenu, Sidebar, WelcomeScreen, getCommonBounds, getSceneVersion, loadFromBlob, sceneCoordsToViewportCoords, serializeAsJSON } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu, WelcomeScreen, getSceneVersion, loadFromBlob, serializeAsJSON } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
 import { runCanvasTool } from "./canvas";
 import { DEFAULT_FONT, inspect, layout } from "./layout";
 import { NOTATION, classify, isFocal } from "../../shared/tools";
-import { ChatPanel, useChat } from "./Chat";
 import { Minimap, type MinimapHandle } from "./Minimap";
 import { Gallery } from "./Gallery";
-import type { AppState } from "../../shared/types";
 
 const LIB_KEY = "explainer-library";
 const THEME_KEY = "explainer-theme"; // "light" | "dark", app-wide, wins over the theme saved inside a drawing
@@ -21,11 +19,7 @@ export function App() {
   const [xapi, setXapi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [file, setFile] = useState<string | null>(null);
   const [initial, setInitial] = useState<ExcalidrawInitialDataState | null>(null);
-  const [state, setState] = useState<AppState | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const askBtn = useRef<HTMLButtonElement>(null); // positioned imperatively: no React re-render per pan/zoom frame
-  const [attached, setAttached] = useState<string[]>([]);
-  const [docked, setDocked] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [tabs, setTabs] = useState<string[]>([]);
@@ -54,8 +48,6 @@ export function App() {
   // boot guard: Excalidraw can report an empty or partial scene before initialData lands; never autosave that over a fuller file
   const expected = useRef(0);
 
-  const chat = useChat({ xapi, file, state, setState, attached, setAttached });
-
   const openFile = useCallback(async (path: string) => {
     let text = await api.invoke("file:read", path);
     let data: ExcalidrawInitialDataState = { elements: [], appState: {} };
@@ -81,13 +73,12 @@ export function App() {
     const theme = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) ?? data.appState?.theme;
     setInitial({ ...data, appState: { ...data.appState, theme, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: true });
     setFile(path);
-    setState(await api.invoke("state:set", { lastFile: path }));
+    await api.invoke("state:set", { lastFile: path });
   }, []);
 
   useEffect(() => {
     (async () => {
       const s = await api.invoke("state:get");
-      setState(s);
       const saved = readTabs();
       const alive: string[] = [];
       for (const t of saved.tabs) if ((await api.invoke("file:read", t)) !== null) alive.push(t);
@@ -113,22 +104,10 @@ export function App() {
     minimap.current?.draw(elements, appState);
     const ids = Object.keys(appState.selectedElementIds).filter((id) => appState.selectedElementIds[id]);
     setSelectedIds((prev) => (same(prev, ids) ? prev : ids));
-    const btn = askBtn.current;
-    if (btn) {
-      const sel = ids.length ? elements.filter((e) => ids.includes(e.id) && !e.isDeleted) : [];
-      if (sel.length) {
-        const [, y1, x2] = getCommonBounds(sel as any);
-        const p = sceneCoordsToViewportCoords({ sceneX: x2, sceneY: y1 }, appState);
-        const inside = p.x > 0 && p.y > 40 && p.x < appState.width && p.y < appState.height;
-        btn.style.left = `${Math.round(p.x - appState.offsetLeft + 8)}px`; btn.style.top = `${Math.round(p.y - appState.offsetTop - 36)}px`;
-        btn.hidden = !inside;
-        btn.title = `Ask the agent about ${sel.length} selected element${sel.length > 1 ? "s" : ""}`;
-      } else btn.hidden = true;
-    }
     // autosave: scene version + the bits of appState worth keeping
     const live = elements.filter((e) => !e.isDeleted).length;
     if (live < expected.current) { console.warn(`autosave skipped: ${live} of ${expected.current} elements loaded`); return; }
-    expected.current = 0; // loaded once: from here on every change is the user's or the agent's
+    expected.current = 0; // loaded once: from here on every change is the user's or an MCP client's
     const sig = `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
     if (sig === lastSaved.current) return;
     lastSaved.current = sig;
@@ -174,16 +153,10 @@ export function App() {
     const x = xapiRef.current, p = await api.invoke("file:saveAsDialog", fileRef.current ?? "");
     if (!x || !p) return;
     await api.invoke("file:write", p, serializeAsJSON(x.getSceneElements(), x.getAppState(), x.getFiles(), "local"));
-    setFile(p); setState(await api.invoke("state:set", { lastFile: p }));
+    setFile(p); await api.invoke("state:set", { lastFile: p });
   };
 
   const uiOptions = useMemo(() => ({ canvasActions: { loadScene: false, export: { saveFileToDisk: true, onExportToBackend: share as any } } }), [share]);
-  // Excalidraw memoizes renderTopRightUI, so visibility is driven by CSS (.app.sidebar-open .agent-trigger)
-  const topRight = useCallback(() => (
-    <Sidebar.Trigger name="agent" className="agent-trigger" title="Claude agent" icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" /></svg>}>
-      Agent
-    </Sidebar.Trigger>
-  ), []);
   const onLibraryChange = useCallback((items: any) => localStorage.setItem(LIB_KEY, JSON.stringify(items)), []);
   const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) { (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); (window as any).__layout = { layout, inspect, classify, isFocal, NOTATION }; } }, []);
 
@@ -217,7 +190,6 @@ export function App() {
         onChange={onChange}
         onLibraryChange={onLibraryChange}
         UIOptions={uiOptions}
-        renderTopRightUI={topRight}
         name={file.split("/").pop()?.replace(/\.excalidraw$/, "")}
       >
         <WelcomeScreen />
@@ -237,9 +209,6 @@ export function App() {
           <MainMenu.DefaultItems.ToggleTheme />
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
-        <Sidebar name="agent" docked={docked} onDock={setDocked} className="agent-sidebar">
-          <ChatPanel chat={chat} />
-        </Sidebar>
       </Excalidraw>
       <Minimap ref={minimap} api={xapi} />
       {home && <Gallery current={file} onOpen={openTab} onRelocate={relocate} />}

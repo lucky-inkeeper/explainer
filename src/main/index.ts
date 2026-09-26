@@ -1,19 +1,17 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
-import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
-import { ClaudeSession, serveMcp } from "./claude";
+import { serveMcp } from "./mcp";
 import { shareScene } from "./share";
-import type { AppState, DrawingInfo, DrawingList, SessionInfo, StartOpts } from "../shared/types";
+import type { AppState, DrawingInfo, DrawingList } from "../shared/types";
 
 declare const __DATA_DIR__: string;
 const DATA = process.env.EXPLAINER_DATA ?? __DATA_DIR__;
-const DIRS = { drawings: path.join(DATA, "drawings"), workspace: path.join(DATA, "workspace"), app: path.join(DATA, "app") };
+const DIRS = { drawings: path.join(DATA, "drawings"), app: path.join(DATA, "app") };
 for (const d of Object.values(DIRS)) fs.mkdirSync(d, { recursive: true });
 const STATE_FILE = path.join(DIRS.app, "state.json");
-const DEFAULTS: AppState = { workspace: DIRS.workspace, permissionMode: "default", sessions: {} };
+const DEFAULTS: AppState = {};
 const readState = (): AppState => { try { return { ...DEFAULTS, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }; } catch { return { ...DEFAULTS }; } };
 const writeState = (s: AppState) => fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 const MCP_PORT = Number(process.env.EXPLAINER_MCP_PORT ?? 7331); // `claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user`
@@ -24,7 +22,6 @@ app.whenReady().then(() => { try { app.dock?.setIcon(path.join(__dirname, "../..
 if (process.env.EXPLAINER_DEBUG_PORT) app.commandLine.appendSwitch("remote-debugging-port", process.env.EXPLAINER_DEBUG_PORT);
 
 let win: BrowserWindow;
-let session: ClaudeSession | null = null;
 const pendingCanvas = new Map<string, { resolve: (v: any) => void; reject: (e: Error) => void }>();
 
 function createWindow() {
@@ -41,43 +38,11 @@ function createWindow() {
   else win.loadFile(path.join(__dirname, "../renderer/index.html"));
 }
 
-// ---- sessions on disk (claude writes ~/.claude/projects/<cwd-slug>/<id>.jsonl)
-const projectsDir = path.join(os.homedir(), ".claude", "projects");
-const slug = (cwd: string) => cwd.replace(/[^a-zA-Z0-9]/g, "-");
-const findTranscript = (id: string, cwd: string) => {
-  const direct = path.join(projectsDir, slug(cwd), `${id}.jsonl`);
-  if (fs.existsSync(direct)) return direct;
-  if (!fs.existsSync(projectsDir)) return null;
-  for (const d of fs.readdirSync(projectsDir)) { const p = path.join(projectsDir, d, `${id}.jsonl`); if (fs.existsSync(p)) return p; }
-  return null;
-};
-const parseLines = (p: string) => fs.readFileSync(p, "utf8").split("\n").flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
-const titleOf = (msgs: any[]) => {
-  for (const m of msgs) {
-    if (m.type === "summary" && m.summary) return String(m.summary).slice(0, 60);
-    if (m.type === "user" && !m.isMeta) {
-      const c = m.message?.content;
-      const t: string | undefined = typeof c === "string" ? c : c?.find?.((b: any) => b.type === "text")?.text;
-      if (t && !t.startsWith("<")) return t.replace(/\s+/g, " ").slice(0, 60);
-    }
-  }
-  return null;
-};
-function listSessions(cwd: string): SessionInfo[] {
-  const dir = path.join(projectsDir, slug(cwd));
-  if (!fs.existsSync(dir)) return [];
-  // ponytail: reads every transcript fully for a title; index it if the list ever feels slow
-  return fs.readdirSync(dir).filter((f) => f.endsWith(".jsonl")).map((f) => {
-    const p = path.join(dir, f);
-    return { id: f.slice(0, -6), title: titleOf(parseLines(p)) ?? f.slice(0, 8), mtime: fs.statSync(p).mtimeMs };
-  }).sort((a, b) => b.mtime - a.mtime);
-}
-
 // ---- ipc
 ipcMain.handle("state:get", () => readState());
 ipcMain.handle("state:set", (_e, patch: Partial<AppState>) => {
   const cur = readState();
-  const next = { ...cur, ...patch, sessions: { ...cur.sessions, ...(patch.sessions ?? {}) } };
+  const next = { ...cur, ...patch };
   writeState(next);
   return next;
 });
@@ -122,15 +87,14 @@ const EXT = ".excalidraw";
 const THUMBS = path.join(DIRS.drawings, ".thumbs");
 const safeName = (n: string) => n.replace(/[\/\\:]/g, "-").replace(/\.excalidraw$/i, "").trim();
 const thumbFile = (p: string, mtime: number) => path.join(THUMBS, `${createHash("md5").update(p).digest("hex")}-${Math.round(mtime)}.jpg`);
-/** A drawing moved: its agent session and the last-file pointer follow it. */
+/** A drawing moved: its creation time and the last-file pointer follow it. */
 function retarget(from: string, to: string | null) {
   const st = readState();
-  const sessions = { ...st.sessions }, created = { ...(st.created ?? {}) };
-  const sid = sessions[from], born = created[from];
-  delete sessions[from]; delete created[from];
-  if (to && sid) sessions[to] = sid;
+  const created = { ...(st.created ?? {}) };
+  const born = created[from];
+  delete created[from];
   if (to && born) created[to] = born;
-  writeState({ ...st, sessions, created, lastFile: st.lastFile === from ? to ?? undefined : st.lastFile });
+  writeState({ ...st, created, lastFile: st.lastFile === from ? to ?? undefined : st.lastFile });
 }
 /** Time of the oldest .history copy of a drawing: the atomic save replaces the inode, so this beats the file's birth time. */
 function oldestBackup(p: string): number | null {
@@ -146,7 +110,7 @@ function listDrawings(): DrawingList {
   const info = (p: string, folder: string | null): DrawingInfo => {
     const st2 = fs.statSync(p);
     if (!created[p]) { created[p] = Math.min(st2.birthtimeMs || st2.mtimeMs, oldestBackup(p) ?? Infinity); learned = true; }
-    return { path: p, name: path.basename(p, EXT), folder, mtime: st2.mtimeMs, ctime: created[p], hasSession: !!st.sessions[p] };
+    return { path: p, name: path.basename(p, EXT), folder, mtime: st2.mtimeMs, ctime: created[p] };
   };
   const files: DrawingInfo[] = [], folders: string[] = [];
   for (const e of fs.readdirSync(DIRS.drawings, { withFileTypes: true })) {
@@ -201,7 +165,6 @@ ipcMain.handle("drawings:thumbSet", (_e, p: string, mtime: number, dataUrl: stri
 });
 ipcMain.handle("file:openDialog", async () => (await dialog.showOpenDialog(win, { defaultPath: DIRS.drawings, filters: FILTERS, properties: ["openFile"] })).filePaths[0] ?? null);
 ipcMain.handle("file:saveAsDialog", async (_e, cur: string) => (await dialog.showSaveDialog(win, { defaultPath: cur || DIRS.drawings, filters: FILTERS })).filePath || null);
-ipcMain.handle("file:pickFolder", async (_e, cur: string) => (await dialog.showOpenDialog(win, { defaultPath: cur, properties: ["openDirectory", "createDirectory"] })).filePaths[0] ?? null);
 
 const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, reject) => {
   const callId = randomUUID();
@@ -209,29 +172,13 @@ const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, rejec
   win.webContents.send("canvas:call", { callId, tool, args });
   setTimeout(() => { if (pendingCanvas.delete(callId)) reject(new Error(`canvas did not answer ${tool} within 60s (window reloaded?)`)); }, 60_000);
 });
-ipcMain.handle("claude:start", (_e, opts: StartOpts) => {
-  session?.kill();
-  session = new ClaudeSession(opts, { onEvent: (m) => win.webContents.send("claude:event", m), onCanvas: callCanvas });
-});
 ipcMain.on("canvas:result", (_e, { callId, result, error }: { callId: string; result?: any; error?: string }) => {
   const p = pendingCanvas.get(callId);
   if (!p) return;
   pendingCanvas.delete(callId);
   error ? p.reject(new Error(error)) : p.resolve(result);
 });
-ipcMain.handle("claude:send", (_e, content) => session?.send(content));
-ipcMain.handle("claude:control", (_e, request) => session?.control(request));
-ipcMain.handle("claude:respond", (_e, id: string, response) => session?.respond(id, response));
-ipcMain.handle("claude:stop", () => session?.control({ subtype: "interrupt" }));
-ipcMain.handle("sessions:list", (_e, cwd: string) => listSessions(cwd));
-ipcMain.handle("sessions:transcript", (_e, id: string, cwd: string) => {
-  const p = findTranscript(id, cwd);
-  return p ? parseLines(p).filter((m) => (m.type === "user" || m.type === "assistant") && !m.isMeta) : [];
-});
 ipcMain.handle("share:post", (_e, json: string) => shareScene(json));
-ipcMain.handle("shell:terminal", (_e, cmd: string) =>
-  execFile("osascript", ["-e", 'tell application "Terminal" to activate', "-e", `tell application "Terminal" to do script "${cmd}"`]));
-ipcMain.handle("shell:openExternal", (_e, url: string) => shell.openExternal(url));
 
 // no zoomIn/zoomOut/resetZoom roles: Cmd+= Cmd+- Cmd+0 belong to Excalidraw's canvas zoom
 const menu = Menu.buildFromTemplate([
@@ -248,4 +195,4 @@ setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 3
 ipcMain.on("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
 app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, callCanvas); });
-app.on("window-all-closed", () => { session?.kill(); app.quit(); });
+app.on("window-all-closed", () => app.quit());

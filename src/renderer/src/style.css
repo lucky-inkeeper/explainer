@@ -22,114 +22,14 @@ html, body, #root { height: 100%; margin: 0; }
 .app.dark .tab-x:hover { background: #3a3a44; color: #fff; }
 /* Excalidraw narrows its UI layer only when it deems the sidebar dockable (wide windows); do it whenever the panel is open */
 .app.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
-.app.sidebar-open .agent-trigger { display: none; }
-.layer-ui__wrapper__top-right > label:has(.agent-trigger) { order: 1; } /* after the Library trigger */
-
-/* outside .excalidraw, so no CSS vars here */
-.ask-btn {
-  position: absolute; z-index: 5; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
-  padding: 0; border-radius: 8px; border: 1px solid #6965db; background: #6965db; color: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.2);
-}
-.ask-btn:hover { background: #5b57d1; }
-
-.chat { display: flex; flex-direction: column; flex: 1; min-height: 0; font: 13px/1.45 system-ui, sans-serif; color: var(--text-primary-color); }
-.agent-sidebar .sidebar__header { padding: 4px 10px; }
-.agent-title { flex: 1; display: flex; align-items: center; gap: 8px; }
-.agent-title .title { flex: 1; text-align: center; font-size: 1.05rem; font-weight: 700; }
-.agent-title button {
-  font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--default-border-color);
-  background: var(--island-bg-color); color: var(--text-primary-color); cursor: pointer;
-}
-.agent-title button:hover { background: var(--button-hover-bg); }
-.agent-title button.menu { display: inline-flex; padding: 4px 6px; }
-.card button, .chat-input button {
-  font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--default-border-color);
-  background: var(--island-bg-color); color: var(--text-primary-color); cursor: pointer;
-}
-.card button:hover { background: var(--button-hover-bg); }
-.chat-banner { padding: 8px 10px; background: #ffe066; color: #333; display: flex; gap: 8px; align-items: center; font-size: 12px; }
-.log-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.chat-log { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-.jump { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: var(--text-primary-color); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: pointer; }
-.jump:hover { background: var(--button-hover-bg); }
-.chat-log > * { flex-shrink: 0; }
-.msg { border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
-.msg.user { background: var(--color-surface-primary-container); align-self: flex-end; max-width: 92%; }
-.msg.text { background: transparent; padding: 2px 0; }
-.msg.info { font-size: 12px; opacity: .75; }
-.msg.error { color: #e03131; }
-.msg.child { margin-left: 16px; border-left: 2px solid var(--default-border-color); }
-.thinking { font-size: 12px; opacity: .6; font-style: italic; }
-.tool { font-size: 12px; border: 1px solid var(--default-border-color); border-radius: 8px; overflow: hidden; }
-.tool summary { padding: 5px 8px; cursor: pointer; background: var(--color-surface-low); display: flex; gap: 6px; align-items: center; }
-.tool summary .name { font-weight: 600; }
-.tool summary .hint { opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-.tool pre { margin: 0; padding: 6px 8px; max-height: 220px; overflow: auto; font-size: 11px; background: var(--island-bg-color); white-space: pre-wrap; }
-.tool pre.result { border-top: 1px dashed var(--default-border-color); }
-.tool.err summary { color: #e03131; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: #adb5bd; flex: none; }
-.dot.running { background: #f59f00; animation: pulse 1s infinite; }
-.dot.ok { background: #40c057; }
-.dot.error { background: #e03131; }
-@keyframes pulse { 50% { opacity: .3; } }
-.card { border: 1px solid var(--color-primary); border-radius: 10px; padding: 10px; background: var(--island-bg-color); display: flex; flex-direction: column; gap: 6px; }
-.card h4 { margin: 0; font-size: 13px; }
-.card pre { margin: 0; font-size: 11px; max-height: 160px; overflow: auto; white-space: pre-wrap; background: var(--color-surface-low); padding: 6px; border-radius: 6px; }
-.card .row { display: flex; gap: 6px; flex-wrap: wrap; }
-.card button.primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-.card button.sel { outline: 2px solid var(--color-primary); }
-.card input { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; flex: 1; }
-.composer { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 6px; border-top: 1px solid var(--default-border-color); }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px; }
-.chips:empty { display: none; }
-.sessions div.folder span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.sessions div.folder small { flex: 1; min-width: 0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; opacity: .7; }
-.chip { font: inherit; font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--default-border-color); background: var(--color-surface-low); color: var(--text-primary-color); display: inline-flex; gap: 5px; align-items: center; cursor: default; max-width: 100%; }
-button.chip { cursor: pointer; }
-button.chip:hover { background: var(--button-hover-bg); }
-.chip.active { border-color: var(--color-primary); }
-.chip img { height: 22px; border-radius: 3px; }
-.chip button { border: none; background: transparent; color: inherit; padding: 0 2px; cursor: pointer; font-size: 12px; }
-.chat-input { position: relative; display: flex; }
-.excalidraw .chat .chat-input textarea { flex: 1; min-width: 0; resize: none; font: inherit; padding: 8px 40px 8px 10px; border-radius: 10px; border: 1px solid var(--default-border-color); background: var(--island-bg-color); color: inherit; min-height: 44px; max-height: 180px; white-space: pre-wrap; overflow-wrap: break-word; overflow-x: hidden; overflow-y: auto; line-height: 1.4; }
-.chat-input textarea:focus { outline: none; border-color: var(--color-primary); }
-.chat-input button { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
-.chat-input button.enter { border: 1px solid var(--default-border-color); background: transparent; color: var(--text-primary-color); opacity: .6; }
-.chat-input button.enter:hover { opacity: 1; }
-.chat-input button.stop { background: #e03131; color: #fff; border: 1px solid #e03131; }
-.composer-foot { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-.composer-foot .spacer { flex: 1; }
-.composer-foot .plain { border: none; background: transparent; color: var(--text-primary-color); font: inherit; font-size: 12px; padding: 2px 0; cursor: pointer; }
-.pick { position: relative; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
-.pick svg { opacity: .6; }
-.pick:hover { color: var(--color-primary); }
-.pick select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.composer-foot .plus { display: inline-flex; padding: 0 2px; opacity: .8; }
-.composer-foot .new { display: inline-flex; opacity: .8; padding: 0 2px; }
-.composer-foot .new:hover, .composer-foot .plus:hover { opacity: 1; color: var(--color-primary); }
-.popup { position: absolute; bottom: 100%; left: 10px; right: 10px; max-height: 240px; overflow: auto; background: var(--island-bg-color); border: 1px solid var(--default-border-color); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 10; }
-.popup div { padding: 6px 10px; cursor: pointer; font-size: 12px; display: flex; gap: 8px; }
-.popup div.active, .popup div:hover { background: var(--button-hover-bg); }
-.popup div span { opacity: .6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sessions { position: absolute; top: 64px; left: 10px; right: 10px; z-index: 20; background: var(--island-bg-color); border: 1px solid var(--default-border-color); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.2); max-height: 60%; overflow: auto; }
-.sessions div { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--default-border-color); font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
-.sessions div:hover { background: var(--button-hover-bg); }
-.sessions div.cur { font-weight: 600; }
-.sessions small { opacity: .6; white-space: nowrap; }
-
 /* Excalidraw help "?" corner button: hidden; Help stays in the main menu and on the ? key */
 .excalidraw .help-icon { display: none; }
-
-/* Excalidraw disables text selection on its container; the thread is text */
-.excalidraw .chat .chat-log, .excalidraw .chat .chat-log * { -webkit-user-select: text; user-select: text; cursor: auto; }
-.excalidraw .chat .chat-log button, .excalidraw .chat .chat-log summary { -webkit-user-select: none; user-select: none; cursor: pointer; }
 
 /* minimap: outside .excalidraw, so plain colors */
 .minimap { position: absolute; right: 12px; bottom: 12px; z-index: 4; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.92); border: 1px solid #d5d6dd; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
 .minimap canvas { display: block; cursor: crosshair; }
 .app.sidebar-open .minimap { right: 314px; }
 .app.dark .minimap { background: rgba(35,35,41,.94); border-color: #3a3a44; }
-.ask-btn[hidden] { display: none; }
 
 /* ---- drawings gallery (outside .excalidraw: no CSS vars, light defaults, .app.dark overrides) */
 .gallery { position: absolute; inset: 0; z-index: 6; overflow: auto; background: #f7f7f9; color: #1b1b1f; font: 14px/1.4 system-ui, sans-serif; padding: 20px 28px 48px; }

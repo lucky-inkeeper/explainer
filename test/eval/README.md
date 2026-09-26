@@ -1,16 +1,14 @@
-# Diagram evaluation run
+# Diagram evaluation helpers
 
-Draws one diagram per type in the diagram-design skill with the real agent, exports every frame, measures the scene and builds a report page.
+The chat-driven run (eval-run.sh, turn.mjs, build-data.mjs) was removed with the in-app agent sidebar on 2026-09-26. Draw the diagrams from a Claude Code client over MCP, then measure and export them here.
 
-Needs the dev app with CDP: `EXPLAINER_DEBUG_PORT=9222 npx electron-vite dev --watch`, the Agent sidebar open, an empty drawing (menu > New drawing).
+Needs the dev app with CDP: `EXPLAINER_DEBUG_PORT=9222 npx electron-vite dev --watch`.
 
 ```
 cd test/eval
-./eval-run.sh                 # 16 prompts, new session each, ~25 min; chat logs and out/summary.md
 node cdp.mjs evalfile metrics.js > out/metrics.json   # per frame: nodes, arrows, notes, leaders, focal, legend, overlaps
 MOD_URL="$(curl -s http://localhost:5173/src/canvas.ts | grep -o 'from "[^"]*@excalidraw_excalidraw.js[^"]*"' | head -1 | sed 's/from "//; s/"$//')" node export-frames.mjs   # out/png/NN-<frame>.jpg
-node build-data.mjs           # out/data.json: prompt, timing, tool calls, reference read, metrics per type
 ```
 
-Review `out/png/` by eye; `out/data.json` is the machine-readable side.
-Helpers: `cdp.mjs shot|eval|evalfile|click|key|logs`, `turn.mjs "<prompt>" [maxSeconds]` sends one chat turn and prints the log.
+Review `out/png/` by eye.
+Helpers: `cdp.mjs shot|eval|evalfile|click|key|logs`.

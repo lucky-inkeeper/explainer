@@ -1,24 +1,7 @@
-export type PermissionMode = "default" | "acceptEdits" | "plan" | "auto" | "bypassPermissions" | "dontAsk";
-
 export interface AppState {
   lastFile?: string;
-  workspace: string;
-  model?: string;
-  effort?: string;
-  permissionMode: PermissionMode;
-  /** drawing file path -> claude session id */
-  sessions: Record<string, string>;
   /** drawing file path -> creation time (ms); the atomic save replaces the inode, so the file system's birth time is useless */
   created?: Record<string, number>;
-}
-
-export interface StartOpts {
-  cwd: string;
-  resume?: string;
-  fork?: boolean;
-  model?: string;
-  effort?: string;
-  permissionMode?: PermissionMode;
 }
 
 export interface DrawingInfo {
@@ -29,7 +12,6 @@ export interface DrawingInfo {
   folder: string | null;
   mtime: number;
   ctime: number;
-  hasSession: boolean;
 }
 
 export interface DrawingList {
@@ -37,20 +19,11 @@ export interface DrawingList {
   files: DrawingInfo[];
 }
 
-export interface SessionInfo {
-  id: string;
-  title: string;
-  mtime: number;
-}
-
 export interface CanvasCall {
   callId: string;
   tool: string;
   args: any;
 }
-
-export type ImageBlock = { type: "image"; source: { type: "base64"; media_type: string; data: string } };
-export type UserContent = string | Array<{ type: "text"; text: string } | ImageBlock>;
 
 export interface Api {
   invoke(ch: "state:get"): Promise<AppState>;
@@ -69,20 +42,9 @@ export interface Api {
   invoke(ch: "drawings:thumbSet", path: string, mtime: number, dataUrl: string): Promise<void>;
   invoke(ch: "file:openDialog"): Promise<string | null>;
   invoke(ch: "file:saveAsDialog", currentPath: string): Promise<string | null>;
-  invoke(ch: "file:pickFolder", current: string): Promise<string | null>;
-  invoke(ch: "claude:start", opts: StartOpts): Promise<void>;
-  invoke(ch: "claude:send", content: UserContent): Promise<void>;
-  invoke(ch: "claude:control", request: Record<string, unknown>): Promise<void>;
-  invoke(ch: "claude:respond", requestId: string, response: Record<string, unknown>): Promise<void>;
-  invoke(ch: "claude:stop"): Promise<void>;
-  invoke(ch: "sessions:list", cwd: string): Promise<SessionInfo[]>;
-  invoke(ch: "sessions:transcript", id: string, cwd: string): Promise<any[]>;
   invoke(ch: "share:post", json: string): Promise<{ url: string } | { error: string }>;
-  invoke(ch: "shell:terminal", command: string): Promise<void>;
-  invoke(ch: "shell:openExternal", url: string): Promise<void>;
   send(ch: "canvas:result", payload: { callId: string; result?: any; error?: string }): void;
   send(ch: "log:stall", where: string, ms: number): void;
-  on(ch: "claude:event", cb: (msg: any) => void): () => void;
   on(ch: "canvas:call", cb: (call: CanvasCall) => void): () => void;
 }
 

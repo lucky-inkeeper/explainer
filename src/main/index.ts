@@ -47,6 +47,29 @@ ipcMain.handle("state:set", (_e, patch: Partial<AppState>) => {
   return next;
 });
 ipcMain.handle("file:read", (_e, p: string) => (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : null));
+const IMAGE_MAX = 4 * 1024 * 1024; // the dataURL is stored inside the .excalidraw file for good
+/** Pixel size from the header: PNG IHDR, or the first JPEG SOF segment. */
+function imageSize(b: Buffer): { mimeType: "image/png" | "image/jpeg"; width: number; height: number } {
+  if (b.length > 24 && b.readUInt32BE(0) === 0x89504e47) return { mimeType: "image/png", width: b.readUInt32BE(16), height: b.readUInt32BE(20) };
+  if (b.length > 4 && b[0] === 0xff && b[1] === 0xd8) {
+    for (let i = 2; i + 9 < b.length && b[i] === 0xff; i += 2 + b.readUInt16BE(i + 2)) {
+      const m = b[i + 1];
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { mimeType: "image/jpeg", width: b.readUInt16BE(i + 7), height: b.readUInt16BE(i + 5) };
+    }
+    throw new Error("JPEG without a size header");
+  }
+  throw new Error("not a PNG or JPEG (checked the file header)");
+}
+/** An image for the canvas, from a path on disk or a dataURL: validated, measured, id = sha1 of the bytes so one picture is stored once. */
+ipcMain.handle("image:read", (_e, src: { path?: string; dataURL?: string }) => {
+  let b: Buffer;
+  if (src.path) { if (!fs.existsSync(src.path)) throw new Error(`no file at ${src.path}`); b = fs.readFileSync(src.path); }
+  else if (src.dataURL) b = Buffer.from(src.dataURL.slice(src.dataURL.indexOf(",") + 1), "base64");
+  else throw new Error("give path or dataURL");
+  if (b.length > IMAGE_MAX) throw new Error(`image is ${(b.length / 1024 / 1024).toFixed(1)} MB; the limit is 4 MB (it is stored inside the drawing). Downscale or crop it first.`);
+  const { mimeType, width, height } = imageSize(b);
+  return { id: createHash("sha1").update(b).digest("hex"), dataURL: `data:${mimeType};base64,${b.toString("base64")}`, mimeType, width, height };
+});
 const liveCount = (text: string) => { try { return (JSON.parse(text).elements ?? []).filter((e: any) => !e.isDeleted).length; } catch { return -1; } };
 const lastBackup = new Map<string, number>();
 /** Atomic write; the previous version is kept in .history when the scene shrinks by more than 30 percent or is emptied, and at most every 5 min otherwise. */

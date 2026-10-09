@@ -29,6 +29,7 @@ export interface Api {
   invoke(ch: "state:get"): Promise<AppState>;
   invoke(ch: "state:set", patch: Partial<AppState>): Promise<AppState>;
   invoke(ch: "file:read", path: string): Promise<string | null>;
+  invoke(ch: "image:read", src: { path?: string; dataURL?: string }): Promise<{ id: string; dataURL: string; mimeType: "image/png" | "image/jpeg"; width: number; height: number }>;
   invoke(ch: "file:write", path: string, text: string): Promise<void>;
   invoke(ch: "file:new", folder?: string | null): Promise<string>;
   invoke(ch: "drawings:list"): Promise<DrawingList>;

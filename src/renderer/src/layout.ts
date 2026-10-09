@@ -41,6 +41,12 @@ const SHAPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
 const isObstacle = (e: El) => e.x != null && ((SHAPES.has(e.type) && !isSection(e)) || (e.type === "text" && !e.containerId && Number.isFinite(e.width) && Number.isFinite(e.height)));
 /** Greedy word wrap to about `maxChars` per line; the converter does not wrap a free text at the width the agent gives. */
 const wrap = (text: string, maxChars: number) => text.split("\n").map((para) => { const lines: string[] = []; let line = ""; for (const word of para.split(" ")) { if (line && line.length + 1 + word.length > maxChars) { lines.push(line); line = word; } else line = line ? `${line} ${word}` : word; } lines.push(line); return lines.join("\n"); }).join("\n");
+/** Wrap `text` to `boxW` px given a measured sample (its longest line spans `measuredW` px). Returns the text unchanged when it fits. */
+export function fitText(text: string, boxW: number, measuredText: string, measuredW: number): string {
+  if (!(measuredW > boxW + 1)) return text;
+  const longest = Math.max(...measuredText.split("\n").map((l) => l.length));
+  return wrap(text, Math.max(8, Math.floor((boxW * longest) / measuredW)));
+}
 
 /**
  * Bound arrow labels overlap shapes when the arrow is shorter than the label.
@@ -236,12 +242,30 @@ export function followBindings(els: El[], touched: Set<string>): El[] {
     const next = newElementWith(a, { ...g, fixedSegments: null, ...(r.elbowed && !a.elbowed && { elbowed: true }) }); // new points: a segment the user fixed on the old route is stale
     moved.set(a.id, next);
     const label = labels.get(a.id);
-    if (label) {
-      const pts = next.points, m = pts[Math.floor((pts.length - 1) / 2)], n = pts[Math.ceil((pts.length - 1) / 2)];
-      moved.set(label.id, newElementWith(label, { x: next.x + (m[0] + n[0]) / 2 - label.width / 2, y: next.y + (m[1] + n[1]) / 2 - label.height / 2 }));
-    }
+    if (label) moved.set(label.id, centerLabel(next, label));
+  }
+  // an arrow moved directly (its own x/y/points in the update) or one whose route failed keeps its label at the old spot: recenter it
+  for (const a of arrows) {
+    const label = labels.get(a.id);
+    if (!label || moved.has(label.id) || !(touched.has(a.id) || redo.includes(a))) continue;
+    moved.set(label.id, centerLabel(moved.get(a.id) ?? a, label));
   }
   return moved.size ? els.map((e) => moved.get(e.id) ?? e) : els;
+}
+
+/** An arrow's bound text sits on the midpoint of its middle segment. */
+function centerLabel(a: El, label: El): El {
+  const pts = a.points, m = pts[Math.floor((pts.length - 1) / 2)], n = pts[Math.ceil((pts.length - 1) / 2)];
+  return newElementWith(label, { x: a.x + (m[0] + n[0]) / 2 - label.width / 2, y: a.y + (m[1] + n[1]) / 2 - label.height / 2 });
+}
+
+/** A bound text lives in its container's frame; the converter creates it without one, so it would sit outside the diagram. */
+export function labelsFollowFrames(els: El[]): El[] {
+  const byId = new Map(els.map((e) => [e.id, e]));
+  return els.map((t) => {
+    const c = t.type === "text" && t.containerId ? byId.get(t.containerId) : undefined;
+    return c && (c.frameId ?? null) !== (t.frameId ?? null) ? newElementWith(t, { frameId: c.frameId ?? null }) : t;
+  });
 }
 
 function spaceForLabels(skeleton: El[]): El[] {
@@ -297,7 +321,7 @@ function spaceForLabels(skeleton: El[]): El[] {
       if (pass === 0 && !b.containerId && b.x != null) {
         const boxW = given.get(b.id) ?? m.width, k = b.textAlign === "right" ? 1 : b.textAlign === "center" ? 0.5 : 0;
         if (k) { b.x += boxW * k; changed = true; }
-        if (given.has(b.id) && m.width > boxW + 1 && !String(b.text).includes("\n")) { b.text = wrap(String(b.text), Math.max(8, Math.floor((boxW * String(b.text).length) / m.width))); changed = true; }
+        if (given.has(b.id)) { const t = fitText(String(b.text), boxW, String(m.text), m.width); if (t !== b.text) { b.text = t; changed = true; } }
       }
       if (b.width !== m.width || b.height !== m.height) { b.width = m.width; b.height = m.height; changed = true; }
     }

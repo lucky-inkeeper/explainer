@@ -64,7 +64,7 @@ Bind arrows to shapes in the SAME call (bindings need the shape in the same batc
 export const TOOLS = [
   {
     name: "draw_elements",
-    description: `Draw new elements on the shared Excalidraw canvas. Coordinates in your batch are relative to the batch; by default the app places the whole batch in free space (right of existing content, or next to the user's attached selection). ${skeletonDoc}`,
+    description: `Draw new elements on the shared Excalidraw canvas. Coordinates in your batch are relative to the batch; by default the app places the whole batch in the nearest free space (right of or below existing content, or next to the user's attached selection). ${skeletonDoc}`,
     inputSchema: {
       type: "object",
       properties: {
@@ -72,7 +72,7 @@ export const TOOLS = [
         placement: {
           type: "string",
           enum: ["auto", "selection", "exact"],
-          description: "auto (default): free space right of all content. selection: right of the user's selected elements. exact: use your x/y as absolute scene coordinates (use read_canvas first).",
+          description: "auto (default): nearest free space, right of or below existing content. selection: right of the user's selected elements. exact: use your x/y as absolute scene coordinates (use read_canvas first).",
         },
         frame: { type: "string", description: "Diagram title. The app wraps the whole batch in one frame with this name. Use it for every complete diagram; do not add your own outer frame then." },
       },
@@ -94,6 +94,34 @@ export const TOOLS = [
     },
   },
   {
+    name: "draw_image",
+    description:
+      "Put pictures (PNG or JPEG) on the canvas: screenshots, mockups, photos. Each image becomes an image element, with an optional caption text next to it. Give a path on disk (absolute; the app reads it) or a dataURL. Default size is half the pixel size (retina screenshots); pass width and/or height to override, the aspect ratio is kept. Max 4 MB per image; the picture is stored inside the drawing. Placed in free space like draw_elements. Returns the element ids and the file ids (sha1 of the bytes: the same picture twice shares one file). To swap a picture later: draw_image is not needed, call update_elements with the image element id and a new fileId from an earlier draw_image, or just draw_image again. Tip for browser screenshots: an element screenshot of some components comes back blank; take a viewport screenshot and crop it by getBoundingClientRect() x devicePixelRatio.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        images: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "Element id; generated (img-<hash8>) when omitted" },
+              path: { type: "string", description: "Absolute path of a PNG or JPEG on disk" },
+              dataURL: { type: "string", description: "data:image/png;base64,... when you already have one" },
+              caption: { type: "string", description: "Short text drawn next to the picture" },
+              width: { type: "number" },
+              height: { type: "number" },
+            },
+          },
+        },
+        layout: { type: "string", enum: ["column", "row"], description: "column (default): pictures stacked, caption to the right of each. row: side by side, caption below (left-aligned)." },
+        placement: { type: "string", enum: ["auto", "selection", "exact"], description: "Same as draw_elements. exact uses x/y you pass on each image." },
+        frame: { type: "string", description: "Title: the app wraps the batch in one frame with this name." },
+      },
+      required: ["images"],
+    },
+  },
+  {
     name: "read_canvas",
     description:
       "Read the canvas: compact list of elements (id, type, x, y, width, height, text, colors, bindings, groups, frames) plus the ids the user currently has selected and the list of frames. Scope it: pass frame (the diagram title or frame id) or ids; an unscoped read of a large canvas returns only the frame list. Use before editing, placing exactly, or answering questions about the drawing.",
@@ -109,7 +137,7 @@ export const TOOLS = [
   {
     name: "update_elements",
     description:
-      "Update existing elements by id. Each update is {id, ...props}: any skeleton prop (x, y, width, height, strokeColor, backgroundColor, text for text elements, label text via text on the bound text element, opacity, strokeStyle...).",
+      "Update existing elements by id. Each update is {id, ...props}: any skeleton prop (x, y, width, height, strokeColor, backgroundColor, text for text elements, label text via text on the bound text element, opacity, strokeStyle...). Moving a shape re-routes its bound arrows; the result lists any overlap or arrow crossing in the touched frames (\"warnings\") - fix those before answering.",
     inputSchema: {
       type: "object",
       properties: { updates: { type: "array", items: { type: "object" } } },
@@ -132,7 +160,7 @@ export const TOOLS = [
 export const SYSTEM_PROMPT = `You are running inside Explainer: an Excalidraw whiteboard with you in a side panel. Your output medium is the CANVAS, not chat.
 
 Rules:
-- Explain by drawing. Use mcp__canvas__draw_mermaid for structure (auto layout) and mcp__canvas__draw_elements for free-form diagrams, annotations, callouts, comparisons, timelines.
+- Explain by drawing. Use mcp__canvas__draw_mermaid for structure (auto layout) and mcp__canvas__draw_elements for free-form diagrams, annotations, callouts, comparisons, timelines. Use mcp__canvas__draw_image to put a screenshot or picture (PNG/JPEG on disk) on the canvas with a caption.
 - Keep canvas text short: labels of 1-6 words, notes of 1-2 lines. Prefer boxes + arrows + grouping over sentences.
 - If a point cannot be made without prose, put a Note (see NOTATION) on the canvas next to the element it explains. Still no prose in chat.
 - Chat text is for: short answers to direct questions (about attached elements, the drawing, or the conversation), one-line status ("Drew the request flow."), questions you must ask, errors, and permission needs. Never a long essay in chat.

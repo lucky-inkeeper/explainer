@@ -15,6 +15,17 @@ const readTabs = (): { tabs: string[]; active: string | null } => { try { return
 const shortName = (p: string) => p.split("/").pop()?.replace(/\.excalidraw$/, "") ?? p;
 const same = (a: string[], b: string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
+/** CSS-scale the canvases (and the DOM frame titles, fixed font size, anchored bottom-left) by k about the container origin, then shift by tx, ty. */
+function zoomTransform(root: HTMLElement, k: number, tx: number, ty: number) {
+  const t = (x: number, y: number, s = 1) => (k === 1 && !tx && !ty ? "" : `translate(${x}px, ${y}px)` + (s === 1 ? "" : ` scale(${s})`));
+  for (const c of root.querySelectorAll<HTMLElement>("canvas.excalidraw__canvas")) { c.style.transformOrigin = "0 0"; c.style.transform = t(tx, ty, k); }
+  for (const el of root.children) {
+    if (!(el instanceof HTMLDivElement) || el.className) continue;
+    const L = el.offsetLeft, B = el.offsetTop + el.offsetHeight; // offset*: layout position, ignores the transform already on it
+    el.style.transform = t(tx + L * (k - 1), ty + B * (k - 1));
+  }
+}
+
 export function App() {
   const [xapi, setXapi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [file, setFile] = useState<string | null>(null);
@@ -29,15 +40,46 @@ export function App() {
   const fileRef = useRef(file); fileRef.current = file;
   const saveTimer = useRef<number>(undefined);
   const minimap = useRef<MinimapHandle>(null);
-
-  // Excalidraw ignores wheel events whose target is not its canvas. Frame titles are DOM overlays (class-less
-  // absolutely positioned divs directly under .excalidraw), so pan/zoom died while the cursor rested on a title.
+  // per-tab pan/zoom: Excalidraw remounts on tab switch (key={file}), so the view is kept here and restored on open
+  const views = useRef(new Map<string, { scrollX: number; scrollY: number; zoom: any }>());
+  // Wheel zoom. Excalidraw re-renders the whole scene on every wheel tick and, unless shouldCacheIgnoreZoom is set, re-rasterizes
+  // every visible element too: on a big drawing one tick froze for hundreds of ms. Instead, while the gesture runs the canvases (and
+  // the DOM frame titles) are CSS-transformed from the view at gesture start, at most once per animation frame, and the scene is
+  // rendered once when the wheel has been quiet for a moment. Element rasters are kept (scaled) while zooming out, down to half the
+  // zoom they were made at, and remade when zooming in past it: zooming out to see everything never stalls, zooming in stays sharp.
+  const gesture = useRef<{ z0: number; sx0: number; sy0: number; zoom: number; scrollX: number; scrollY: number; raf: number; end: number; done: boolean } | null>(null);
+  const rasterZoom = useRef(1); // zoom the element canvases were last rasterized at (last time shouldCacheIgnoreZoom was false)
+  const rasterTimer = useRef<number>(undefined);
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       const t = e.target as HTMLElement;
-      if (!(t instanceof HTMLDivElement) || t.className || !t.parentElement?.classList.contains("excalidraw")) return;
+      const root = document.querySelector<HTMLElement>(".excalidraw");
+      const title = t instanceof HTMLDivElement && !t.className && t.parentElement === root;
       const canvas = document.querySelector("canvas.excalidraw__canvas.interactive");
-      if (!canvas) return;
+      if (!canvas || !root) return;
+      if ((e.ctrlKey || e.metaKey) && (title || t === canvas)) {
+        const x = xapiRef.current;
+        if (!x) return;
+        e.preventDefault(); e.stopPropagation();
+        let g = gesture.current;
+        if (g?.done) return; // the last gesture's render is still on its way: drop the tick, the next one starts from the rendered view
+        if (!g) { const s = x.getAppState(); g = gesture.current = { z0: s.zoom.value, sx0: s.scrollX, sy0: s.scrollY, zoom: s.zoom.value, scrollX: s.scrollX, scrollY: s.scrollY, raf: 0, end: 0, done: false }; }
+        // relative step anchored at the cursor, same shape as Excalidraw's getStateForZoom (its own step is absolute: +66% per tick at zoom 0.15)
+        const d = Math.max(-10, Math.min(10, e.deltaY));
+        const zoom = Math.max(0.1, Math.min(30, g.zoom * (1 - d / 100)));
+        const r = root.getBoundingClientRect(), ax = e.clientX - r.left, ay = e.clientY - r.top;
+        g.scrollX += (ax - ax / g.zoom) - (ax - ax / zoom); g.scrollY += (ay - ay / g.zoom) - (ay - ay / zoom); g.zoom = zoom;
+        if (!g.raf) g.raf = requestAnimationFrame(() => {
+          if (!g || g.done) return;
+          g.raf = 0;
+          zoomTransform(root, g.zoom / g.z0, (g.scrollX - g.sx0) * g.zoom, (g.scrollY - g.sy0) * g.zoom);
+        });
+        window.clearTimeout(g.end);
+        g.end = window.setTimeout(() => { if (!g) return; g.done = true; x.updateScene({ appState: { zoom: { value: g.zoom as any }, scrollX: g.scrollX, scrollY: g.scrollY, shouldCacheIgnoreZoom: true } }); }, 120);
+        return;
+      }
+      // Excalidraw ignores wheel events whose target is not its canvas; frame titles are DOM overlays, so pan died with the cursor on one
+      if (!title) return;
       e.preventDefault(); e.stopPropagation();
       canvas.dispatchEvent(new WheelEvent("wheel", { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey, clientX: e.clientX, clientY: e.clientY, bubbles: true, cancelable: true }));
     };
@@ -71,7 +113,8 @@ export function App() {
     expected.current = (data.elements ?? []).filter((e: any) => !e.isDeleted).length;
     window.setTimeout(() => { expected.current = 0; }, 15_000); // never leave a file unsaveable if Excalidraw drops something on load
     const theme = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) ?? data.appState?.theme;
-    setInitial({ ...data, appState: { ...data.appState, theme, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: true });
+    const view = views.current.get(path);
+    setInitial({ ...data, appState: { ...data.appState, ...view, theme, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: !view });
     setFile(path);
     await api.invoke("state:set", { lastFile: path });
   }, []);
@@ -101,7 +144,19 @@ export function App() {
   const onChange = useCallback((elements: readonly any[], appState: any, files: any) => {
     setSidebarOpen(!!appState.openSidebar);
     setDark(appState.theme === "dark");
+    const g = gesture.current;
+    if (g?.done) { // the scene is rendered at the final zoom: drop the CSS transforms in the same task, before paint
+      gesture.current = null;
+      const root = document.querySelector<HTMLElement>(".excalidraw");
+      if (root) zoomTransform(root, 1, 0, 0);
+    }
+    window.clearTimeout(rasterTimer.current);
+    if (!appState.shouldCacheIgnoreZoom) rasterZoom.current = appState.zoom.value;
+    else if (!gesture.current && (appState.zoom.value > rasterZoom.current || appState.zoom.value < rasterZoom.current / 2)) {
+      rasterTimer.current = window.setTimeout(() => xapiRef.current?.updateScene({ appState: { shouldCacheIgnoreZoom: false } }), 300);
+    }
     minimap.current?.draw(elements, appState);
+    if (fileRef.current) views.current.set(fileRef.current, { scrollX: appState.scrollX, scrollY: appState.scrollY, zoom: appState.zoom });
     const ids = Object.keys(appState.selectedElementIds).filter((id) => appState.selectedElementIds[id]);
     setSelectedIds((prev) => (same(prev, ids) ? prev : ids));
     // autosave: scene version + the bits of appState worth keeping
@@ -158,7 +213,8 @@ export function App() {
 
   const uiOptions = useMemo(() => ({ canvasActions: { loadScene: false, export: { saveFileToDisk: true, onExportToBackend: share as any } } }), [share]);
   const onLibraryChange = useCallback((items: any) => localStorage.setItem(LIB_KEY, JSON.stringify(items)), []);
-  const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); if (import.meta.env.DEV) { (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); (window as any).__layout = { layout, inspect, classify, isFocal, NOTATION }; } }, []);
+  // hooks for CDP drivers (test/eval, Claude Code) in dev and in the packaged app alike: it is a local app, nothing else can reach the page
+  const setApi = useCallback((a: ExcalidrawImperativeAPI) => { setXapi(a); (window as any).__xapi = a; (window as any).__canvas = (tool: string, args: any) => runCanvasTool(a, tool, args, selRef.current); (window as any).__layout = { layout, inspect, classify, isFocal, NOTATION }; }, []);
 
   if (!initial || !file) return <div className="app" />;
   return (

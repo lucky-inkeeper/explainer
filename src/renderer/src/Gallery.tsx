@@ -33,6 +33,8 @@ async function thumbnail(f: DrawingInfo): Promise<string | null> {
   } catch (e) { console.error("thumbnail failed", f.path, e); return null; }
 }
 
+/** The open folder outlives the gallery: it unmounts while a drawing is shown, and Home should reopen where you were. */
+let lastCwd: string | null = null;
 const VIEW_KEY = "explainer-gallery"; // { kind, sort, view }
 type Prefs = { kind: "all" | "files" | "folders"; sort: "modified" | "created" | "name"; dir: "asc" | "desc"; view: "grid" | "list" };
 const DEFAULT_PREFS: Prefs = { kind: "all", sort: "modified", dir: "desc", view: "grid" };
@@ -47,7 +49,8 @@ type MenuItem = { label: string; onClick: () => void; danger?: boolean; head?: b
 
 export function Gallery({ current, onOpen, onRelocate }: { current: string | null; onOpen: (path: string) => void; onRelocate: (from: string, to: string | null) => void }) {
   const [list, setList] = useState<DrawingList>({ folders: [], files: [] });
-  const [cwd, setCwd] = useState<string | null>(null); // folder name, or null at the root
+  const [cwd, setCwdState] = useState<string | null>(lastCwd); // folder name, or null at the root
+  const setCwd = (d: string | null) => { lastCwd = d; setCwdState(d); };
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const [renaming, setRenaming] = useState<string | null>(null); // file path or "folder:<name>"
   const [menu, setMenu] = useState<string | null>(null); // same keys
@@ -61,6 +64,7 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   const reload = useCallback(async () => {
     const l = await api.invoke("drawings:list");
     setList(l);
+    if (lastCwd !== null && !l.folders.includes(lastCwd)) setCwd(null); // the folder was renamed or removed meanwhile
     for (const f of l.files) {
       if (!alive.current) return;
       const key = `${f.path}@${f.mtime}`;

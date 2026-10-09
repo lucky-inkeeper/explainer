@@ -173,8 +173,8 @@ export function App() {
   }, []);
 
   const share = useCallback(async (elements: readonly any[], appState: any, files: any) => {
-    // excalidraw.com does not know the web-font ids (ADR-0003): swap in its nearest own fonts, Excalifont (5) and Nunito (6)
-    const web = elements.map((e) => (e.fontFamily === FONTS["Playpen Sans"] ? { ...e, fontFamily: 5 } : e.fontFamily === FONTS.Inter ? { ...e, fontFamily: 6 } : e));
+    // excalidraw.com does not know the web-font ids (ADR-0003): both become its Nunito (6), the closest to how the app looks
+    const web = elements.map((e) => (e.fontFamily === FONTS["Playpen Sans"] || e.fontFamily === FONTS.Inter ? { ...e, fontFamily: 6 } : e));
     const r = await api.invoke("share:post", serializeAsJSON(web as any, appState, files, "database"));
     const x = xapiRef.current;
     if ("url" in r) { await navigator.clipboard.writeText(r.url); x?.setToast({ message: `Link copied${Object.keys(files ?? {}).length ? " (images are not included in share links)" : ""}: ${r.url}`, duration: 8000, closable: true }); }

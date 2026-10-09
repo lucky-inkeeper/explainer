@@ -5,6 +5,7 @@ import path from "node:path";
 import { insideDir, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
 import { shareScene } from "./share";
+import { startSync } from "./sync";
 import type { AppState, DrawingInfo, DrawingList } from "../shared/types";
 
 declare const __DATA_DIR__: string;
@@ -54,8 +55,10 @@ const offlinePage = (why: string) => `<!doctype html><title>Explainer</title><bo
 type Handler = (e: IpcMainInvokeEvent, ...args: any[]) => unknown;
 const handle = (ch: string, fn: Handler) => ipcMain.handle(ch, (e, ...args) => {
   if (!sameOrigin(e.senderFrame?.url, UI_ORIGIN)) throw new Error(`${ch}: blocked, the caller is not the Explainer UI`);
+  if (CHANGES_DRAWINGS.has(ch)) sync?.syncSoon();
   return fn(e, ...args);
 });
+const CHANGES_DRAWINGS = new Set(["file:new", "drawings:rename", "drawings:move", "drawings:delete", "drawings:renameFolder", "drawings:deleteFolder"]);
 const listen = (ch: string, fn: (e: IpcMainEvent, ...args: any[]) => void) => ipcMain.on(ch, (e, ...args) => { if (sameOrigin(e.senderFrame?.url, UI_ORIGIN)) fn(e, ...args); });
 // drawings live in data/drawings; a file outside it is reachable only after the user picked it in a dialog this session
 const picked = new Set<string>();
@@ -109,6 +112,10 @@ const lastBackup = new Map<string, number>();
 /** Atomic write; the previous version is kept in .history when the scene shrinks by more than 30 percent or is emptied, and at most every 5 min otherwise. */
 handle("file:write", (_e, p: string, text: string) => {
   if (!mayUse(p)) throw new Error(`file:write: ${p} is outside ${DIRS.drawings} and was not picked in a dialog`);
+  writeDrawing(p, text);
+  if (insideDir(DIRS.drawings, p)) sync?.syncSoon();
+});
+function writeDrawing(p: string, text: string) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
   if (fs.existsSync(p)) {
     const prev = fs.readFileSync(p, "utf8");
@@ -128,7 +135,7 @@ handle("file:write", (_e, p: string, text: string) => {
   const tmp = `${p}.tmp`;
   fs.writeFileSync(tmp, text);
   fs.renameSync(tmp, p);
-});
+}
 handle("file:new", (_e, folder?: string | null) => {
   const dir = folder ? path.join(DIRS.drawings, safeName(folder)) : DIRS.drawings;
   fs.mkdirSync(dir, { recursive: true });
@@ -226,6 +233,21 @@ handle("drawings:thumbSet", (_e, p: string, mtime: number, dataUrl: string) => {
 handle("file:openDialog", async () => pick((await dialog.showOpenDialog(win, { defaultPath: DIRS.drawings, filters: FILTERS, properties: ["openFile"] })).filePaths[0]));
 handle("file:saveAsDialog", async (_e, cur: string) => pick((await dialog.showSaveDialog(win, { defaultPath: mayUse(cur) ? cur : DIRS.drawings, filters: FILTERS })).filePath));
 
+// ---- cloud sync (ADR-0007): on when data/app/sync.json has a Vercel Blob read-write token
+let sync: ReturnType<typeof startSync> | null = null;
+function startCloudSync() {
+  let token = process.env.EXPLAINER_BLOB_TOKEN;
+  try { token ??= JSON.parse(fs.readFileSync(path.join(DIRS.app, "sync.json"), "utf8")).blobToken; } catch { /* no file: sync off */ }
+  if (!token) return null;
+  const s = startSync({
+    dir: DIRS.drawings, stateFile: path.join(DIRS.app, "sync-state.json"), token,
+    write: writeDrawing, trash: (p) => shell.trashItem(p),
+    changed: (paths) => { for (const p of paths) if (!fs.existsSync(p)) retarget(p, null); win?.webContents.send("drawings:synced", paths); },
+  });
+  win.on("focus", () => s.syncNow());
+  return s;
+}
+
 const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, reject) => {
   const callId = randomUUID();
   pendingCanvas.set(callId, { resolve, reject });
@@ -254,5 +276,5 @@ let beat = Date.now();
 setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
 listen("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
-app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args)); });
+app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); sync = startCloudSync(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args)); });
 app.on("window-all-closed", () => app.quit());

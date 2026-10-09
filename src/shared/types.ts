@@ -47,6 +47,7 @@ export interface Api {
   send(ch: "canvas:result", payload: { callId: string; result?: any; error?: string }): void;
   send(ch: "log:stall", where: string, ms: number): void;
   on(ch: "canvas:call", cb: (call: CanvasCall) => void): () => void;
+  on(ch: "drawings:synced", cb: (paths: string[]) => void): () => void;
 }
 
 declare global {

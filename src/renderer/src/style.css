@@ -67,7 +67,8 @@ input.gnew { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px s
 .app.dark .gview { background: #232329; border-color: #3a3a44; } .app.dark .gview button.on { background: #3a3a44; color: #fff; }
 .gerror { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: #fff0f0; color: #c92a2a; font-size: 13px; }
 .ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
-.gcard { position: relative; display: flex; flex-direction: column; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; }
+.gcard { position: relative; display: flex; flex-direction: column; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; cursor: pointer; }
+.gcard:hover { border-color: #b3b1e8; }
 .gcard.current { border-color: #6965db; box-shadow: 0 0 0 2px rgba(105,101,219,.25); }
 .gthumb { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 16 / 10; padding: 0; border: 0; border-bottom: 1px solid #ececf1; border-radius: 12px 12px 0 0; background: #fff; cursor: pointer; overflow: hidden; }
 .gcard.folder .gthumb { background: #f4f4fb; }
@@ -106,6 +107,7 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .glist .grow.folder .gthumb { background: #f4f4fb; }
 .glist .grow.folder .gthumb svg { width: 40px; height: 30px; }
 .glist .gpick { position: static; opacity: 0; width: 16px; height: 16px; }
+.grow:not(.head) { cursor: pointer; }
 .grow:hover .gpick, .grow.picked .gpick, .glist .gpick:focus-visible { opacity: 1; }
 .glist .gmore { opacity: 0; }
 .grow:hover .gmore, .glist .gmenu ~ .gmore { opacity: 1; }

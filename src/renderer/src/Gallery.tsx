@@ -111,9 +111,11 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
       { label: "Move to Trash", onClick: () => removeFile(f), danger: true },
     ];
   };
-  const Name = ({ id, value, onRename, onOpenIt }: { id: string; value: string; onRename: (v: string) => void; onOpenIt: () => void }) => renaming === id ? (
+  /** The whole card (or list row) opens its drawing or folder, except its checkbox, its menu and a name being edited. */
+  const opens = (fn: () => void) => (e: React.MouseEvent) => { if (!(e.target as HTMLElement).closest(".gpick, .gmore, .gmenu, input.gname")) fn(); };
+  const Name = ({ id, value, onRename }: { id: string; value: string; onRename: (v: string) => void }) => renaming === id ? (
     <input className="gname" autoFocus defaultValue={value} onKeyDown={(e) => { if (e.key === "Enter") onRename(e.currentTarget.value); if (e.key === "Escape") setRenaming(null); }} onBlur={(e) => onRename(e.currentTarget.value)} />
-  ) : <button className="gname" onClick={onOpenIt} onDoubleClick={() => setRenaming(id)} title="Open (double-click to rename)">{value}</button>;
+  ) : <button className="gname" onDoubleClick={() => setRenaming(id)} title="Open (double-click to rename)">{value}</button>;
   const Menu = ({ id, items }: { id: string; items: MenuItem[] }) => (
     <>
       <button className="gmore" onClick={() => setMenu(menu === id ? null : id)} aria-label="More" title="More"><Dots /></button>
@@ -188,11 +190,11 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
           {folders.map((d) => {
             const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
             return (
-              <div key={key} className="grow folder" role="row">
+              <div key={key} className="grow folder" role="row" onClick={opens(() => setCwd(d))}>
                 <span />
                 <div className="gcell name">
-                  <button className="gthumb" onClick={() => setCwd(d)} title={`Open ${d}`}><FolderIcon /></button>
-                  <Name id={key} value={d} onRename={(v) => renameFolder(d, v)} onOpenIt={() => setCwd(d)} />
+                  <button className="gthumb" title={`Open ${d}`}><FolderIcon /></button>
+                  <Name id={key} value={d} onRename={(v) => renameFolder(d, v)} />
                 </div>
                 <span className="gcell dim">{n} drawing{n === 1 ? "" : "s"}</span>
                 <span className="gcell dim" />
@@ -203,11 +205,11 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
           {files.map((f) => {
             const t = thumbs[`${f.path}@${f.mtime}`];
             return (
-              <div key={f.path} className={"grow" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")} role="row">
+              <div key={f.path} className={"grow" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")} role="row" onClick={opens(() => onOpen(f.path))}>
                 <input type="checkbox" className="gpick" checked={selected.has(f.path)} onChange={() => toggle(f.path)} aria-label={`Select ${f.name}`} />
                 <div className="gcell name">
-                  <button className="gthumb" onClick={() => onOpen(f.path)} title={`Open ${f.name}`}>{t ? <img src={t} alt="" /> : <span className="gempty">{t === "" ? "empty" : ""}</span>}</button>
-                  <Name id={f.path} value={f.name} onRename={(v) => renameFile(f, v)} onOpenIt={() => onOpen(f.path)} />
+                  <button className="gthumb" title={`Open ${f.name}`}>{t ? <img src={t} alt="" /> : <span className="gempty">{t === "" ? "empty" : ""}</span>}</button>
+                  <Name id={f.path} value={f.name} onRename={(v) => renameFile(f, v)} />
                 </div>
                 <span className="gcell" title={new Date(f.mtime).toLocaleString()}>{ago(f.mtime)}</span>
                 <span className="gcell" title={new Date(f.ctime).toLocaleString()}>{ago(f.ctime)}</span>
@@ -222,10 +224,10 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
         {folders.map((d) => {
           const key = `folder:${d}`, n = list.files.filter((f) => f.folder === d).length;
           return (
-            <article key={key} className="gcard folder">
-              <button className="gthumb" onClick={() => setCwd(d)} title={`Open ${d}`}><FolderIcon /></button>
+            <article key={key} className="gcard folder" onClick={opens(() => setCwd(d))}>
+              <button className="gthumb" title={`Open ${d}`}><FolderIcon /></button>
               <div className="gmeta">
-                <Name id={key} value={d} onRename={(v) => renameFolder(d, v)} onOpenIt={() => setCwd(d)} />
+                <Name id={key} value={d} onRename={(v) => renameFolder(d, v)} />
                 <div className="gfoot">
                   <span className="gdate">{n} drawing{n === 1 ? "" : "s"}</span>
                   <Menu id={key} items={folderItems(d)} />
@@ -237,13 +239,13 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
         {files.map((f) => {
           const t = thumbs[`${f.path}@${f.mtime}`];
           return (
-            <article key={f.path} className={"gcard" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")}>
+            <article key={f.path} className={"gcard" + (f.path === current ? " current" : "") + (selected.has(f.path) ? " picked" : "")} onClick={opens(() => onOpen(f.path))}>
               <input type="checkbox" className="gpick" checked={selected.has(f.path)} onChange={() => toggle(f.path)} aria-label={`Select ${f.name}`} title="Select for a bulk action" />
-              <button className="gthumb" onClick={() => onOpen(f.path)} title={`Open ${f.name}`}>
+              <button className="gthumb" title={`Open ${f.name}`}>
                 {t ? <img src={t} alt="" /> : <span className="gempty">{t === "" ? "empty" : ""}</span>}
               </button>
               <div className="gmeta">
-                <Name id={f.path} value={f.name} onRename={(v) => renameFile(f, v)} onOpenIt={() => onOpen(f.path)} />
+                <Name id={f.path} value={f.name} onRename={(v) => renameFile(f, v)} />
                 <div className="gfoot">
                   <span className="gdate" title={new Date(f.mtime).toLocaleString()}>{edited(f.mtime)}</span>
                   <Menu id={f.path} items={fileItems(f)} />

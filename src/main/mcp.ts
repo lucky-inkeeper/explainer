@@ -34,6 +34,8 @@ export function serveMcp(port: number, onCanvas: CanvasCall) {
   const srv = http.createServer((req, res) => {
     if (req.url !== "/mcp") { res.writeHead(404).end(); return; }
     if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }).end(); return; } // no server-push stream: request/reply only
+    // MCP clients send no Origin; a browser always does, so a web page cannot drive the canvas or read local images through this port
+    if (req.headers.origin) { res.writeHead(403).end(); return; }
     let body = "";
     req.on("data", (d) => (body += d));
     req.on("end", async () => {

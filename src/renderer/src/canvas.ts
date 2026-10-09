@@ -142,7 +142,7 @@ export async function runCanvasTool(api: ExcalidrawImperativeAPI, tool: string, 
       let cx = 0, cy = 0;
       for (const im of images) {
         if (!im.path && !im.dataURL) throw new Error("each image needs path or dataURL");
-        const f = await ipc.invoke("image:read", { path: im.path, dataURL: im.dataURL }).catch((e: any) => { throw new Error(String(e?.message ?? e).replace(/^.*'image:read': (Error: )?/, "")); }); // drop Electron's IPC prefix
+        const f = await ipc.invoke("image:read", { dataURL: im.dataURL }).catch((e: any) => { throw new Error(String(e?.message ?? e).replace(/^.*'image:read': (Error: )?/, "")); }); // drop Electron's IPC prefix
         api.addFiles([{ id: f.id, dataURL: f.dataURL, mimeType: f.mimeType, created: Date.now() }] as any);
         if (!fileIds.includes(f.id)) fileIds.push(f.id);
         // half the pixel size by default (retina captures); one given side keeps the aspect ratio

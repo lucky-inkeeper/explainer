@@ -135,6 +135,20 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   return (
     <div className="gallery" role="dialog" aria-label="Drawings">
       <header className="ghead">
+        <div className="gactions">
+          {cwd !== null && (
+            <nav className="gcrumbs" aria-label="Folder">
+              <button className="gcrumb back" onClick={() => setCwd(null)} title="All drawings" aria-label="Back to all drawings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <span className="gcrumb on">{cwd}</span>
+            </nav>
+          )}
+          {cwd === null && (addingFolder ? (
+            <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
+          ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
+          <button className="gprimary" onClick={create}>+ New drawing</button>
+        </div>
         <div className="gfilters">
           <select className="gselect" value={prefs.kind} onChange={(e) => setPref({ kind: e.target.value as Prefs["kind"] })} title="Show">
             <option value="all">All files</option>
@@ -154,20 +168,6 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13" /><circle cx="4" cy="6" r="1" fill="currentColor" /><circle cx="4" cy="12" r="1" fill="currentColor" /><circle cx="4" cy="18" r="1" fill="currentColor" /></svg>
             </button>
           </div>
-        </div>
-        <div className="gactions">
-          {cwd !== null && (
-            <nav className="gcrumbs" aria-label="Folder">
-              <button className="gcrumb back" onClick={() => setCwd(null)} title="All drawings" aria-label="Back to all drawings">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-              </button>
-              <span className="gcrumb on">{cwd}</span>
-            </nav>
-          )}
-          {cwd === null && (addingFolder ? (
-            <input className="gnew" autoFocus placeholder="Folder name" onKeyDown={(e) => { if (e.key === "Enter") { const v = e.currentTarget.value; setAddingFolder(false); if (v.trim()) act(() => api.invoke("drawings:newFolder", v)); } if (e.key === "Escape") setAddingFolder(false); }} onBlur={() => setAddingFolder(false)} />
-          ) : <button className="gsecondary" onClick={() => setAddingFolder(true)}>+ Folder</button>)}
-          <button className="gprimary" onClick={create}>+ New drawing</button>
         </div>
       </header>
       {error && <div className="gerror">{error}</div>}

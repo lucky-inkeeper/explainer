@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Excalidraw, MainMenu, WelcomeScreen, getSceneVersion, loadFromBlob, serializeAsJSON } from "@excalidraw/excalidraw";
+import { CaptureUpdateAction, Excalidraw, MainMenu, WelcomeScreen, getSceneVersion, loadFromBlob, serializeAsJSON } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
 import { runCanvasTool } from "./canvas";
@@ -9,6 +9,8 @@ import { Minimap, type MinimapHandle } from "./Minimap";
 import { Gallery } from "./Gallery";
 
 const LIB_KEY = "explainer-library";
+/** What autosave compares: scene version + the bits of appState worth keeping. */
+const sceneSig = (elements: readonly any[], appState: any) => `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
 const THEME_KEY = "explainer-theme"; // "light" | "dark", app-wide, wins over the theme saved inside a drawing
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null } (null = Home)
 const readTabs = (): { tabs: string[]; active: string | null } => { try { return { tabs: [], active: null, ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null }; } };
@@ -163,7 +165,7 @@ export function App() {
     const live = elements.filter((e) => !e.isDeleted).length;
     if (live < expected.current) { console.warn(`autosave skipped: ${live} of ${expected.current} elements loaded`); return; }
     expected.current = 0; // loaded once: from here on every change is the user's or an MCP client's
-    const sig = `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
+    const sig = sceneSig(elements, appState);
     if (sig === lastSaved.current) return;
     lastSaved.current = sig;
     window.clearTimeout(saveTimer.current);
@@ -196,6 +198,19 @@ export function App() {
     setTabs((t) => (to ? t.map((x) => (x === from ? to : x)) : t.filter((x) => x !== from)));
     if (from === fileRef.current) { if (to) openFile(to); else { const n = readTabs().tabs.find((x) => x !== from); if (n) openFile(n); } }
   }, [openFile]);
+  // cloud sync wrote, moved or trashed drawings: the open one is reloaded in place (no save back, so two Macs do not echo), gone ones close
+  useEffect(() => api.on("drawings:synced", async (paths) => {
+    for (const p of paths) {
+      const text = await api.invoke("file:read", p);
+      if (text === null) { relocate(p, null); continue; }
+      const x = xapiRef.current;
+      if (p !== fileRef.current || !x) continue;
+      const data: any = await loadFromBlob(new Blob([text], { type: "application/json" }), null, null);
+      x.addFiles(Object.values(data.files ?? {}));
+      x.updateScene({ elements: data.elements, captureUpdate: CaptureUpdateAction.NEVER });
+      lastSaved.current = sceneSig(x.getSceneElements(), x.getAppState());
+    }
+  }), [relocate]);
   const newFile = async () => openTab(await api.invoke("file:new"));
   const toggleTheme = useCallback(() => {
     const next = dark ? "light" : "dark";

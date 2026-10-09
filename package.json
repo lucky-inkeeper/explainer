@@ -9,12 +9,14 @@
     "build": "electron-vite build && electron-builder --mac --dir",
     "typecheck": "tsc --noEmit",
     "check": "node --test test/*.test.mjs",
+    "sync:setup": "node build/sync-setup.mjs",
     "deploy:web": "electron-vite build && VERCEL_ORG_ID=team_CPHX1knfRFeyur6aspbm0zIJ VERCEL_PROJECT_ID=prj_8HCPxB6tkXx6vOK5gZoMPbOG8Iuu vercel deploy out/renderer --prod --yes",
     "postinstall": "d=node_modules/electron/dist; [ -d \"$d/Electron.app\" ] && mv \"$d/Electron.app\" \"$d/Explainer.app\"; a=\"$d/Explainer.app\"; [ -d \"$a\" ] && plutil -replace CFBundleName -string \"Explainer\" \"$a/Contents/Info.plist\" && plutil -replace CFBundleDisplayName -string \"Explainer\" \"$a/Contents/Info.plist\" && printf \"%s\" \"Explainer.app/Contents/MacOS/Electron\" > node_modules/electron/path.txt && codesign --force --deep --sign - \"$a\" >/dev/null 2>&1; true"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",
     "@excalidraw/mermaid-to-excalidraw": "^2.2.2",
+    "@vercel/blob": "2.8.0",
     "pako": "^2.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

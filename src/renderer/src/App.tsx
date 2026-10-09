@@ -3,7 +3,7 @@ import { CaptureUpdateAction, Excalidraw, MainMenu, WelcomeScreen, getSceneVersi
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
 import { runCanvasTool } from "./canvas";
-import { DEFAULT_FONT, inspect, layout } from "./layout";
+import { DEFAULT_FONT, FONTS, inspect, layout } from "./layout";
 import { NOTATION, classify, isFocal } from "../../shared/tools";
 import { Minimap, type MinimapHandle } from "./Minimap";
 import { Gallery } from "./Gallery";
@@ -173,7 +173,9 @@ export function App() {
   }, []);
 
   const share = useCallback(async (elements: readonly any[], appState: any, files: any) => {
-    const r = await api.invoke("share:post", serializeAsJSON(elements as any, appState, files, "database"));
+    // excalidraw.com does not know the web-font ids (ADR-0003): swap in its nearest own fonts, Excalifont (5) and Nunito (6)
+    const web = elements.map((e) => (e.fontFamily === FONTS["Playpen Sans"] ? { ...e, fontFamily: 5 } : e.fontFamily === FONTS.Inter ? { ...e, fontFamily: 6 } : e));
+    const r = await api.invoke("share:post", serializeAsJSON(web as any, appState, files, "database"));
     const x = xapiRef.current;
     if ("url" in r) { await navigator.clipboard.writeText(r.url); x?.setToast({ message: `Link copied${Object.keys(files ?? {}).length ? " (images are not included in share links)" : ""}: ${r.url}`, duration: 8000, closable: true }); }
     else x?.setToast({ message: r.error, closable: true });

@@ -1,7 +1,8 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell, type IpcMainEvent, type IpcMainInvokeEvent } from "electron";
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { insideDir, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
 import { shareScene } from "./share";
 import type { AppState, DrawingInfo, DrawingList } from "../shared/types";
@@ -16,6 +17,9 @@ const readState = (): AppState => { try { return { ...DEFAULTS, ...JSON.parse(fs
 const writeState = (s: AppState) => fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 const MCP_PORT = Number(process.env.EXPLAINER_MCP_PORT ?? 7331); // `claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user`
 const FILTERS = [{ name: "Excalidraw", extensions: ["excalidraw", "json"] }];
+// the UI is served from Vercel (`pnpm deploy:web`); the .app is a shell around it and needs the internet to open
+const UI_URL = process.env.ELECTRON_RENDERER_URL ?? process.env.EXPLAINER_UI_URL ?? "https://explainer-pearl.vercel.app";
+const UI_ORIGIN = new URL(UI_URL).origin;
 
 app.setName("Explainer"); // menu bar and About; the Dock label of the dev binary stays "Electron" until the app is packaged
 app.whenReady().then(() => { try { app.dock?.setIcon(path.join(__dirname, "../../build/icon.png")); } catch { /* packaged: the bundle has its own icon */ } }); // dev Dock icon
@@ -28,25 +32,45 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1440, height: 920, title: "Explainer",
     titleBarStyle: "hiddenInset", trafficLightPosition: { x: 14, y: 12 }, // the tab bar is the title bar, Figma style
-    webPreferences: { preload: path.join(__dirname, "../preload/index.js"), contextIsolation: true, sandbox: false },
+    webPreferences: { preload: path.join(__dirname, "../preload/index.js"), contextIsolation: true, sandbox: true },
   });
   win.maximize(); // Excalidraw docks the sidebar only above ~1229px editor width
   // page zoom stays fixed: pinch and Cmd+wheel must zoom the canvas (Excalidraw), not the UI
   win.webContents.setVisualZoomLevelLimits(1, 1);
   win.webContents.on("did-finish-load", () => win.webContents.setZoomFactor(1));
-  if (process.env.ELECTRON_RENDERER_URL) win.loadURL(process.env.ELECTRON_RENDERER_URL);
-  else win.loadFile(path.join(__dirname, "../renderer/index.html"));
+  // the page may only be the UI, or the offline page that links back to it; every other link opens in the browser
+  win.webContents.on("will-navigate", (e, url) => { if (!sameOrigin(url, UI_ORIGIN)) { e.preventDefault(); if (url.startsWith("https://")) shell.openExternal(url); } });
+  win.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith("https://")) shell.openExternal(url); return { action: "deny" }; });
+  win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
+    if (!isMainFrame || code === -3) return; // -3: aborted by a newer load
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(offlinePage(desc))}`);
+  });
+  win.loadURL(UI_URL);
 }
+const offlinePage = (why: string) => `<!doctype html><title>Explainer</title><body style="font:15px -apple-system,sans-serif;display:grid;place-items:center;height:90vh;margin:0;color:#333">
+<div style="text-align:center"><h2>Explainer needs the internet to open</h2><p style="color:#777">${why.replace(/[<>&]/g, "")}</p><p>Your drawings are safe on this Mac.</p><a href="${UI_URL}">Try again</a></div>`;
 
-// ---- ipc
-ipcMain.handle("state:get", () => readState());
-ipcMain.handle("state:set", (_e, patch: Partial<AppState>) => {
+// ---- ipc: every call must come from the UI origin (the UI is web content, see guard.ts)
+type Handler = (e: IpcMainInvokeEvent, ...args: any[]) => unknown;
+const handle = (ch: string, fn: Handler) => ipcMain.handle(ch, (e, ...args) => {
+  if (!sameOrigin(e.senderFrame?.url, UI_ORIGIN)) throw new Error(`${ch}: blocked, the caller is not the Explainer UI`);
+  return fn(e, ...args);
+});
+const listen = (ch: string, fn: (e: IpcMainEvent, ...args: any[]) => void) => ipcMain.on(ch, (e, ...args) => { if (sameOrigin(e.senderFrame?.url, UI_ORIGIN)) fn(e, ...args); });
+// drawings live in data/drawings; a file outside it is reachable only after the user picked it in a dialog this session
+const picked = new Set<string>();
+const pick = (p: string | null | undefined) => { if (p) picked.add(path.resolve(p)); return p ?? null; };
+const mayUse = (p: unknown) => insideDir(DIRS.drawings, p) || (typeof p === "string" && picked.has(path.resolve(p)));
+const mustBeDrawing = (p: unknown) => { if (!insideDir(DIRS.drawings, p)) throw new Error(`not a drawing in ${DIRS.drawings}`); };
+
+handle("state:get", () => readState());
+handle("state:set", (_e, patch: Partial<AppState>) => {
   const cur = readState();
   const next = { ...cur, ...patch };
   writeState(next);
   return next;
 });
-ipcMain.handle("file:read", (_e, p: string) => (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : null));
+handle("file:read", (_e, p: string) => (mayUse(p) && fs.existsSync(p) ? fs.readFileSync(p, "utf8") : null));
 const IMAGE_MAX = 4 * 1024 * 1024; // the dataURL is stored inside the .excalidraw file for good
 /** Pixel size from the header: PNG IHDR, or the first JPEG SOF segment. */
 function imageSize(b: Buffer): { mimeType: "image/png" | "image/jpeg"; width: number; height: number } {
@@ -60,20 +84,31 @@ function imageSize(b: Buffer): { mimeType: "image/png" | "image/jpeg"; width: nu
   }
   throw new Error("not a PNG or JPEG (checked the file header)");
 }
-/** An image for the canvas, from a path on disk or a dataURL: validated, measured, id = sha1 of the bytes so one picture is stored once. */
-ipcMain.handle("image:read", (_e, src: { path?: string; dataURL?: string }) => {
-  let b: Buffer;
-  if (src.path) { if (!fs.existsSync(src.path)) throw new Error(`no file at ${src.path}`); b = fs.readFileSync(src.path); }
-  else if (src.dataURL) b = Buffer.from(src.dataURL.slice(src.dataURL.indexOf(",") + 1), "base64");
-  else throw new Error("give path or dataURL");
-  if (b.length > IMAGE_MAX) throw new Error(`image is ${(b.length / 1024 / 1024).toFixed(1)} MB; the limit is 4 MB (it is stored inside the drawing). Downscale or crop it first.`);
+const checkSize = (b: Buffer) => { if (b.length > IMAGE_MAX) throw new Error(`image is ${(b.length / 1024 / 1024).toFixed(1)} MB; the limit is 4 MB (it is stored inside the drawing). Downscale or crop it first.`); };
+/** draw_image paths come from the MCP client, which may read local files; the UI may not, so the main process reads them and hands the UI bytes. */
+function withImageData(args: any) {
+  return { ...args, images: (args?.images ?? []).map((im: any) => {
+    if (!im?.path) return im;
+    if (!fs.existsSync(im.path)) throw new Error(`no file at ${im.path}`);
+    const b = fs.readFileSync(im.path);
+    checkSize(b);
+    imageSize(b); // fail on a non-image before its bytes reach the UI
+    return { ...im, path: undefined, dataURL: `data:application/octet-stream;base64,${b.toString("base64")}` };
+  }) };
+}
+/** An image for the canvas, from a dataURL: validated, measured, id = sha1 of the bytes so one picture is stored once. */
+handle("image:read", (_e, src: { dataURL?: string }) => {
+  if (!src?.dataURL) throw new Error("give dataURL");
+  const b = Buffer.from(src.dataURL.slice(src.dataURL.indexOf(",") + 1), "base64");
+  checkSize(b);
   const { mimeType, width, height } = imageSize(b);
   return { id: createHash("sha1").update(b).digest("hex"), dataURL: `data:${mimeType};base64,${b.toString("base64")}`, mimeType, width, height };
 });
 const liveCount = (text: string) => { try { return (JSON.parse(text).elements ?? []).filter((e: any) => !e.isDeleted).length; } catch { return -1; } };
 const lastBackup = new Map<string, number>();
 /** Atomic write; the previous version is kept in .history when the scene shrinks by more than 30 percent or is emptied, and at most every 5 min otherwise. */
-ipcMain.handle("file:write", (_e, p: string, text: string) => {
+handle("file:write", (_e, p: string, text: string) => {
+  if (!mayUse(p)) throw new Error(`file:write: ${p} is outside ${DIRS.drawings} and was not picked in a dialog`);
   fs.mkdirSync(path.dirname(p), { recursive: true });
   if (fs.existsSync(p)) {
     const prev = fs.readFileSync(p, "utf8");
@@ -94,7 +129,7 @@ ipcMain.handle("file:write", (_e, p: string, text: string) => {
   fs.writeFileSync(tmp, text);
   fs.renameSync(tmp, p);
 });
-ipcMain.handle("file:new", (_e, folder?: string | null) => {
+handle("file:new", (_e, folder?: string | null) => {
   const dir = folder ? path.join(DIRS.drawings, safeName(folder)) : DIRS.drawings;
   fs.mkdirSync(dir, { recursive: true });
   let p = "", i = 0;
@@ -109,6 +144,8 @@ ipcMain.handle("file:new", (_e, folder?: string | null) => {
 const EXT = ".excalidraw";
 const THUMBS = path.join(DIRS.drawings, ".thumbs");
 const safeName = (n: string) => n.replace(/[\/\\:]/g, "-").replace(/\.excalidraw$/i, "").trim();
+/** A gallery folder: one level under data/drawings, never "", "." or "..". */
+const folderDir = (name: string) => { const d = path.join(DIRS.drawings, safeName(String(name))); if (!insideDir(DIRS.drawings, d) || path.dirname(d) !== DIRS.drawings) throw new Error(`bad folder name: ${name}`); return d; };
 const thumbFile = (p: string, mtime: number) => path.join(THUMBS, `${createHash("md5").update(p).digest("hex")}-${Math.round(mtime)}.jpg`);
 /** A drawing moved: its creation time and the last-file pointer follow it. */
 function retarget(from: string, to: string | null) {
@@ -156,38 +193,38 @@ const moveDrawing = (from: string, to: string) => {
   retarget(from, to);
   return to;
 };
-ipcMain.handle("drawings:list", () => listDrawings());
-ipcMain.handle("drawings:rename", (_e, p: string, name: string) => moveDrawing(p, path.join(path.dirname(p), safeName(name) + EXT)));
-ipcMain.handle("drawings:move", (_e, p: string, folder: string | null) => moveDrawing(p, path.join(folder ? path.join(DIRS.drawings, safeName(folder)) : DIRS.drawings, path.basename(p))));
-ipcMain.handle("drawings:delete", async (_e, p: string) => { await shell.trashItem(p); retarget(p, null); });
-ipcMain.handle("drawings:newFolder", (_e, name: string) => { fs.mkdirSync(path.join(DIRS.drawings, safeName(name)), { recursive: true }); });
+handle("drawings:list", () => listDrawings());
+handle("drawings:rename", (_e, p: string, name: string) => { mustBeDrawing(p); return moveDrawing(p, path.join(path.dirname(p), safeName(name) + EXT)); });
+handle("drawings:move", (_e, p: string, folder: string | null) => { mustBeDrawing(p); return moveDrawing(p, path.join(folder ? folderDir(folder) : DIRS.drawings, path.basename(p))); });
+handle("drawings:delete", async (_e, p: string) => { mustBeDrawing(p); await shell.trashItem(p); retarget(p, null); });
+handle("drawings:newFolder", (_e, name: string) => { fs.mkdirSync(folderDir(name), { recursive: true }); });
 const folderFiles = (dir: string) => fs.readdirSync(dir).filter((f) => f.endsWith(EXT)).map((f) => path.join(dir, f));
-ipcMain.handle("drawings:renameFolder", (_e, name: string, next: string) => {
-  const from = path.join(DIRS.drawings, safeName(name)), to = path.join(DIRS.drawings, safeName(next));
+handle("drawings:renameFolder", (_e, name: string, next: string) => {
+  const from = folderDir(name), to = folderDir(next);
   if (from === to) return;
   if (fs.existsSync(to)) throw new Error(`${safeName(next)} already exists`);
   const files = folderFiles(from);
   fs.renameSync(from, to);
   for (const f of files) retarget(f, path.join(to, path.basename(f)));
 });
-ipcMain.handle("drawings:deleteFolder", async (_e, name: string) => {
-  const dir = path.join(DIRS.drawings, safeName(name));
+handle("drawings:deleteFolder", async (_e, name: string) => {
+  const dir = folderDir(name);
   const files = folderFiles(dir);
   await shell.trashItem(dir);
   for (const f of files) retarget(f, null);
 });
-ipcMain.handle("drawings:thumb", (_e, p: string, mtime: number) => {
+handle("drawings:thumb", (_e, p: string, mtime: number) => {
   const f = thumbFile(p, mtime);
   return fs.existsSync(f) ? `data:image/jpeg;base64,${fs.readFileSync(f).toString("base64")}` : null;
 });
-ipcMain.handle("drawings:thumbSet", (_e, p: string, mtime: number, dataUrl: string) => {
+handle("drawings:thumbSet", (_e, p: string, mtime: number, dataUrl: string) => {
   fs.mkdirSync(THUMBS, { recursive: true });
   const f = thumbFile(p, mtime), prefix = path.basename(f).split("-")[0];
   for (const old of fs.readdirSync(THUMBS)) if (old.startsWith(prefix + "-")) fs.unlinkSync(path.join(THUMBS, old)); // one thumbnail per file
   fs.writeFileSync(f, Buffer.from(dataUrl.split(",")[1], "base64"));
 });
-ipcMain.handle("file:openDialog", async () => (await dialog.showOpenDialog(win, { defaultPath: DIRS.drawings, filters: FILTERS, properties: ["openFile"] })).filePaths[0] ?? null);
-ipcMain.handle("file:saveAsDialog", async (_e, cur: string) => (await dialog.showSaveDialog(win, { defaultPath: cur || DIRS.drawings, filters: FILTERS })).filePath || null);
+handle("file:openDialog", async () => pick((await dialog.showOpenDialog(win, { defaultPath: DIRS.drawings, filters: FILTERS, properties: ["openFile"] })).filePaths[0]));
+handle("file:saveAsDialog", async (_e, cur: string) => pick((await dialog.showSaveDialog(win, { defaultPath: mayUse(cur) ? cur : DIRS.drawings, filters: FILTERS })).filePath));
 
 const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, reject) => {
   const callId = randomUUID();
@@ -195,13 +232,13 @@ const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, rejec
   win.webContents.send("canvas:call", { callId, tool, args });
   setTimeout(() => { if (pendingCanvas.delete(callId)) reject(new Error(`canvas did not answer ${tool} within 60s (window reloaded?)`)); }, 60_000);
 });
-ipcMain.on("canvas:result", (_e, { callId, result, error }: { callId: string; result?: any; error?: string }) => {
+listen("canvas:result", (_e, { callId, result, error }: { callId: string; result?: any; error?: string }) => {
   const p = pendingCanvas.get(callId);
   if (!p) return;
   pendingCanvas.delete(callId);
   error ? p.reject(new Error(error)) : p.resolve(result);
 });
-ipcMain.handle("share:post", (_e, json: string) => shareScene(json));
+handle("share:post", (_e, json: string) => shareScene(json));
 
 // no zoomIn/zoomOut/resetZoom roles: Cmd+= Cmd+- Cmd+0 belong to Excalidraw's canvas zoom
 const menu = Menu.buildFromTemplate([
@@ -215,7 +252,7 @@ const menu = Menu.buildFromTemplate([
 // heartbeat: a stalled event loop in either process shows up in the log with its length
 let beat = Date.now();
 setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
-ipcMain.on("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
+listen("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
-app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, callCanvas); });
+app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args)); });
 app.on("window-all-closed", () => app.quit());

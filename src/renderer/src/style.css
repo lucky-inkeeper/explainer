@@ -1,6 +1,14 @@
 html, body, #root { height: 100%; margin: 0; }
 .app { height: 100vh; position: relative; display: flex; flex-direction: column; }
-.canvas-wrap { position: relative; flex: 1; min-height: 0; }
+.canvas-wrap { position: relative; flex: 1; min-height: 0; display: flex; }
+/* a pane = one drawing; split view shows two side by side, the focused one marked on top */
+.pane { position: relative; flex: 1; min-width: 0; }
+.pane + .pane { border-left: 1px solid #d5d6dd; }
+.app.dark .pane + .pane { border-color: #3a3a44; }
+.canvas-wrap.split .pane.focused::after { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: #6965db; z-index: 5; pointer-events: none; }
+.tab.shown { box-shadow: inset 0 -2px 0 #b3b1e8; }
+.tabmenu { position: fixed; right: auto; bottom: auto; z-index: 10; font: 13px system-ui, sans-serif; }
+.gmenu button:disabled { color: #b0b1b8; cursor: default; background: transparent; }
 /* ---- tab bar (outside .excalidraw: no CSS vars) */
 .tabs { display: flex; align-items: stretch; height: 40px; flex: none; padding-left: 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow-x: auto; overflow-y: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
 .tab, .tab-x { -webkit-app-region: no-drag; }
@@ -21,14 +29,14 @@ html, body, #root { height: 100%; margin: 0; }
 .app.dark .tab { border-color: #2a2a32; } .app.dark .tab:hover { background: #232329; } .app.dark .tab.on { background: #121216; color: #fff; }
 .app.dark .tab-x:hover { background: #3a3a44; color: #fff; }
 /* Excalidraw narrows its UI layer only when it deems the sidebar dockable (wide windows); do it whenever the panel is open */
-.app.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
+.pane.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
 /* Excalidraw help "?" corner button: hidden; Help stays in the main menu and on the ? key */
 .excalidraw .help-icon { display: none; }
 
 /* minimap: outside .excalidraw, so plain colors */
 .minimap { position: absolute; right: 12px; bottom: 12px; z-index: 4; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.92); border: 1px solid #d5d6dd; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
 .minimap canvas { display: block; cursor: crosshair; }
-.app.sidebar-open .minimap { right: 314px; }
+.pane.sidebar-open .minimap { right: 314px; }
 .app.dark .minimap { background: rgba(35,35,41,.94); border-color: #3a3a44; }
 
 /* ---- drawings gallery (outside .excalidraw: no CSS vars, light defaults, .app.dark overrides) */

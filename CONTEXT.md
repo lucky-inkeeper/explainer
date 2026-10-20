@@ -13,7 +13,8 @@ Explainer is a Mac app: the Excalidraw editor with canvas tools served over MCP.
 - **Agent instructions** - `agentInstructions()` in `src/shared/tools.ts`, sent as `instructions` in the MCP `initialize` reply: the notation, the short-text and icon rules, and the path of the diagram-design skill. The only channel that reaches every agent since the sidebar was removed. Claude Code cuts it at 2048 chars without a warning; `test/notation.test.mjs` guards the length.
 - **Skeleton** - Excalidraw's element-skeleton input format (`convertToExcalidrawElements`). What the agent emits.
 - **Placement** - where a batch of new elements lands: `auto` (free space right of content), `selection` (next to the user's selected elements), `exact`.
-- **Share link** - `https://excalidraw.com/#json=<id>,<key>`, produced by posting the encrypted scene to Excalidraw's public share backend.
+- **Shared drawing** - a drawing the user shared (menu > Share with link): uploaded on a click to the public Blob store at `shared/<uuid>.excalidraw`, opened read-only by the viewer (`?view=<blob URL>`, `Viewer.tsx`). All other drawings stay on this Mac. See ADR-0008.
+- **excalidraw.com link** - `https://excalidraw.com/#json=<id>,<key>`, produced by posting the encrypted scene to Excalidraw's public share backend (menu > Copy excalidraw.com link).
 - **Notation** - fixed shape + color per kind (user action, system step, decision, data, DB, external service, note). One table, `NOTATION` in `src/shared/tools.ts`; the prompt block, the legend strip, the layout checks and the eval metrics read it.
 - **Legend strip** - built by the app under every framed diagram: the kinds and arrow styles the batch uses. The agent never draws one.
 - **Elbowed arrow** - `elbowed: true` on a bound arrow; the spacing pass gives it a right-angle route (facing sides, one bend pair).

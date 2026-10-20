@@ -1,6 +1,6 @@
 # ADR-0007: Drawings sync between Macs through a public Vercel Blob store
 
-Date: 2026-10-09. Status: accepted. Changes ADR-0006 ("data stays local"): drawings now also live in the cloud.
+Date: 2026-10-09. Status: superseded by ADR-0008 (2026-10-20). Changes ADR-0006 ("data stays local"): drawings now also live in the cloud.
 
 ## Decision
 - Store `explainer-drawings` (`store_mDWPQCYRichJsmDW`, region sin1, public), connected to the Vercel project `explainer`.

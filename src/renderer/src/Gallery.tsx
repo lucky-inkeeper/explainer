@@ -75,7 +75,6 @@ export function Gallery({ current, onOpen, onRelocate }: { current: string | nul
   }, [thumbs]);
 
   useEffect(() => { alive.current = true; reload(); return () => { alive.current = false; }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => api.on("drawings:synced", () => reload()), [reload]); // another Mac added, changed or removed drawings
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return; if (menu) setMenu(null); else if (selected.size) setSelected(new Set()); };
     const onClick = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest(".gmenu, .gmore")) setMenu(null); };

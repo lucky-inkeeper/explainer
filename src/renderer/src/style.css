@@ -132,3 +132,4 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .app.dark .gsecondary, .app.dark input.gnew, .app.dark input.gname { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
 .app.dark .gmore:hover { background: #2a2a32; color: #fff; }
 .app.dark .gmenu { background: #232329; border-color: #3a3a44; } .app.dark .gmenu button { color: #e3e3e8; } .app.dark .gmenu button:hover { background: #2a2a32; }
+.viewer-msg { display: grid; place-items: center; height: 100vh; font: 15px system-ui, sans-serif; color: #4a4b52; }

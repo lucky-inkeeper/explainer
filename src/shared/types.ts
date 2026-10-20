@@ -2,6 +2,8 @@ export interface AppState {
   lastFile?: string;
   /** drawing file path -> creation time (ms); the atomic save replaces the inode, so the file system's birth time is useless */
   created?: Record<string, number>;
+  /** drawing file path -> its public blob URL, for the drawings the user shared (ADR-0008) */
+  shared?: Record<string, string>;
 }
 
 export interface DrawingInfo {
@@ -44,10 +46,11 @@ export interface Api {
   invoke(ch: "file:openDialog"): Promise<string | null>;
   invoke(ch: "file:saveAsDialog", currentPath: string): Promise<string | null>;
   invoke(ch: "share:post", json: string): Promise<{ url: string } | { error: string }>;
+  invoke(ch: "share:publish", path: string, json: string): Promise<string>;
+  invoke(ch: "share:unpublish", path: string): Promise<void>;
   send(ch: "canvas:result", payload: { callId: string; result?: any; error?: string }): void;
   send(ch: "log:stall", where: string, ms: number): void;
   on(ch: "canvas:call", cb: (call: CanvasCall) => void): () => void;
-  on(ch: "drawings:synced", cb: (paths: string[]) => void): () => void;
 }
 
 declare global {

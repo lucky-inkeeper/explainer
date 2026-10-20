@@ -73,16 +73,12 @@ export function App() {
       return next;
     });
   }, [unshow]);
-  /** A drawing was renamed, moved or trashed (gallery, Save as, cloud sync, failed load): its tab and pane follow. */
+  /** A drawing was renamed, moved or trashed (gallery, Save as, failed load): its tab and pane follow. */
   const relocate = useCallback((from: string, to: string | null) => {
     if (to) { setTabs((t) => t.map((x) => (x === from ? to : x))); setPanes((ps) => ps.map((x) => (x === from ? to : x))); return; }
     setTabs((t) => t.filter((x) => x !== from));
     unshow(from, readTabs().tabs.filter((x) => x !== from), 0);
   }, [unshow]);
-  // cloud sync trashed drawings: their tabs close (each pane reloads its own drawing when sync rewrote it)
-  useEffect(() => api.on("drawings:synced", async (paths) => {
-    for (const p of paths) if ((await api.invoke("file:read", p)) === null) relocate(p, null);
-  }), [relocate]);
   const newFile = useCallback(async () => openTab(await api.invoke("file:new")), [openTab]);
   const open = useCallback(async () => { const p = await api.invoke("file:openDialog"); if (p) openTab(p); }, [openTab]);
   const goHome = useCallback(() => setHome(true), []);

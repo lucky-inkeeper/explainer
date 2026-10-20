@@ -6,7 +6,7 @@ import { insideDir, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
 import { agentInstructions } from "../shared/tools";
 import { shareScene } from "./share";
-import { startSync } from "./sync";
+import { del, put } from "@vercel/blob";
 import type { AppState, DrawingInfo, DrawingList } from "../shared/types";
 
 declare const __DATA_DIR__: string;
@@ -57,10 +57,8 @@ const offlinePage = (why: string) => `<!doctype html><title>Explainer</title><bo
 type Handler = (e: IpcMainInvokeEvent, ...args: any[]) => unknown;
 const handle = (ch: string, fn: Handler) => ipcMain.handle(ch, (e, ...args) => {
   if (!sameOrigin(e.senderFrame?.url, UI_ORIGIN)) throw new Error(`${ch}: blocked, the caller is not the Explainer UI`);
-  if (CHANGES_DRAWINGS.has(ch)) sync?.syncSoon();
   return fn(e, ...args);
 });
-const CHANGES_DRAWINGS = new Set(["file:new", "drawings:rename", "drawings:move", "drawings:delete", "drawings:renameFolder", "drawings:deleteFolder"]);
 const listen = (ch: string, fn: (e: IpcMainEvent, ...args: any[]) => void) => ipcMain.on(ch, (e, ...args) => { if (sameOrigin(e.senderFrame?.url, UI_ORIGIN)) fn(e, ...args); });
 // drawings live in data/drawings; a file outside it is reachable only after the user picked it in a dialog this session
 const picked = new Set<string>();
@@ -115,7 +113,6 @@ const lastBackup = new Map<string, number>();
 handle("file:write", (_e, p: string, text: string) => {
   if (!mayUse(p)) throw new Error(`file:write: ${p} is outside ${DIRS.drawings} and was not picked in a dialog`);
   writeDrawing(p, text);
-  if (insideDir(DIRS.drawings, p)) sync?.syncSoon();
 });
 function writeDrawing(p: string, text: string) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -156,14 +153,16 @@ const safeName = (n: string) => n.replace(/[\/\\:]/g, "-").replace(/\.excalidraw
 /** A gallery folder: one level under data/drawings, never "", "." or "..". */
 const folderDir = (name: string) => { const d = path.join(DIRS.drawings, safeName(String(name))); if (!insideDir(DIRS.drawings, d) || path.dirname(d) !== DIRS.drawings) throw new Error(`bad folder name: ${name}`); return d; };
 const thumbFile = (p: string, mtime: number) => path.join(THUMBS, `${createHash("md5").update(p).digest("hex")}-${Math.round(mtime)}.jpg`);
-/** A drawing moved: its creation time and the last-file pointer follow it. */
+/** A drawing moved: its creation time, the last-file pointer and its shared link follow it. A trashed drawing stops being shared. */
 function retarget(from: string, to: string | null) {
   const st = readState();
-  const created = { ...(st.created ?? {}) };
-  const born = created[from];
-  delete created[from];
+  const created = { ...(st.created ?? {}) }, shared = { ...(st.shared ?? {}) };
+  const born = created[from], url = shared[from];
+  delete created[from]; delete shared[from];
   if (to && born) created[to] = born;
-  writeState({ ...st, created, lastFile: st.lastFile === from ? to ?? undefined : st.lastFile });
+  if (to && url) shared[to] = url;
+  if (!to && url) unpublish(url);
+  writeState({ ...st, created, shared, lastFile: st.lastFile === from ? to ?? undefined : st.lastFile });
 }
 /** Time of the oldest .history copy of a drawing: the atomic save replaces the inode, so this beats the file's birth time. */
 function oldestBackup(p: string): number | null {
@@ -235,20 +234,30 @@ handle("drawings:thumbSet", (_e, p: string, mtime: number, dataUrl: string) => {
 handle("file:openDialog", async () => pick((await dialog.showOpenDialog(win, { defaultPath: DIRS.drawings, filters: FILTERS, properties: ["openFile"] })).filePaths[0]));
 handle("file:saveAsDialog", async (_e, cur: string) => pick((await dialog.showSaveDialog(win, { defaultPath: mayUse(cur) ? cur : DIRS.drawings, filters: FILTERS })).filePath));
 
-// ---- cloud sync (ADR-0007): on when data/app/sync.json has a Vercel Blob read-write token
-let sync: ReturnType<typeof startSync> | null = null;
-function startCloudSync() {
-  let token = process.env.EXPLAINER_BLOB_TOKEN;
-  try { token ??= JSON.parse(fs.readFileSync(path.join(DIRS.app, "sync.json"), "utf8")).blobToken; } catch { /* no file: sync off */ }
-  if (!token) return null;
-  const s = startSync({
-    dir: DIRS.drawings, stateFile: path.join(DIRS.app, "sync-state.json"), token,
-    write: writeDrawing, trash: (p) => shell.trashItem(p),
-    changed: (paths) => { for (const p of paths) if (!fs.existsSync(p)) retarget(p, null); win?.webContents.send("drawings:synced", paths); },
-  });
-  win.on("focus", () => s.syncNow());
-  return s;
+// ---- shared drawings (ADR-0008): a drawing goes to the public Blob store only when the user shares it, and only on a click
+function blobToken() {
+  try { return process.env.EXPLAINER_BLOB_TOKEN ?? JSON.parse(fs.readFileSync(path.join(DIRS.app, "sync.json"), "utf8")).blobToken as string; } catch { return undefined; }
 }
+const unpublish = (url: string) => { const token = blobToken(); if (token) del(url, { token }).catch((e) => console.error(`[share] delete ${url}: ${e?.message ?? e}`)); };
+/** Upload the scene to its blob (the same URL on every update) and return the blob URL. */
+handle("share:publish", async (_e, p: string, text: string) => {
+  if (!mayUse(p)) throw new Error(`share: ${p} is not a drawing`);
+  const token = blobToken();
+  if (!token) throw new Error("Sharing is off: run `pnpm sync:setup` once on this Mac, then restart Explainer.");
+  const st = readState(), old = st.shared?.[p];
+  const id = old ? /\/shared\/([\w-]+)\.excalidraw$/.exec(new URL(old).pathname)?.[1] ?? randomUUID() : randomUUID(); // random: the URL is public but not guessable
+  const r = await put(`shared/${id}.excalidraw`, text, { token, access: "public", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 });
+  writeState({ ...readState(), shared: { ...(readState().shared ?? {}), [p]: r.url } });
+  return r.url;
+});
+handle("share:unpublish", (_e, p: string) => {
+  const st = readState(), url = st.shared?.[p];
+  if (!url) return;
+  const shared = { ...st.shared };
+  delete shared[p];
+  writeState({ ...st, shared });
+  unpublish(url);
+});
 
 const callCanvas = (tool: string, args: any) => new Promise<any>((resolve, reject) => {
   const callId = randomUUID();
@@ -278,5 +287,5 @@ let beat = Date.now();
 setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
 listen("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
-app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); sync = startCloudSync(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design/SKILL.md"))); });
+app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design/SKILL.md"))); });
 app.on("window-all-closed", () => app.quit());

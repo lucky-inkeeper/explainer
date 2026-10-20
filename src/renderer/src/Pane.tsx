@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { CaptureUpdateAction, Excalidraw, MainMenu, WelcomeScreen, getSceneVersion, loadFromBlob, serializeAsJSON } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu, WelcomeScreen, getSceneVersion, loadFromBlob, serializeAsJSON } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
 import { runCanvasTool } from "./canvas";
@@ -13,6 +13,8 @@ export const THEME_KEY = "explainer-theme"; // "light" | "dark", app-wide, wins 
 const sceneSig = (elements: readonly any[], appState: any) => `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
 // per-drawing pan/zoom: a pane remounts when its drawing changes (key={file}), so the view is kept here and restored on open
 export const views = new Map<string, { scrollX: number; scrollY: number; zoom: any }>();
+/** The read-only page for a shared drawing: the UI with ?view=<blob URL> (Viewer.tsx). */
+const viewLink = (blobUrl: string) => `${location.origin}/?view=${encodeURIComponent(blobUrl)}`;
 let toastNext: string | null = null; // shown by the next pane that mounts (a failed load hands its pane a fresh drawing)
 
 /** CSS-scale the canvases (and the DOM frame titles, fixed font size, anchored bottom-left) by k about the container origin, then shift by tx, ty. */
@@ -46,6 +48,7 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
   const [xapi, setXapi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [initial, setInitial] = useState<ExcalidrawInitialDataState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sharedUrl, setSharedUrl] = useState<string | null>(null); // the drawing's public blob, when the user shared it (ADR-0008)
   const xapiRef = useRef(xapi); xapiRef.current = xapi;
   const selected = useRef<string[]>([]);
   const wrap = useRef<HTMLDivElement>(null);
@@ -132,7 +135,8 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
       const theme = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) ?? data.appState?.theme;
       const view = views.get(file);
       setInitial({ ...data, appState: { ...data.appState, ...view, theme, currentItemFontFamily: DEFAULT_FONT }, libraryItems, scrollToContent: !view });
-      await api.invoke("state:set", { lastFile: file });
+      const st = await api.invoke("state:set", { lastFile: file });
+      setSharedUrl(st.shared?.[file] ?? null);
     })();
     return () => { dead = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- key={file}: one pane instance per file
@@ -175,18 +179,6 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
     saveTimer.current = window.setTimeout(() => api.invoke("file:write", file, serializeAsJSON(elements as any, appState, files, "local")), 800);
   }, [file]);
 
-  // cloud sync wrote this drawing: reload it in place (no save back, so two Macs do not echo)
-  useEffect(() => api.on("drawings:synced", async (paths) => {
-    const x = xapiRef.current;
-    if (!x || !paths.includes(file)) return;
-    const text = await api.invoke("file:read", file);
-    if (text === null) return; // trashed: the app closes the pane
-    const data: any = await loadFromBlob(new Blob([text], { type: "application/json" }), null, null);
-    x.addFiles(Object.values(data.files ?? {}));
-    x.updateScene({ elements: data.elements, captureUpdate: CaptureUpdateAction.NEVER });
-    lastSaved.current = sceneSig(x.getSceneElements(), x.getAppState());
-  }), [file]);
-
   const share = useCallback(async (elements: readonly any[], appState: any, files: any) => {
     // excalidraw.com does not know the web-font ids (ADR-0003): both become its Nunito (6), the closest to how the app looks
     const web = elements.map((e) => (e.fontFamily === FONTS["Playpen Sans"] || e.fontFamily === FONTS.Inter ? { ...e, fontFamily: 6 } : e));
@@ -196,6 +188,23 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
     else x?.setToast({ message: r.error, closable: true });
     return true;
   }, []);
+  /** Share with link / Update shared link: upload the scene now (one Blob write per click) and copy the viewer link. */
+  const publish = async () => {
+    const x = xapiRef.current;
+    if (!x) return;
+    try {
+      const url = await api.invoke("share:publish", file, serializeAsJSON(x.getSceneElements(), x.getAppState(), x.getFiles(), "local"));
+      setSharedUrl(url);
+      const link = viewLink(url);
+      await navigator.clipboard.writeText(link);
+      x.setToast({ message: `${sharedUrl ? "Shared link updated" : "Shared"}, link copied: ${link}`, duration: 8000, closable: true });
+    } catch (e: any) { x.setToast({ message: String(e?.message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, ""), closable: true }); }
+  };
+  const unpublish = async () => {
+    await api.invoke("share:unpublish", file);
+    setSharedUrl(null);
+    xapiRef.current?.setToast({ message: "Stopped sharing: the link no longer opens. The drawing stays on this Mac.", duration: 6000, closable: true });
+  };
   const saveAs = async () => {
     const x = xapiRef.current, p = await api.invoke("file:saveAsDialog", file);
     if (!x || !p) return;
@@ -230,7 +239,10 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
             <MainMenu.Item onSelect={onNew}>New drawing</MainMenu.Item>
             <MainMenu.Item onSelect={onOpen}>Open…</MainMenu.Item>
             <MainMenu.Item onSelect={saveAs}>Save as…</MainMenu.Item>
-            <MainMenu.Item onSelect={() => { const x = xapiRef.current; if (x) share(x.getSceneElements(), x.getAppState(), x.getFiles()); }}>Copy share link</MainMenu.Item>
+            <MainMenu.Item onSelect={publish}>{sharedUrl ? "Update shared link" : "Share with link"}</MainMenu.Item>
+            {sharedUrl && <MainMenu.Item onSelect={() => { navigator.clipboard.writeText(viewLink(sharedUrl)); xapiRef.current?.setToast({ message: "Link copied (the last update; use Update shared link to send newer edits)", duration: 5000, closable: true }); }}>Copy shared link</MainMenu.Item>}
+            {sharedUrl && <MainMenu.Item onSelect={unpublish}>Stop sharing</MainMenu.Item>}
+            <MainMenu.Item onSelect={() => { const x = xapiRef.current; if (x) share(x.getSceneElements(), x.getAppState(), x.getFiles()); }}>Copy excalidraw.com link</MainMenu.Item>
             <MainMenu.Separator />
             <MainMenu.DefaultItems.Export />
             <MainMenu.DefaultItems.SaveAsImage />

@@ -36,21 +36,29 @@ export function classify(e: Classifiable): string | null {
 export const isFocal = (e: Classifiable) => SHAPE_TYPES.includes(e.type) && lc(e.strokeColor) === FOCAL;
 
 const kindLine = (k: (typeof KINDS)[number]) => {
-  const extra = k.strokeStyle ? `strokeStyle "${k.strokeStyle}", ` : k.rounded ? "roundness {type: 3}, " : k.strokeWidth ? `strokeWidth ${k.strokeWidth}, ` : "";
-  return `- ${k.prompt.padEnd(19)}-> ${(k.type + ",").padEnd(11)}${extra}backgroundColor "${k.color}" (${k.colorName})${k.hint ? `, ${k.hint}` : ""}`;
+  const extra = k.strokeStyle ? `, ${k.strokeStyle}` : k.rounded ? ", roundness {type: 3}" : k.strokeWidth ? `, strokeWidth ${k.strokeWidth}` : "";
+  return `- ${k.prompt}: ${k.type} ${k.color}${extra}${k.hint ? `, ${k.hint}` : ""}`;
 };
 const { note, section, focal } = NOTATION;
-const NOTATION_BLOCK = `NOTATION (mandatory, identical in every diagram so the reader learns it once):
+const MERMAID_MAP = `Mermaid mapping: ([User action]) stadium, [System step] rectangle, {Decision?} diamond, [(DB: name)] cylinder, [/Input/] for data, plus classDef lines with the notation fills: ${KINDS.filter((k) => k.mermaid).map((k) => `classDef ${k.mermaid} fill:${k.color};`).join(" ")} then assign with ":::user" etc.`;
+
+/**
+ * Sent in the MCP initialize result: the only channel that reaches every agent since the in-app sidebar was removed.
+ * Claude Code silently cuts server instructions at 2048 chars (test/notation.test.mjs guards the length).
+ */
+export const agentInstructions = (skillFile: string) => `Explainer canvas: you answer by drawing; chat gets one status line.
+Before a new complete diagram, Read ${skillFile} and the type reference it names. Skip for small edits.
+TEXT: labels 1-6 words, notes 1-2 lines. Boxes, arrows, grouping carry meaning, not sentences. Shorten words, never drop a fact the reader needs.
+ICONS: one emoji at the start of a label when it names the thing faster (👤 user, 🗄️ DB, ☁️ cloud, 🔒 auth, ⚙️ job, 📄 file, 🌐 web). The label words stay. Real logos or screenshots: draw_image.
+NOTATION (mandatory, every diagram; fillStyle "solid"):
 ${KINDS.map(kindLine).join("\n")}
-- Note / explanation -> text element, strokeColor "${note.color}", fontFamily ${note.fontFamily}, fontSize ${note.fontSize}, width <= ${note.maxWidth}, no box. A note points at what it explains: put it within 40px of that element, or add a leader: arrow with strokeStyle "dashed", strokeWidth 1, strokeColor "${note.color}", endArrowhead "dot", start: {id: "<note id>"}, end: {id: "<shape id>"} (leaders bind to shapes or text, never to an arrow). Max 2 notes per diagram.
-- Focal (the 1-2 nodes the reader must notice) -> strokeColor "${focal.color}", strokeWidth ${focal.strokeWidth}; the fill stays the kind color. Never more than 2 per diagram.
-- Frame: exactly ONE per complete diagram, around the whole diagram: pass frame: "<diagram title>" to draw_elements or draw_mermaid and the app wraps the batch. Never one frame per lane, user, module or layer, never nested frames, never a frame for a small annotation added next to an existing diagram.
-- Section inside a diagram (a user's lane, a swimlane, a module group, a layer, a phase) -> a container rectangle listed BEFORE its members (so they draw on top): backgroundColor "${section.color}", strokeStyle "dashed", roughness 0, roundness {type: 3}, plus a small title text at its top-left (fontSize 14, fontFamily ${note.fontFamily}, strokeColor "${note.color}"). Give the container, its title and its members the same groupIds entry so they move together. Leave 24px padding inside.
-- No diagonal arrows: a bound arrow whose ends share neither a row nor a column is routed by the app as a right-angle elbow; for a free arrow give only horizontal and vertical segments. Arrow solid = flow / call; arrow dashed = async, optional or event; label arrows with a short verb when it helps: label: {text, fontSize: 16}. The app widens gaps so labels fit; the tool result lists any remaining overlap ("warnings") - fix those before answering
-- fillStyle "solid" for all shapes.
-- Fonts: the app defaults every text to fontFamily 101 (Playpen Sans, handwritten). Use fontFamily ${note.fontFamily} (Inter) for notes, long explanations and code-like labels (paths, endpoints).
-Legend: the app adds a legend strip (the kinds and arrow styles used) at the bottom of every framed diagram. Never draw a legend yourself.
-Mermaid mapping: ([User action]) stadium, [System step] rectangle, {Decision?} diamond, [(DB: name)] cylinder, [/Input/] for data, and add classDef lines with the same fills, e.g. ${KINDS.filter((k) => k.mermaid).map((k) => `classDef ${k.mermaid} fill:${k.color};`).join(" ")} then assign with ":::user" etc.`;
+- Note: text, strokeColor ${note.color}, fontFamily ${note.fontFamily}, fontSize ${note.fontSize}, width <= ${note.maxWidth}, no box, within 40px of its element or a dashed dot-end leader arrow. Max 2.
+- Focal: strokeColor ${focal.color}, strokeWidth ${focal.strokeWidth}, fill keeps kind color. Max 2.
+- Section (lane, layer, group): rectangle ${section.color}, dashed, roughness 0, listed before its members, title text fontSize 14 at top-left, same groupIds, 24px padding.
+- Frame: exactly one per diagram via the frame param. Never nested, never per lane.
+- Arrows: solid = flow/call, dashed = async/optional/event; short verb labels; no diagonals.
+- Legend: the app adds it. Never draw a legend.
+- Fix every overlap listed in "warnings" before you answer.`;
 
 const skeletonDoc = `Element skeleton (Excalidraw convertToExcalidrawElements format). Types: rectangle, ellipse, diamond, text, arrow, line, frame.
 Common props: id (string, give one so you can bind/update later), x, y, width, height, strokeColor (hex), backgroundColor (hex or "transparent"), fillStyle ("hachure"|"solid"|"cross-hatch"), strokeWidth (1|2|4), strokeStyle ("solid"|"dashed"|"dotted"), roughness (0|1|2), opacity (0-100), groupIds (string[]), frameId, link.
@@ -82,7 +90,7 @@ export const TOOLS = [
   {
     name: "draw_mermaid",
     description:
-      "Draw a Mermaid diagram (flowchart, sequence, class) on the canvas with automatic layout. Best for structure: architecture, call flow, data flow, dependency graphs. Placed in free space like draw_elements. Returns created element ids.",
+      `Draw a Mermaid diagram (flowchart, sequence, class) on the canvas with automatic layout. Best for structure: architecture, call flow, data flow, dependency graphs. Placed in free space like draw_elements. Returns created element ids. ${MERMAID_MAP}`,
     inputSchema: {
       type: "object",
       properties: {
@@ -156,18 +164,3 @@ export const TOOLS = [
     },
   },
 ];
-
-export const SYSTEM_PROMPT = `You are running inside Explainer: an Excalidraw whiteboard with you in a side panel. Your output medium is the CANVAS, not chat.
-
-Rules:
-- Explain by drawing. Use mcp__canvas__draw_mermaid for structure (auto layout) and mcp__canvas__draw_elements for free-form diagrams, annotations, callouts, comparisons, timelines. Use mcp__canvas__draw_image to put a screenshot or picture (PNG/JPEG on disk) on the canvas with a caption.
-- Keep canvas text short: labels of 1-6 words, notes of 1-2 lines. Prefer boxes + arrows + grouping over sentences.
-- If a point cannot be made without prose, put a Note (see NOTATION) on the canvas next to the element it explains. Still no prose in chat.
-- Chat text is for: short answers to direct questions (about attached elements, the drawing, or the conversation), one-line status ("Drew the request flow."), questions you must ask, errors, and permission needs. Never a long essay in chat.
-- When the user attaches selected elements (<selected_elements> block): if they ask a question about them ("what is this", "why", "is this right", "explain this box"), answer in chat in a few sentences and do not draw. If they ask to change, fix, rename or add something, edit them with update_elements or draw next to them (placement: "selection").
-- Draw when the user asks to explain, visualize, map or show a topic, flow, system or repository.
-- Before every new complete diagram: invoke the diagram-design skill (Skill tool), pick the type from its table, read that type reference, then draw. Skip it for a small annotation or an edit of existing elements. Never ask for approval before drawing. After drawing, one line in chat with the type and the count: "Drew a swimlane (3 lanes, 9 steps)."
-- One draw call per logical diagram. Bind arrows to shapes in the same call.
-- For a repository: clone/read it with your normal tools first, then draw an architecture map (modules as boxes, arrows for dependencies/data flow), then zoom into specifics only if asked.
-
-${NOTATION_BLOCK}`;

@@ -4,11 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { insideDir, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
+import { agentInstructions } from "../shared/tools";
 import { shareScene } from "./share";
 import { startSync } from "./sync";
 import type { AppState, DrawingInfo, DrawingList } from "../shared/types";
 
 declare const __DATA_DIR__: string;
+declare const __AGENT_DIR__: string;
 const DATA = process.env.EXPLAINER_DATA ?? __DATA_DIR__;
 const DIRS = { drawings: path.join(DATA, "drawings"), app: path.join(DATA, "app") };
 for (const d of Object.values(DIRS)) fs.mkdirSync(d, { recursive: true });
@@ -276,5 +278,5 @@ let beat = Date.now();
 setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
 listen("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
-app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); sync = startCloudSync(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args)); });
+app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); sync = startCloudSync(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design/SKILL.md"))); });
 app.on("window-all-closed", () => app.quit());

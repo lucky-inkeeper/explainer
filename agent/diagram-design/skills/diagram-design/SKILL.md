@@ -6,7 +6,7 @@ license: MIT, ported from cathrynlavery/diagram-design (see UPSTREAM.md)
 
 # Diagram design for the Explainer canvas
 
-Output is NOT an HTML or SVG file. Output is one `mcp__canvas__draw_elements` batch (or `mcp__canvas__draw_mermaid` for auto layout). The NOTATION in the system prompt (shape + color per kind, one frame per diagram, section containers) always applies. This skill adds three things: which type to draw, how to lay it out, what to leave out.
+Output is NOT an HTML or SVG file. Output is one `mcp__canvas__draw_elements` batch (or `mcp__canvas__draw_mermaid` for auto layout). The NOTATION in the MCP server instructions (shape + color per kind, one frame per diagram, section containers) always applies. This skill adds three things: which type to draw, how to lay it out, what to leave out.
 
 ## 1. Philosophy
 
@@ -62,7 +62,7 @@ Read the chosen reference before drawing. Then draw at once. Do not ask for appr
 | dashed, optional, async, return | `strokeStyle "dashed"` |
 | accent, coral, focal | focal treatment: `strokeColor "#e8590c"`, `strokeWidth 2`; fill stays the kind color. At most 2 per diagram |
 | muted text, eyebrow, mono, sublabel, tag, chip | text element, `fontFamily 102`, `fontSize 14`, `strokeColor "#868e96"`; a chip is that text inside a small grey rectangle |
-| zone, boundary, lane, fragment frame, containment | the Section container from the system prompt: `#f8f9fa` dashed rectangle listed before its members, title text top-left, shared `groupIds` |
+| zone, boundary, lane, fragment frame, containment | the Section container from the MCP server instructions: `#f8f9fa` dashed rectangle listed before its members, title text top-left, shared `groupIds` |
 | orthogonal or elbow connector | `elbowed: true` on a bound arrow; the app routes it with right angles (facing sides, one bend pair). Still put nodes on shared rows and columns so most arrows need no bend |
 | bridge or hop at a crossing | not available; reorder nodes so arrows do not cross |
 | label mask, label margin | not needed; the app widens gaps so arrow labels fit |

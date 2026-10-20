@@ -9,6 +9,7 @@ Explainer is a Mac app: the Excalidraw editor with canvas tools served over MCP.
 - **Gallery** - the drawings list (menu > Drawings…, or the button at the top left): thumbnails, folder tabs, new, open, rename, move to a folder, move to Trash. Thumbnails are cached in `data/drawings/.thumbs/` per file and mtime.
 - **Agent** - any Claude Code client connected to the canvas tools over MCP.
 - **Canvas tools** - MCP tools the app serves to the agent: `draw_elements`, `draw_mermaid`, `read_canvas`, `update_elements`, `delete_elements`. Deleting a frame deletes everything inside it; `delete_elements` takes a `frame` name or id for a whole diagram, `read_canvas` takes `frame` or `ids` to stay small. They are served over Streamable HTTP on `127.0.0.1:7331/mcp` (`EXPLAINER_MCP_PORT` to move it) so any other Claude Code client (Zed, CLI, VS Code) can draw on and read the open canvas: `claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user`. Explainer must be running; request/reply only, no push.
+- **Agent instructions** - `agentInstructions()` in `src/shared/tools.ts`, sent as `instructions` in the MCP `initialize` reply: the notation, the short-text and icon rules, and the path of the diagram-design skill. The only channel that reaches every agent since the sidebar was removed. Claude Code cuts it at 2048 chars without a warning; `test/notation.test.mjs` guards the length.
 - **Skeleton** - Excalidraw's element-skeleton input format (`convertToExcalidrawElements`). What the agent emits.
 - **Placement** - where a batch of new elements lands: `auto` (free space right of content), `selection` (next to the user's selected elements), `exact`.
 - **Share link** - `https://excalidraw.com/#json=<id>,<key>`, produced by posting the encrypted scene to Excalidraw's public share backend.
@@ -28,7 +29,7 @@ Explainer is a Mac app: the Excalidraw editor with canvas tools served over MCP.
 src/main/      Electron main: MCP HTTP server (mcp.ts), files, share link, IPC
 src/preload/   contextBridge (window.api)
 src/renderer/  React: App (Excalidraw), Gallery, canvas (tool handlers)
-src/shared/    types, canvas tool definitions, agent system prompt
+src/shared/    types, canvas tool definitions, agent instructions
 agent/         Claude Code plugins for the agent (diagram-design)
 data/          user data (gitignored): drawings/, app/
 docs/adr/      decisions

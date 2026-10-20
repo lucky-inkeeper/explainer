@@ -4,13 +4,13 @@ import { CANVAS_SERVER, TOOLS } from "../shared/tools";
 export type CanvasCall = (tool: string, args: any) => Promise<any>;
 
 /** Minimal MCP server over JSON-RPC: initialize, tools/list, tools/call. Served by the localhost HTTP bridge. */
-export async function handleMcp(msg: any, onCanvas: CanvasCall): Promise<any> {
+export async function handleMcp(msg: any, onCanvas: CanvasCall, instructions?: string): Promise<any> {
   if (msg.id === undefined) return { jsonrpc: "2.0", result: {}, id: 0 }; // notification
   let result: unknown;
   try {
     switch (msg.method) {
       case "initialize":
-        result = { protocolVersion: msg.params?.protocolVersion ?? "2024-11-05", capabilities: { tools: {} }, serverInfo: { name: CANVAS_SERVER, version: "1" } };
+        result = { protocolVersion: msg.params?.protocolVersion ?? "2024-11-05", capabilities: { tools: {} }, serverInfo: { name: CANVAS_SERVER, version: "1" }, instructions };
         break;
       case "tools/list":
         result = { tools: TOOLS };
@@ -30,7 +30,7 @@ export async function handleMcp(msg: any, onCanvas: CanvasCall): Promise<any> {
 }
 
 /** Streamable HTTP MCP endpoint on localhost so other Claude Code clients (Zed, CLI, VS Code) can use the canvas tools. Explainer must be running. */
-export function serveMcp(port: number, onCanvas: CanvasCall) {
+export function serveMcp(port: number, onCanvas: CanvasCall, instructions?: string) {
   const srv = http.createServer((req, res) => {
     if (req.url !== "/mcp") { res.writeHead(404).end(); return; }
     if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }).end(); return; } // no server-push stream: request/reply only
@@ -41,7 +41,7 @@ export function serveMcp(port: number, onCanvas: CanvasCall) {
     req.on("end", async () => {
       let msg: any;
       try { msg = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
-      const out = await handleMcp(msg, onCanvas);
+      const out = await handleMcp(msg, onCanvas, instructions);
       if (msg.id === undefined) { res.writeHead(202).end(); return; }
       res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(out));
     });

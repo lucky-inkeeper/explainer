@@ -46,6 +46,8 @@ export function App() {
   }, []);
   useEffect(() => { if (panes.length) localStorage.setItem(TABS_KEY, JSON.stringify({ tabs, active: home ? null : panes[focus] ?? panes[0], pairs })); }, [tabs, home, panes, focus, pairs]);
 
+  useEffect(() => { document.querySelector(".tab-list .tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest" }); }, [panes, focus, home, tabs]);
+
   useEffect(() => api.on("canvas:call", async ({ callId, tool, args }) => {
     const ps = panesRef.current, onScreen = ps.map(shortName);
     const i = args?.drawing ? ps.findIndex((p) => p === args.drawing || shortName(p) === args.drawing) : focusRef.current;
@@ -143,12 +145,15 @@ export function App() {
         <button className={"tab home" + (home ? " on" : "")} role="tab" aria-selected={home} onClick={goHome} title="Drawings">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>
         </button>
+        {/* only this strip scrolls (no scrollbar), so the traffic-light gap, Home, + and theme stay put */}
+        <div className="tab-list" onWheel={(e) => { if (!e.deltaX) e.currentTarget.scrollLeft += e.deltaY; }}>
         {tabs.map((t) => {
           // split view, Firefox style: the two shown drawings sit side by side in one pill, at the first one's place
           const pr = pairs.find((x) => x.includes(t));
           if (pr) return t === tabs.find((x) => pr.includes(x)) ? <div key={pr.join("|")} className={"tab-split" + (!home && pr.includes(panes[focus]) ? " on" : "")}>{pr.map(tab)}</div> : null;
           return tab(t);
         })}
+        </div>
         <button className="tab plus" onClick={goHome} title="New tab" aria-label="New tab">+</button>
         <button className="tab theme" onClick={toggleTheme} title={dark ? "Light mode" : "Dark mode"} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} aria-pressed={dark}>
           {dark

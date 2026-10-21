@@ -11,7 +11,9 @@ html, body, #root { height: 100%; margin: 0; }
 /* ---- tab bar (outside .excalidraw: no CSS vars). Tabs are rounded containers (Firefox style), not full-height cells */
 .tabs { display: flex; align-items: stretch; gap: 4px; height: 40px; flex: none; padding: 0 6px 0 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
 .tab, .tab-x { -webkit-app-region: no-drag; }
-/* no tab-bar scroll: tabs shrink (name ellipsis) like a browser, so nothing slides under the traffic lights */
+.tab-list { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; -webkit-app-region: no-drag; }
+.tab-list::-webkit-scrollbar { display: none; }
+.tab-list .tab, .tab-list .tab-split { flex: none; }
 .tab { display: flex; align-items: center; gap: 8px; margin: 5px 0; padding: 0 10px; max-width: 220px; flex: 0 1 auto; min-width: 40px; border: 0; border-radius: 8px; background: #e6e6ec; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
 .tab:hover { background: #dcdce4; }
 .tab.on { background: #fff; color: #1b1b1f; box-shadow: 0 1px 3px rgba(0,0,0,.14); }

@@ -6,37 +6,43 @@ html, body, #root { height: 100%; margin: 0; }
 .pane + .pane { border-left: 1px solid #d5d6dd; }
 .app.dark .pane + .pane { border-color: #3a3a44; }
 .canvas-wrap.split .pane.focused::after { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: #6965db; z-index: 5; pointer-events: none; }
-.tab.shown { box-shadow: inset 0 -2px 0 #b3b1e8; }
 .gmenu.tabmenu { position: fixed; right: auto; bottom: auto; z-index: 10; font: 13px system-ui, sans-serif; }
 .gmenu button:disabled { color: #b0b1b8; cursor: default; background: transparent; }
-/* ---- tab bar (outside .excalidraw: no CSS vars) */
-.tabs { display: flex; align-items: stretch; height: 40px; flex: none; padding-left: 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
+/* ---- tab bar (outside .excalidraw: no CSS vars). Tabs are rounded containers (Firefox style), not full-height cells */
+.tabs { display: flex; align-items: stretch; gap: 4px; height: 40px; flex: none; padding: 0 6px 0 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
 .tab, .tab-x { -webkit-app-region: no-drag; }
-.tab { display: flex; align-items: center; gap: 8px; padding: 0 12px; max-width: 220px; flex: 0 1 auto; min-width: 40px; border: 0; border-right: 1px solid #e0e0e6; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
-.tab:hover { background: #e7e7ee; }
-.tab.on { background: #fff; color: #1b1b1f; box-shadow: inset 0 -2px 0 #6965db; }
-.tab.home { padding: 0 14px; flex: none; }
 /* no tab-bar scroll: tabs shrink (name ellipsis) like a browser, so nothing slides under the traffic lights */
-.tab.plus { flex: none; font-size: 18px; padding: 0 14px; color: #8a8b93; border-right: 0; }
-.tab.theme { flex: none; margin-left: auto; padding: 0 14px; border-right: 0; border-left: 1px solid #e0e0e6; color: #8a8b93; }
-.tab.theme:hover { color: #1b1b1f; }
-.app.dark .tab.theme { border-color: #2a2a32; } .app.dark .tab.theme:hover { color: #fff; }
+.tab { display: flex; align-items: center; gap: 8px; margin: 5px 0; padding: 0 10px; max-width: 220px; flex: 0 1 auto; min-width: 40px; border: 0; border-radius: 8px; background: #e6e6ec; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.tab:hover { background: #dcdce4; }
+.tab.on { background: #fff; color: #1b1b1f; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+.tab.shown { box-shadow: inset 0 0 0 1px #b3b1e8; }
+.tab.home, .tab.plus, .tab.theme { flex: none; padding: 0 10px; background: transparent; color: #8a8b93; }
+.tab.home:hover, .tab.plus:hover, .tab.theme:hover { background: #e6e6ec; color: #1b1b1f; }
+.tab.home.on { background: #fff; color: #1b1b1f; }
+.tab.plus { font-size: 18px; }
+.tab.theme { margin-left: auto; }
 .app.dark .canvas-wrap { background: #121212; }
 .tab-name { overflow: hidden; text-overflow: ellipsis; }
 .tab-x { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; margin-right: -4px; border: 0; border-radius: 5px; background: transparent; color: #8a8b93; cursor: pointer; opacity: 0; }
 .tab:hover .tab-x, .tab.on .tab-x { opacity: 1; }
 .tab-x:hover { background: #d5d6dd; color: #1b1b1f; }
 .app.dark .tabs { background: #1b1b21; border-color: #3a3a44; color: #b9b9c2; }
-.app.dark .tab { border-color: #2a2a32; } .app.dark .tab:hover { background: #232329; } .app.dark .tab.on { background: #121216; color: #fff; }
-.app.dark .tab-x:hover { background: #3a3a44; color: #fff; }
-/* the split pair: one tab entry holding both drawings (Firefox style); bright while the split view is on screen */
-.tab-split { display: flex; flex: 0 1 auto; min-width: 0; margin: 5px 4px; padding: 2px; gap: 2px; border-radius: 9px; background: #e3e2f7; -webkit-app-region: no-drag; }
-.tab-split:not(.on) { background: #e7e7ee; }
-.tab-split .tab { border-right: 0; border-radius: 7px; }
-.tab-split .tab.on { box-shadow: inset 0 0 0 1.5px #6965db; }
+.app.dark .tab { background: #26262d; } .app.dark .tab:hover { background: #2e2e36; } .app.dark .tab.on { background: #3a3a44; color: #fff; box-shadow: none; }
+.app.dark .tab.shown { box-shadow: inset 0 0 0 1px #4d4b80; }
+.app.dark .tab.home, .app.dark .tab.plus, .app.dark .tab.theme { background: transparent; }
+.app.dark .tab.home:hover, .app.dark .tab.plus:hover, .app.dark .tab.theme:hover, .app.dark .tab.home.on { background: #26262d; color: #fff; }
+.app.dark .tab-x:hover { background: #4a4a55; color: #fff; }
+/* the split pair: one container holding both drawings (Firefox style); tinted while the split view is on screen */
+.tab-split { display: flex; flex: 0 1 auto; min-width: 0; margin: 5px 0; padding: 2px; gap: 2px; border-radius: 9px; background: #e6e6ec; -webkit-app-region: no-drag; }
+.tab-split.on { background: #e3e2f7; }
+.tab-split .tab { margin: 0; border-radius: 7px; background: transparent; }
+.tab-split .tab:hover { background: rgba(255,255,255,.5); }
+.tab-split .tab.on { background: #fff; box-shadow: inset 0 0 0 1.5px #6965db; }
 .tab-split .tab.shown { box-shadow: none; background: rgba(255,255,255,.5); }
-.app.dark .tab-split { background: #2a2a3c; } .app.dark .tab-split:not(.on) { background: #232329; }
-.app.dark .tab-split .tab.shown { background: rgba(255,255,255,.06); }
+.tab-split:not(.on) .tab + .tab { border-left: 1px solid #d0d0d8; border-radius: 0 7px 7px 0; }
+.app.dark .tab-split { background: #26262d; } .app.dark .tab-split:not(.on) .tab + .tab { border-left-color: #3a3a44; } .app.dark .tab-split.on { background: #2a2a3c; }
+.app.dark .tab-split .tab { background: transparent; } .app.dark .tab-split .tab.on { background: #3a3a44; box-shadow: inset 0 0 0 1.5px #8b88f0; }
+.app.dark .tab-split .tab.shown, .app.dark .tab-split .tab:hover { background: rgba(255,255,255,.06); } .app.dark .tab-split .tab.shown { box-shadow: none; }
 /* Excalidraw narrows its UI layer only when it deems the sidebar dockable (wide windows); do it whenever the panel is open */
 .pane.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
 /* Excalidraw help "?" corner button: hidden; Help stays in the main menu and on the ? key */

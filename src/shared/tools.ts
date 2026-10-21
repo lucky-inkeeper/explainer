@@ -164,3 +164,8 @@ export const TOOLS = [
     },
   },
 ];
+// split view shows two drawings: every tool can name one; without it the call goes to the focused pane (the one the user touched last)
+for (const t of TOOLS) (t.inputSchema.properties as Record<string, unknown>).drawing = {
+  type: "string",
+  description: "Split view: the drawing to act on (its name, as read_canvas lists it in onScreen). Omit for the focused drawing. Two agents in split view: each passes its own.",
+};

@@ -7,17 +7,18 @@ html, body, #root { height: 100%; margin: 0; }
 .app.dark .pane + .pane { border-color: #3a3a44; }
 .canvas-wrap.split .pane.focused::after { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: #6965db; z-index: 5; pointer-events: none; }
 .tab.shown { box-shadow: inset 0 -2px 0 #b3b1e8; }
-.tabmenu { position: fixed; right: auto; bottom: auto; z-index: 10; font: 13px system-ui, sans-serif; }
+.gmenu.tabmenu { position: fixed; right: auto; bottom: auto; z-index: 10; font: 13px system-ui, sans-serif; }
 .gmenu button:disabled { color: #b0b1b8; cursor: default; background: transparent; }
 /* ---- tab bar (outside .excalidraw: no CSS vars) */
-.tabs { display: flex; align-items: stretch; height: 40px; flex: none; padding-left: 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow-x: auto; overflow-y: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
+.tabs { display: flex; align-items: stretch; height: 40px; flex: none; padding-left: 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
 .tab, .tab-x { -webkit-app-region: no-drag; }
-.tab { display: flex; align-items: center; gap: 8px; padding: 0 12px; max-width: 220px; border: 0; border-right: 1px solid #e0e0e6; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.tab { display: flex; align-items: center; gap: 8px; padding: 0 12px; max-width: 220px; flex: 0 1 auto; min-width: 40px; border: 0; border-right: 1px solid #e0e0e6; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
 .tab:hover { background: #e7e7ee; }
 .tab.on { background: #fff; color: #1b1b1f; box-shadow: inset 0 -2px 0 #6965db; }
-.tab.home { padding: 0 14px; }
-.tab.plus { font-size: 18px; padding: 0 14px; color: #8a8b93; border-right: 0; }
-.tab.theme { margin-left: auto; padding: 0 14px; border-right: 0; border-left: 1px solid #e0e0e6; color: #8a8b93; }
+.tab.home { padding: 0 14px; flex: none; }
+/* no tab-bar scroll: tabs shrink (name ellipsis) like a browser, so nothing slides under the traffic lights */
+.tab.plus { flex: none; font-size: 18px; padding: 0 14px; color: #8a8b93; border-right: 0; }
+.tab.theme { flex: none; margin-left: auto; padding: 0 14px; border-right: 0; border-left: 1px solid #e0e0e6; color: #8a8b93; }
 .tab.theme:hover { color: #1b1b1f; }
 .app.dark .tab.theme { border-color: #2a2a32; } .app.dark .tab.theme:hover { color: #fff; }
 .app.dark .canvas-wrap { background: #121212; }
@@ -28,6 +29,14 @@ html, body, #root { height: 100%; margin: 0; }
 .app.dark .tabs { background: #1b1b21; border-color: #3a3a44; color: #b9b9c2; }
 .app.dark .tab { border-color: #2a2a32; } .app.dark .tab:hover { background: #232329; } .app.dark .tab.on { background: #121216; color: #fff; }
 .app.dark .tab-x:hover { background: #3a3a44; color: #fff; }
+/* the split pair: one tab entry holding both drawings (Firefox style); bright while the split view is on screen */
+.tab-split { display: flex; flex: 0 1 auto; min-width: 0; margin: 5px 4px; padding: 2px; gap: 2px; border-radius: 9px; background: #e3e2f7; -webkit-app-region: no-drag; }
+.tab-split:not(.on) { background: #e7e7ee; }
+.tab-split .tab { border-right: 0; border-radius: 7px; }
+.tab-split .tab.on { box-shadow: inset 0 0 0 1.5px #6965db; }
+.tab-split .tab.shown { box-shadow: none; background: rgba(255,255,255,.5); }
+.app.dark .tab-split { background: #2a2a3c; } .app.dark .tab-split:not(.on) { background: #232329; }
+.app.dark .tab-split .tab.shown { background: rgba(255,255,255,.06); }
 /* Excalidraw narrows its UI layer only when it deems the sidebar dockable (wide windows); do it whenever the panel is open */
 .pane.sidebar-open .excalidraw .layer-ui__wrapper { width: calc(100% - var(--right-sidebar-width)); }
 /* Excalidraw help "?" corner button: hidden; Help stays in the main menu and on the ? key */

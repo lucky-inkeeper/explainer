@@ -4,8 +4,9 @@ import { runCanvasTool } from "./canvas";
 import { Gallery } from "./Gallery";
 import { Pane, THEME_KEY, type PaneHandle } from "./Pane";
 
-const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), split: string | null }
-const readTabs = (): { tabs: string[]; active: string | null; split: string | null } => { try { return { tabs: [], active: null, split: null, ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null, split: null }; } };
+const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), pairs: [string, string][] }
+type SavedTabs = { tabs: string[]; active: string | null; pairs: string[][]; pair?: string[] | null; split?: string | null };
+const readTabs = (): SavedTabs => { try { return { tabs: [], active: null, pairs: [], ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null, pairs: [] }; } };
 const shortName = (p: string) => p.split("/").pop()?.replace(/\.excalidraw$/, "") ?? p;
 
 export function App() {
@@ -14,10 +15,13 @@ export function App() {
   const [home, setHome] = useState(true); // Home tab = the gallery; the panes stay mounted underneath
   // the drawings on screen: one pane, or two side by side (split view). Never the same file twice: two autosaves would fight
   const [panes, setPanes] = useState<string[]>([]);
+  // split pairs (Firefox style): each is one tab entry for two drawings, kept while another tab is shown. A drawing is in one pair at most
+  const [pairs, setPairs] = useState<string[][]>([]);
   const [focus, setFocus] = useState(0); // the pane the user touched last: tab clicks, the gallery and the agent's canvas calls go to it
   const [menu, setMenu] = useState<{ tab: string; x: number; y: number } | null>(null);
   const panesRef = useRef(panes); panesRef.current = panes;
   const focusRef = useRef(focus); focusRef.current = focus;
+  const pairsRef = useRef(pairs); pairsRef.current = pairs;
   const handles = useRef<(PaneHandle | null)[]>([]);
 
   useEffect(() => {
@@ -30,37 +34,58 @@ export function App() {
       if (!alive.includes(last)) alive.push(last);
       setTabs(alive);
       setHome(saved.active === null || !saved.tabs.length);
-      setPanes(saved.split && saved.split !== last && alive.includes(saved.split) ? [last, saved.split] : [last]);
+      // older formats: `pair` (one pair), `split` (the drawing beside `active`)
+      const raw = saved.pair ? [saved.pair] : saved.split ? [[saved.active ?? "", saved.split]] : saved.pairs;
+      const ok: string[][] = [];
+      for (const pr of raw) if (pr[0] !== pr[1] && pr.every((x) => alive.includes(x) && !ok.flat().includes(x))) ok.push(pr);
+      const mine = ok.find((pr) => pr.includes(last));
+      setPairs(ok);
+      setPanes(mine ?? [last]);
+      setFocus(mine ? mine.indexOf(last) : 0);
     })();
   }, []);
-  useEffect(() => { if (panes.length) localStorage.setItem(TABS_KEY, JSON.stringify({ tabs, active: home ? null : panes[0], split: panes[1] ?? null })); }, [tabs, home, panes]);
+  useEffect(() => { if (panes.length) localStorage.setItem(TABS_KEY, JSON.stringify({ tabs, active: home ? null : panes[focus] ?? panes[0], pairs })); }, [tabs, home, panes, focus, pairs]);
 
   useEffect(() => api.on("canvas:call", async ({ callId, tool, args }) => {
-    const h = handles.current[focusRef.current];
+    const ps = panesRef.current, onScreen = ps.map(shortName);
+    const i = args?.drawing ? ps.findIndex((p) => p === args.drawing || shortName(p) === args.drawing) : focusRef.current;
+    if (i < 0) return api.send("canvas:result", { callId, error: `drawing "${args.drawing}" is not on screen. On screen: ${onScreen.join(", ")}` });
+    const h = handles.current[i];
     if (!h?.api) return api.send("canvas:result", { callId, error: "canvas not ready" });
-    try { api.send("canvas:result", { callId, result: await runCanvasTool(h.api, tool, args, h.selected) }); }
+    try {
+      const result = await runCanvasTool(h.api, tool, args, h.selected);
+      api.send("canvas:result", { callId, result: tool === "read_canvas" ? { drawing: onScreen[i], onScreen, ...result } : result });
+    }
     catch (e: any) { api.send("canvas:result", { callId, error: e?.message ?? String(e) }); }
   }), []);
 
-  /** Show a drawing: focus its pane if it is on screen, else load it into the focused pane. Opens a tab when it has none. */
+  /** Show a drawing: a pair member brings back the split view, any other drawing shows alone. Opens a tab when it has none. */
   const openTab = useCallback((p: string) => {
     setTabs((t) => (t.includes(p) ? t : [...t, p]));
     setHome(false);
-    const ps = panesRef.current, j = ps.indexOf(p);
-    if (j >= 0) setFocus(j);
-    else setPanes(ps.map((x, i) => (i === focusRef.current ? p : x)));
+    const ps = pairsRef.current.find((pr) => pr.includes(p)) ?? [p];
+    setPanes(ps);
+    setFocus(ps.indexOf(p));
   }, []);
-  /** Right-click > Open in split view: the drawing goes to the right pane. */
+  /** Right-click > Open in split view (only from a drawing shown alone): it and this drawing become a new pair. */
   const openSplit = useCallback((p: string) => {
     setTabs((t) => (t.includes(p) ? t : [...t, p]));
     setHome(false);
-    setPanes((ps) => [ps[0], p]);
+    const ps = [panesRef.current[0], p];
+    setPairs((all) => [...all, ps]);
+    setPanes(ps);
     setFocus(1);
   }, []);
-  const closeSplit = useCallback(() => { setPanes((ps) => ps.slice(0, 1)); setFocus(0); }, []);
+  /** Right-click > Close split view: the pair of `p` goes back to two tabs; on screen, the focused drawing stays. */
+  const closeSplit = useCallback((p: string) => {
+    setPairs((all) => all.filter((pr) => !pr.includes(p)));
+    const ps = panesRef.current;
+    if (ps.includes(p) && ps.length === 2) { setPanes([ps[focusRef.current]]); setFocus(0); }
+  }, []);
   /** A drawing leaves the screen: in split view its pane closes; alone, the pane shows the next tab (or Home). */
   const unshow = useCallback((p: string, rest: string[], i: number) => {
     const ps = panesRef.current;
+    setPairs((all) => all.filter((pr) => !pr.includes(p)));
     if (!ps.includes(p)) return;
     if (ps.length === 2) { setPanes(ps.filter((x) => x !== p)); setFocus(0); return; }
     const n = rest[Math.min(i, rest.length - 1)];
@@ -75,7 +100,7 @@ export function App() {
   }, [unshow]);
   /** A drawing was renamed, moved or trashed (gallery, Save as, failed load): its tab and pane follow. */
   const relocate = useCallback((from: string, to: string | null) => {
-    if (to) { setTabs((t) => t.map((x) => (x === from ? to : x))); setPanes((ps) => ps.map((x) => (x === from ? to : x))); return; }
+    if (to) { setTabs((t) => t.map((x) => (x === from ? to : x))); setPanes((ps) => ps.map((x) => (x === from ? to : x))); setPairs((all) => all.map((pr) => pr.map((x) => (x === from ? to : x)))); return; }
     setTabs((t) => t.filter((x) => x !== from));
     unshow(from, readTabs().tabs.filter((x) => x !== from), 0);
   }, [unshow]);
@@ -101,6 +126,17 @@ export function App() {
   const menuItem = (label: string, run: () => void, disabled = false) => (
     <button disabled={disabled} onPointerDown={(e) => e.stopPropagation()} onClick={() => { setMenu(null); run(); }}>{label}</button>
   );
+  const tab = (t: string) => {
+    const on = !home && t === panes[focus], shown = !home && !on && panes.includes(t);
+    return (
+      <div key={t} className={"tab" + (on ? " on" : "") + (shown ? " shown" : "")} role="tab" aria-selected={on} onClick={() => openTab(t)} onContextMenu={(e) => { e.preventDefault(); setMenu({ tab: t, x: e.clientX, y: e.clientY }); }} title={t}>
+        <span className="tab-name">{shortName(t)}</span>
+        <button className="tab-x" aria-label={`Close ${shortName(t)}`} onClick={(e) => { e.stopPropagation(); closeTab(t); }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </div>
+    );
+  };
   return (
     <div className={"app" + (dark ? " dark" : "")}>
       <div className="tabs" role="tablist">
@@ -108,15 +144,10 @@ export function App() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>
         </button>
         {tabs.map((t) => {
-          const on = !home && t === panes[focus], shown = !home && !on && panes.includes(t);
-          return (
-            <div key={t} className={"tab" + (on ? " on" : "") + (shown ? " shown" : "")} role="tab" aria-selected={on} onClick={() => openTab(t)} onContextMenu={(e) => { e.preventDefault(); setMenu({ tab: t, x: e.clientX, y: e.clientY }); }} title={t}>
-              <span className="tab-name">{shortName(t)}</span>
-              <button className="tab-x" aria-label={`Close ${shortName(t)}`} onClick={(e) => { e.stopPropagation(); closeTab(t); }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-              </button>
-            </div>
-          );
+          // split view, Firefox style: the two shown drawings sit side by side in one pill, at the first one's place
+          const pr = pairs.find((x) => x.includes(t));
+          if (pr) return t === tabs.find((x) => pr.includes(x)) ? <div key={pr.join("|")} className={"tab-split" + (!home && pr.includes(panes[focus]) ? " on" : "")}>{pr.map(tab)}</div> : null;
+          return tab(t);
         })}
         <button className="tab plus" onClick={goHome} title="New tab" aria-label="New tab">+</button>
         <button className="tab theme" onClick={toggleTheme} title={dark ? "Light mode" : "Dark mode"} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} aria-pressed={dark}>
@@ -127,9 +158,9 @@ export function App() {
       </div>
       {menu && (
         <div className="gmenu tabmenu" role="menu" style={{ left: menu.x, top: menu.y }}>
-          {split && panes.includes(menu.tab)
-            ? menuItem("Close split view", closeSplit)
-            : menuItem("Open in split view", () => openSplit(menu.tab), !split && menu.tab === panes[0])}
+          {pairs.some((pr) => pr.includes(menu.tab))
+            ? menuItem("Close split view", () => closeSplit(menu.tab))
+            : menuItem("Open in split view", () => openSplit(menu.tab), split || menu.tab === panes[0])}
           {menuItem("Close tab", () => closeTab(menu.tab))}
         </div>
       )}

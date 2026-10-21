@@ -7,6 +7,8 @@ import { Pane, THEME_KEY, type PaneHandle } from "./Pane";
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), pairs: [string, string][] }
 type SavedTabs = { tabs: string[]; active: string | null; pairs: string[][]; pair?: string[] | null; split?: string | null };
 const readTabs = (): SavedTabs => { try { return { tabs: [], active: null, pairs: [], ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null, pairs: [] }; } };
+/** The tab strip fades out at an edge only while more tabs hide past it. ponytail: no resize listener; the next scroll or tab change updates it. */
+const fade = (l: HTMLElement) => { l.classList.toggle("fade-l", l.scrollLeft > 0); l.classList.toggle("fade-r", l.scrollLeft + l.clientWidth < l.scrollWidth - 1); };
 const shortName = (p: string) => p.split("/").pop()?.replace(/\.excalidraw$/, "") ?? p;
 
 export function App() {
@@ -23,6 +25,9 @@ export function App() {
   const focusRef = useRef(focus); focusRef.current = focus;
   const pairsRef = useRef(pairs); pairsRef.current = pairs;
   const handles = useRef<(PaneHandle | null)[]>([]);
+  // tab drag and drop: `p` is the dragged drawing, `pair` = the whole pair (dragged by its grip)
+  const drag = useRef<{ p: string; pair: boolean } | null>(null);
+  const [drop, setDrop] = useState<{ at: string; after?: boolean; swap?: boolean } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -46,7 +51,11 @@ export function App() {
   }, []);
   useEffect(() => { if (panes.length) localStorage.setItem(TABS_KEY, JSON.stringify({ tabs, active: home ? null : panes[focus] ?? panes[0], pairs })); }, [tabs, home, panes, focus, pairs]);
 
-  useEffect(() => { document.querySelector(".tab-list .tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest" }); }, [panes, focus, home, tabs]);
+  useEffect(() => {
+    document.querySelector(".tab-list .tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const l = document.querySelector<HTMLElement>(".tab-list");
+    if (l) fade(l);
+  }, [panes, focus, home, tabs]);
 
   useEffect(() => api.on("canvas:call", async ({ callId, tool, args }) => {
     const ps = panesRef.current, onScreen = ps.map(shortName);
@@ -128,10 +137,42 @@ export function App() {
   const menuItem = (label: string, run: () => void, disabled = false) => (
     <button disabled={disabled} onPointerDown={(e) => e.stopPropagation()} onClick={() => { setMenu(null); run(); }}>{label}</button>
   );
-  const tab = (t: string) => {
+  /** Drop: move the dragged tab (or pair) before/after the entry holding `at`, or to the end. A pair member dragged out leaves its pair. */
+  const moveTo = (at: string | null, after: boolean) => {
+    const d = drag.current;
+    if (!d) return;
+    const pr = pairs.find((x) => x.includes(d.p)), moving = d.pair && pr ? pr : [d.p];
+    if (at && moving.includes(at)) return;
+    if (pr && !d.pair) closeSplit(d.p);
+    const target = at ? pairs.find((x) => x.includes(at)) ?? [at] : [];
+    setTabs((t) => {
+      const rest = t.filter((x) => !moving.includes(x)), idx = target.map((x) => rest.indexOf(x)).filter((i) => i >= 0);
+      const i = !idx.length ? rest.length : after ? Math.max(...idx) + 1 : Math.min(...idx);
+      return [...rest.slice(0, i), ...moving, ...rest.slice(i)];
+    });
+  };
+  /** Drop a pair member on the other one: left and right swap, on screen too. */
+  const swap = (pr: string[]) => {
+    setPairs((all) => all.map((x) => (x === pr ? [x[1], x[0]] : x)));
+    if (panes.length === 2 && pr.includes(panes[0])) { setPanes([panes[1], panes[0]]); setFocus(1 - focus); }
+  };
+  const dropZone = (at: string) => ({
+    onDragOver: (e: React.DragEvent) => { if (!drag.current) return; e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); setDrop({ at, after: e.clientX > r.left + r.width / 2 }); },
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); moveTo(at, !!drop?.after); setDrop(null); },
+  });
+  const dragStart = (p: string, pair: boolean) => (e: React.DragEvent) => { e.stopPropagation(); drag.current = { p, pair }; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", p); };
+  const dragEnd = () => { drag.current = null; setDrop(null); };
+  const dropMark = (at: string) => (drop?.at === at ? (drop.swap ? " drop-swap" : drop.after ? " drop-after" : " drop-before") : "");
+  const tab = (t: string, pr?: string[]) => {
     const on = !home && t === panes[focus], shown = !home && !on && panes.includes(t);
+    // inside a pair: dropping the other member here swaps them; anything else bubbles to the pair's own drop zone
+    const inPair = pr && {
+      onDragOver: (e: React.DragEvent) => { const d = drag.current; if (!d || d.pair || !pr.includes(d.p)) return; e.stopPropagation(); if (d.p === t) return; e.preventDefault(); setDrop({ at: t, swap: true }); },
+      onDrop: (e: React.DragEvent) => { const d = drag.current; if (!d || d.pair || !pr.includes(d.p)) return; e.preventDefault(); e.stopPropagation(); if (d.p !== t) swap(pr); setDrop(null); },
+    };
     return (
-      <div key={t} className={"tab" + (on ? " on" : "") + (shown ? " shown" : "")} role="tab" aria-selected={on} onClick={() => openTab(t)} onContextMenu={(e) => { e.preventDefault(); setMenu({ tab: t, x: e.clientX, y: e.clientY }); }} title={t}>
+      <div key={t} className={"tab" + (on ? " on" : "") + (shown ? " shown" : "") + (pr ? (drop?.swap ? dropMark(t) : "") : dropMark(t))} role="tab" aria-selected={on} onClick={() => openTab(t)} onContextMenu={(e) => { e.preventDefault(); setMenu({ tab: t, x: e.clientX, y: e.clientY }); }} title={t}
+        draggable onDragStart={dragStart(t, false)} onDragEnd={dragEnd} {...(pr ? inPair : dropZone(t))}>
         <span className="tab-name">{shortName(t)}</span>
         <button className="tab-x" aria-label={`Close ${shortName(t)}`} onClick={(e) => { e.stopPropagation(); closeTab(t); }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -146,11 +187,20 @@ export function App() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>
         </button>
         {/* only this strip scrolls (no scrollbar), so the traffic-light gap, Home, + and theme stay put */}
-        <div className="tab-list" onWheel={(e) => { if (!e.deltaX) e.currentTarget.scrollLeft += e.deltaY; }}>
+        <div className="tab-list" onWheel={(e) => { if (!e.deltaX) e.currentTarget.scrollLeft += e.deltaY; }} onScroll={(e) => fade(e.currentTarget)}
+          onDragOver={(e) => { if (drag.current && e.target === e.currentTarget) { e.preventDefault(); setDrop(null); } }}
+          onDrop={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); moveTo(null, false); setDrop(null); } }}>
         {tabs.map((t) => {
           // split view, Firefox style: the two shown drawings sit side by side in one pill, at the first one's place
           const pr = pairs.find((x) => x.includes(t));
-          if (pr) return t === tabs.find((x) => pr.includes(x)) ? <div key={pr.join("|")} className={"tab-split" + (!home && pr.includes(panes[focus]) ? " on" : "")}>{pr.map(tab)}</div> : null;
+          if (pr) return t === tabs.find((x) => pr.includes(x))
+            ? <div key={pr.join("|")} className={"tab-split" + (!home && pr.includes(panes[focus]) ? " on" : "") + (drop?.swap ? "" : dropMark(pr[0]))} {...dropZone(pr[0])}>
+                <span className="tab-grip" draggable onDragStart={dragStart(pr[0], true)} onDragEnd={dragEnd} title="Drag to move the pair">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M12 5v14" /></svg>
+                </span>
+                {pr.map((x) => tab(x, pr))}
+              </div>
+            : null;
           return tab(t);
         })}
         </div>

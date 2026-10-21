@@ -47,6 +47,7 @@ const MERMAID_MAP = `Mermaid mapping: ([User action]) stadium, [System step] rec
  * Claude Code silently cuts server instructions at 2048 chars (test/notation.test.mjs guards the length).
  */
 export const agentInstructions = (skillFile: string) => `Explainer canvas: you answer by drawing; chat gets one status line.
+DRAWINGS: when the user names a canvas, pass it as \`drawing\` on every call; the app opens it. open_drawing lists names.
 Before a new complete diagram, Read ${skillFile} and the type reference it names. Skip for small edits.
 TEXT: labels 1-6 words, notes 1-2 lines. Boxes, arrows, grouping carry meaning, not sentences. Shorten words, never drop a fact the reader needs.
 ICONS: one emoji at the start of a label when it names the thing faster (👤 user, 🗄️ DB, ☁️ cloud, 🔒 auth, ⚙️ job, 📄 file, 🌐 web). The label words stay. Real logos or screenshots: draw_image.
@@ -163,9 +164,14 @@ export const TOOLS = [
       },
     },
   },
+  {
+    name: "open_drawing",
+    description: "Without name: list every drawing (folder/name) and what is on screen. With name: show that drawing, like a tab click; split: true opens it beside the drawing shown alone. You rarely need it to open: every other tool takes `drawing` and opens it itself.",
+    inputSchema: { type: "object", properties: { name: { type: "string", description: "Drawing name, folder/name, or full path" }, split: { type: "boolean" } } },
+  },
 ];
-// split view shows two drawings: every tool can name one; without it the call goes to the focused pane (the one the user touched last)
-for (const t of TOOLS) (t.inputSchema.properties as Record<string, unknown>).drawing = {
+// every canvas tool can name its drawing; not on screen, the app opens it first. Without it the call goes to the focused pane
+for (const t of TOOLS) if (t.name !== "open_drawing") (t.inputSchema.properties as Record<string, unknown>).drawing = {
   type: "string",
-  description: "Split view: the drawing to act on (its name, as read_canvas lists it in onScreen). Omit for the focused drawing. Two agents in split view: each passes its own.",
+  description: "The drawing to act on: name, folder/name or path (open_drawing lists them). Not on screen: the app opens it first. Omit for the focused drawing.",
 };

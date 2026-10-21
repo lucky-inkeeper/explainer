@@ -13,7 +13,16 @@ html, body, #root { height: 100%; margin: 0; }
 .tab, .tab-x { -webkit-app-region: no-drag; }
 .tab-list { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; -webkit-app-region: no-drag; }
 .tab-list::-webkit-scrollbar { display: none; }
+.tab-list { --fl: 0px; --fr: 0px; -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent); mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent); }
+.tab-list.fade-l { --fl: 32px; } .tab-list.fade-r { --fr: 32px; }
 .tab-list .tab, .tab-list .tab-split { flex: none; }
+/* drag and drop: a bar where the tab lands; a dashed outline when a pair member will swap */
+.tab, .tab-split { position: relative; }
+.drop-before::before, .drop-after::before { content: ""; position: absolute; top: 3px; bottom: 3px; width: 2px; border-radius: 1px; background: #6965db; }
+.drop-before::before { left: -3px; } .drop-after::before { right: -3px; }
+.tab.drop-swap { outline: 2px dashed #6965db; outline-offset: -2px; }
+.tab-grip { display: flex; align-items: center; padding: 0 4px 0 6px; color: #8a8b93; cursor: grab; }
+.tab-grip:hover { color: #1b1b1f; } .app.dark .tab-grip:hover { color: #fff; }
 .tab { display: flex; align-items: center; gap: 8px; margin: 5px 0; padding: 0 10px; max-width: 220px; flex: 0 1 auto; min-width: 40px; border: 0; border-radius: 8px; background: #e6e6ec; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
 .tab:hover { background: #dcdce4; }
 .tab.on { background: #fff; color: #1b1b1f; box-shadow: 0 1px 3px rgba(0,0,0,.14); }

@@ -3,6 +3,7 @@ import { api } from "./api";
 import { runCanvasTool } from "./canvas";
 import { Gallery } from "./Gallery";
 import { Pane, THEME_KEY, type PaneHandle } from "./Pane";
+import type { DrawingInfo } from "../../shared/types";
 
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), pairs: [string, string][] }
 type SavedTabs = { tabs: string[]; active: string | null; pairs: string[][]; pair?: string[] | null; split?: string | null };
@@ -58,17 +59,56 @@ export function App() {
   }, [panes, focus, home, tabs]);
 
   useEffect(() => api.on("canvas:call", async ({ callId, tool, args }) => {
-    const ps = panesRef.current, onScreen = ps.map(shortName);
-    const i = args?.drawing ? ps.findIndex((p) => p === args.drawing || shortName(p) === args.drawing) : focusRef.current;
-    if (i < 0) return api.send("canvas:result", { callId, error: `drawing "${args.drawing}" is not on screen. On screen: ${onScreen.join(", ")}` });
-    const h = handles.current[i];
-    if (!h?.api) return api.send("canvas:result", { callId, error: "canvas not ready" });
     try {
-      const result = await runCanvasTool(h.api, tool, args, h.selected);
+      const i = tool === "open_drawing" ? -1 : args?.drawing ? await show(args.drawing) : focusRef.current;
+      if (tool === "open_drawing") return api.send("canvas:result", { callId, result: await openDrawing(args ?? {}) });
+      const h = handles.current[i];
+      if (!h?.api) return api.send("canvas:result", { callId, error: "canvas not ready" });
+      const result = await runCanvasTool(h.api, tool, args, h.selected), onScreen = panesRef.current.map(shortName);
       api.send("canvas:result", { callId, result: tool === "read_canvas" ? { drawing: onScreen[i], onScreen, ...result } : result });
     }
     catch (e: any) { api.send("canvas:result", { callId, error: e?.message ?? String(e) }); }
   }), []);
+
+  /** A drawing the agent names: a path, "folder/name" or a name. Two drawings with one name: the error lists both paths. */
+  const resolve = async (name: string): Promise<string> => {
+    const all: DrawingInfo[] = (await api.invoke("drawings:list")).files;
+    const hits = all.filter((f) => f.path === name || f.name === name || `${f.folder}/${f.name}` === name);
+    if (hits.length === 1) return hits[0].path;
+    if (hits.length) throw new Error(`"${name}" matches ${hits.length} drawings, pass one path: ${hits.map((f) => f.path).join(", ")}`);
+    throw new Error(`no drawing "${name}". open_drawing without a name lists them`);
+  };
+  /** Wait until the pane showing `p` has its canvas (a pane mounts after a tab switch). Returns its index. */
+  const ready = async (p: string) => {
+    for (let t = 0; t < 100; t++) {
+      const i = panesRef.current.indexOf(p);
+      if (i >= 0 && handles.current[i]?.api) return i;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    throw new Error(`drawing "${shortName(p)}" did not open`);
+  };
+  /** A call naming a drawing that is not on screen opens it first, like a tab click. */
+  const show = async (name: string) => {
+    const on = panesRef.current.findIndex((p) => p === name || shortName(p) === name);
+    if (on >= 0) return on;
+    const p = await resolve(name);
+    openTab(p);
+    return ready(p);
+  };
+  const openDrawing = async ({ name, split }: { name?: string; split?: boolean }) => {
+    if (!name) {
+      const all: DrawingInfo[] = (await api.invoke("drawings:list")).files;
+      return { onScreen: panesRef.current.map(shortName), drawings: all.map((f) => (f.folder ? `${f.folder}/${f.name}` : f.name)) };
+    }
+    const p = await resolve(name);
+    if (split && !panesRef.current.includes(p)) {
+      if (panesRef.current.length === 2) throw new Error("split works from a drawing shown alone: open one without split first");
+      if (pairsRef.current.some((pr) => pr.includes(p))) throw new Error(`"${name}" is already in a split pair: open it without split`);
+      openSplit(p);
+    } else openTab(p);
+    await ready(p);
+    return { drawing: shortName(p), onScreen: panesRef.current.map(shortName) };
+  };
 
   /** Show a drawing: a pair member brings back the split view, any other drawing shows alone. Opens a tab when it has none. */
   const openTab = useCallback((p: string) => {

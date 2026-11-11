@@ -180,6 +180,7 @@
   {
    "type": "arrow",
    "id": "a4",
+   "elbowed": true,
    "start": {
     "id": "active"
    },

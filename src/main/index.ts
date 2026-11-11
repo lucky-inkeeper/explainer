@@ -5,6 +5,7 @@ import path from "node:path";
 import { insideDir, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
 import { agentInstructions } from "../shared/tools";
+import { diagramRules } from "./rules";
 import { shareScene } from "./share";
 import { del, put } from "@vercel/blob";
 import type { AppState, DrawingInfo, DrawingList, McpStatus } from "../shared/types";
@@ -281,7 +282,9 @@ const mcpStatus = (): McpStatus => ({ on: !!mcp, port: MCP_PORT, error: mcpError
 function setMcp(on: boolean) {
   mcp?.close(); mcp = null; mcpError = null;
   if (on) {
-    mcp = serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design/SKILL.md")));
+    mcp = serveMcp(MCP_PORT, async (tool, args) =>
+      tool === "get_diagram_rules" ? diagramRules(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design"), args?.name, agentInstructions())
+      : callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions());
     mcp.on("error", (e: Error) => { mcp = null; mcpError = e.message; buildMenu(); });
   }
   buildMenu();

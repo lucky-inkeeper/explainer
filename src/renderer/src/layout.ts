@@ -4,7 +4,7 @@
  * Entry points: layout() for a skeleton batch, inspect() for converted elements. In dev both hang on window.__layout; test/layout.test.mjs replays fixtures through them.
  */
 import { FONT_FAMILY, convertToExcalidrawElements, getCommonBounds, newElementWith } from "@excalidraw/excalidraw";
-import { KINDS, NOTATION, classify, isFocal } from "../../shared/tools";
+import { KINDS, NOTATION, classify, isFocal, notationWarnings } from "../../shared/tools";
 
 /** Web fonts (Google Fonts, loaded in index.html) registered as extra Excalidraw font ids. Excalidraw resolves the id to the family name for canvas drawing and measuring. */
 export const FONTS = { "Playpen Sans": 101, Inter: 102 } as const;
@@ -541,6 +541,7 @@ export function layout(skeleton: El[], opts: { frame?: string } = {}): { element
   }
   const park = parkNotes(spaceForLabels(withDefaultFont(skeleton)));
   let els = park.els;
+  const notation = notationWarnings(els, { framed: !!opts.frame });
   if (opts.frame) els = wrapInFrame([...els, ...legendFor(els)], String(opts.frame));
-  return { elements: els, parked: park.parked, warnings: inspect(els) };
+  return { elements: els, parked: park.parked, warnings: [...inspect(els), ...notation] };
 }

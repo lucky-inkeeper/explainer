@@ -10,7 +10,8 @@ const dir = new URL("./layout/fixtures/", import.meta.url);
 
 test("layout fixtures", async (t) => {
   const pages = await fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json()).catch(() => null);
-  const page = pages?.find((p) => p.type === "page" && p.url.includes("localhost:5173"));
+  // any localhost port (Vite moves off 5173 when another dev server holds it); the title keeps out other pages on a shared 9222
+  const page = pages?.find((p) => p.type === "page" && p.title === "Explainer" && /^http:\/\/localhost:\d+\//.test(p.url));
   if (!page) return t.skip(`layout: dev app not on ${port}, skipped`);
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((r) => (ws.onopen = r));

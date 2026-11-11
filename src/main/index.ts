@@ -7,7 +7,7 @@ import { serveMcp } from "./mcp";
 import { agentInstructions } from "../shared/tools";
 import { shareScene } from "./share";
 import { del, put } from "@vercel/blob";
-import type { AppState, DrawingInfo, DrawingList } from "../shared/types";
+import type { AppState, DrawingInfo, DrawingList, McpStatus } from "../shared/types";
 
 declare const __DATA_DIR__: string;
 declare const __AGENT_DIR__: string;
@@ -274,18 +274,43 @@ listen("canvas:result", (_e, { callId, result, error }: { callId: string; result
 handle("share:post", (_e, json: string) => shareScene(json));
 
 // no zoomIn/zoomOut/resetZoom roles: Cmd+= Cmd+- Cmd+0 belong to Excalidraw's canvas zoom
-const menu = Menu.buildFromTemplate([
-  { role: "appMenu" },
-  { role: "fileMenu" },
-  { role: "editMenu" },
-  { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }, { type: "separator" }, { role: "togglefullscreen" }] },
-  { role: "windowMenu" },
-]);
+// MCP bridge: on by default; menu > Agent and the Settings page turn it off and on, and the choice persists in state.json
+let mcp: ReturnType<typeof serveMcp> | null = null;
+let mcpError: string | null = null;
+const mcpStatus = (): McpStatus => ({ on: !!mcp, port: MCP_PORT, error: mcpError });
+function setMcp(on: boolean) {
+  mcp?.close(); mcp = null; mcpError = null;
+  if (on) {
+    mcp = serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design/SKILL.md")));
+    mcp.on("error", (e: Error) => { mcp = null; mcpError = e.message; buildMenu(); });
+  }
+  buildMenu();
+}
+function saveMcp(on: boolean) { writeState({ ...readState(), mcpOff: !on }); setMcp(on); }
+handle("mcp:get", () => mcpStatus());
+handle("mcp:set", (_e, on: boolean) => { saveMcp(on === true); return mcpStatus(); });
+function buildMenu() {
+  if (win && !win.isDestroyed()) win.webContents.send("mcp:status", mcpStatus()); // the Settings page follows the menu
+  const status = mcp ? `MCP: on, 127.0.0.1:${MCP_PORT}` : mcpError ? `MCP: failed (${mcpError})` : "MCP: off";
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    { role: "appMenu" },
+    { role: "fileMenu" },
+    { role: "editMenu" },
+    { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }, { type: "separator" }, { role: "togglefullscreen" }] },
+    { label: "Agent", submenu: [
+      { label: status, enabled: false },
+      { label: "MCP Bridge", type: "checkbox", checked: !!mcp, click: (item) => saveMcp(item.checked) },
+      { type: "separator" },
+      { label: "Settings…", accelerator: "CmdOrCtrl+,", click: () => win?.webContents.send("settings:open") },
+    ] },
+    { role: "windowMenu" },
+  ]));
+}
 
 // heartbeat: a stalled event loop in either process shows up in the log with its length
 let beat = Date.now();
 setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) console.error(`[main] event loop stalled ${lag}ms`); beat = now; }, 1000);
 listen("log:stall", (_e, where: string, ms: number) => console.error(`[${where}] stalled ${ms}ms`));
 
-app.whenReady().then(() => { Menu.setApplicationMenu(menu); createWindow(); serveMcp(MCP_PORT, async (tool, args) => callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design/SKILL.md"))); });
+app.whenReady().then(() => { createWindow(); setMcp(!readState().mcpOff); });
 app.on("window-all-closed", () => app.quit());

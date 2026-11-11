@@ -3,6 +3,7 @@ import { api } from "./api";
 import { runCanvasTool } from "./canvas";
 import { Gallery } from "./Gallery";
 import { Pane, THEME_KEY, type PaneHandle } from "./Pane";
+import { Settings } from "./Settings";
 import type { DrawingInfo } from "../../shared/types";
 
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), pairs: [string, string][] }
@@ -22,6 +23,7 @@ export function App() {
   const [pairs, setPairs] = useState<string[][]>([]);
   const [focus, setFocus] = useState(0); // the pane the user touched last: tab clicks, the gallery and the agent's canvas calls go to it
   const [menu, setMenu] = useState<{ tab: string; x: number; y: number } | null>(null);
+  const [settings, setSettings] = useState(false); // the Settings page covers the canvas like the gallery
   const panesRef = useRef(panes); panesRef.current = panes;
   const focusRef = useRef(focus); focusRef.current = focus;
   const pairsRef = useRef(pairs); pairsRef.current = pairs;
@@ -58,6 +60,8 @@ export function App() {
     if (l) fade(l);
   }, [panes, focus, home, tabs]);
 
+  // menu > Agent > Settings… (Cmd+,). An older app shell has no such channel, so its preload throws
+  useEffect(() => { try { return api.on("settings:open", () => setSettings(true)); } catch { return undefined; } }, []);
   useEffect(() => api.on("canvas:call", async ({ callId, tool, args }) => {
     try {
       const i = tool === "open_drawing" ? -1 : args?.drawing ? await show(args.drawing) : focusRef.current;
@@ -112,6 +116,7 @@ export function App() {
 
   /** Show a drawing: a pair member brings back the split view, any other drawing shows alone. Opens a tab when it has none. */
   const openTab = useCallback((p: string) => {
+    setSettings(false);
     setTabs((t) => (t.includes(p) ? t : [...t, p]));
     setHome(false);
     const ps = pairsRef.current.find((pr) => pr.includes(p)) ?? [p];
@@ -157,7 +162,8 @@ export function App() {
   }, [unshow]);
   const newFile = useCallback(async () => openTab(await api.invoke("file:new")), [openTab]);
   const open = useCallback(async () => { const p = await api.invoke("file:openDialog"); if (p) openTab(p); }, [openTab]);
-  const goHome = useCallback(() => setHome(true), []);
+  const openSettings = useCallback(() => setSettings(true), []);
+  const goHome = useCallback(() => { setSettings(false); setHome(true); }, []);
   const toggleTheme = useCallback(() => {
     const next = dark ? "light" : "dark";
     localStorage.setItem(THEME_KEY, next);
@@ -250,6 +256,9 @@ export function App() {
             ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
             : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>}
         </button>
+        <button className={"tab gear" + (settings ? " on" : "")} onClick={() => setSettings((v) => !v)} title="Settings" aria-label="Settings" aria-pressed={settings}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+        </button>
       </div>
       {menu && (
         <div className="gmenu tabmenu" role="menu" style={{ left: menu.x, top: menu.y }}>
@@ -262,9 +271,10 @@ export function App() {
       <div className={"canvas-wrap" + (split ? " split" : "")}>
         {panes.map((p, i) => (
           <Pane key={p} ref={(h) => { handles.current[i] = h; }} file={p} dark={dark} focused={i === focus}
-            onFocus={() => setFocus(i)} onMoved={relocate} onDark={setDark} onHome={goHome} onNew={newFile} onOpen={open} />
+            onFocus={() => setFocus(i)} onMoved={relocate} onDark={setDark} onHome={goHome} onNew={newFile} onOpen={open} onSettings={openSettings} />
         ))}
         {home && <Gallery current={panes[focus]} onOpen={openTab} onRelocate={relocate} />}
+        {settings && <Settings />}
       </div>
     </div>
   );

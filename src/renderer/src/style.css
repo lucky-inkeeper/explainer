@@ -27,8 +27,8 @@ html, body, #root { height: 100%; margin: 0; }
 .tab:hover { background: #dcdce4; }
 .tab.on { background: #fff; color: #1b1b1f; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
 .tab.shown { box-shadow: inset 0 0 0 1px #b3b1e8; }
-.tab.home, .tab.plus, .tab.theme { flex: none; padding: 0 10px; background: transparent; color: #8a8b93; }
-.tab.home:hover, .tab.plus:hover, .tab.theme:hover { background: #e6e6ec; color: #1b1b1f; }
+.tab.home, .tab.plus, .tab.theme, .tab.gear { flex: none; padding: 0 10px; background: transparent; color: #8a8b93; }
+.tab.home:hover, .tab.plus:hover, .tab.theme:hover, .tab.gear:hover, .tab.gear.on { background: #e6e6ec; color: #1b1b1f; }
 .tab.home.on { background: #fff; color: #1b1b1f; }
 .tab.plus { font-size: 18px; }
 .tab.theme { margin-left: auto; }
@@ -40,8 +40,8 @@ html, body, #root { height: 100%; margin: 0; }
 .app.dark .tabs { background: #1b1b21; border-color: #3a3a44; color: #b9b9c2; }
 .app.dark .tab { background: #26262d; } .app.dark .tab:hover { background: #2e2e36; } .app.dark .tab.on { background: #3a3a44; color: #fff; box-shadow: none; }
 .app.dark .tab.shown { box-shadow: inset 0 0 0 1px #4d4b80; }
-.app.dark .tab.home, .app.dark .tab.plus, .app.dark .tab.theme { background: transparent; }
-.app.dark .tab.home:hover, .app.dark .tab.plus:hover, .app.dark .tab.theme:hover, .app.dark .tab.home.on { background: #26262d; color: #fff; }
+.app.dark .tab.home, .app.dark .tab.plus, .app.dark .tab.theme, .app.dark .tab.gear { background: transparent; }
+.app.dark .tab.home:hover, .app.dark .tab.plus:hover, .app.dark .tab.theme:hover, .app.dark .tab.gear:hover, .app.dark .tab.gear.on, .app.dark .tab.home.on { background: #26262d; color: #fff; }
 .app.dark .tab-x:hover { background: #4a4a55; color: #fff; }
 /* the split pair: one container holding both drawings (Firefox style); tinted while the split view is on screen */
 .tab-split { display: flex; flex: 0 1 auto; min-width: 0; margin: 5px 0; padding: 2px; gap: 2px; border-radius: 9px; background: #e6e6ec; -webkit-app-region: no-drag; }
@@ -159,3 +159,33 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .app.dark .gmore:hover { background: #2a2a32; color: #fff; }
 .app.dark .gmenu { background: #232329; border-color: #3a3a44; } .app.dark .gmenu button { color: #e3e3e8; } .app.dark .gmenu button:hover { background: #2a2a32; }
 .viewer-msg { display: grid; place-items: center; height: 100vh; font: 15px system-ui, sans-serif; color: #4a4b52; }
+
+/* ---- settings page (reuses the gallery shell) */
+.settings { z-index: 7; padding-top: 56px; }
+.settings > * { max-width: 680px; margin-left: auto; margin-right: auto; } /* error and section share one centered column */
+.sset h2 { font-size: 16px; margin: 4px 0 4px; }
+.sdim { color: #6b6c75; margin: 0 0 16px; }
+.srow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px; border: 1px solid #d5d6dd; border-radius: 10px; background: #fff; cursor: pointer; }
+.srow > span { display: flex; align-items: center; gap: 10px; }
+.sstate { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: #ececf1; color: #4a4b52; }
+.sstate.on { background: #d3f9d8; color: #2b8a3e; } .sstate.bad { background: #fff0f0; color: #c92a2a; }
+.sswitch { appearance: none; width: 36px; height: 20px; border-radius: 99px; background: #c9cad1; position: relative; cursor: pointer; transition: background .15s; flex: none; }
+.sswitch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.sswitch:checked { background: #6965db; } .sswitch:checked::after { transform: translateX(16px); }
+.sswitch:focus-visible { outline: 2px solid #6965db; outline-offset: 2px; }
+.slabel { font-size: 12px; font-weight: 600; color: #6b6c75; margin: 18px 0 6px; }
+.scode { display: flex; align-items: flex-start; gap: 8px; padding: 8px 8px 8px 12px; border: 1px solid #d5d6dd; border-radius: 8px; background: #fff; }
+.scode pre { flex: 1; margin: 4px 0; font: 12.5px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.scode .gsecondary { padding: 4px 10px; font-size: 12px; }
+.app.dark .sdim, .app.dark .slabel { color: #8a8b93; }
+.app.dark .srow, .app.dark .scode { background: #1b1b21; border-color: #3a3a44; }
+.app.dark .sstate { background: #2a2a32; color: #b9b9c2; } .app.dark .sstate.on { background: #1f3a26; color: #8ce99a; } .app.dark .sstate.bad { background: #3a1f1f; color: #ffa8a8; }
+.app.dark .sswitch { background: #4a4a55; } .app.dark .sswitch:checked { background: #6965db; }
+/* client tabs look like the tab bar tabs: grey rounded boxes, the picked one white and raised */
+.stabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.stabs button { height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: #e6e6ec; color: #4a4b52; font: 13px system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+.stabs button:hover { background: #dcdce4; }
+.stabs button.on { background: #fff; color: #1b1b1f; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+.stabs button:focus { outline: none; } .stabs button:focus-visible { outline: 2px solid #6965db; outline-offset: 1px; }
+.shint { font-size: 12.5px; margin: 0 0 6px; } .scode + .shint { margin-top: 8px; }
+.app.dark .stabs button { background: #26262d; color: #b9b9c2; } .app.dark .stabs button:hover { background: #2e2e36; } .app.dark .stabs button.on { background: #3a3a44; color: #fff; box-shadow: none; }

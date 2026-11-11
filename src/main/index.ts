@@ -6,6 +6,7 @@ import { insideDir, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
 import { agentInstructions } from "../shared/tools";
 import { diagramRules } from "./rules";
+import { backupSuffix, historyName, toPrune } from "./lib/history";
 import { shareScene } from "./share";
 import { del, put } from "@vercel/blob";
 import type { AppState, DrawingInfo, DrawingList, McpStatus } from "../shared/types";
@@ -108,7 +109,6 @@ handle("image:read", (_e, src: { dataURL?: string }) => {
   const { mimeType, width, height } = imageSize(b);
   return { id: createHash("sha1").update(b).digest("hex"), dataURL: `data:${mimeType};base64,${b.toString("base64")}`, mimeType, width, height };
 });
-const liveCount = (text: string) => { try { return (JSON.parse(text).elements ?? []).filter((e: any) => !e.isDeleted).length; } catch { return -1; } };
 const lastBackup = new Map<string, number>();
 /** Atomic write; the previous version is kept in .history when the scene shrinks by more than 30 percent or is emptied, and at most every 5 min otherwise. */
 handle("file:write", (_e, p: string, text: string) => {
@@ -119,17 +119,13 @@ function writeDrawing(p: string, text: string) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
   if (fs.existsSync(p)) {
     const prev = fs.readFileSync(p, "utf8");
-    const prevLive = liveCount(prev), nextLive = liveCount(text), now = Date.now();
-    const emptying = prevLive > 0 && nextLive === 0;
-    const shrinking = prevLive > 0 && nextLive >= 0 && nextLive < prevLive * 0.7;
-    if (prev !== text && prevLive > 0 && (emptying || shrinking || now - (lastBackup.get(p) ?? 0) > 5 * 60_000)) {
-      const dir = path.join(path.dirname(p), ".history");
+    const now = Date.now(), suffix = backupSuffix(prev, text, now - (lastBackup.get(p) ?? 0));
+    if (suffix !== null) {
+      const dir = path.join(path.dirname(p), ".history"), base = path.basename(p, ".excalidraw");
       fs.mkdirSync(dir, { recursive: true });
-      const stamp = new Date(now).toISOString().replace(/[:.]/g, "-");
-      fs.writeFileSync(path.join(dir, `${path.basename(p, ".excalidraw")}-${stamp}${emptying ? "-before-clear" : shrinking ? "-before-shrink" : ""}.excalidraw`), prev);
+      fs.writeFileSync(path.join(dir, historyName(base, now, suffix)), prev);
       lastBackup.set(p, now);
-      const old = fs.readdirSync(dir).filter((f) => f.startsWith(path.basename(p, ".excalidraw") + "-")).sort();
-      for (const f of old.slice(0, Math.max(0, old.length - 30))) fs.unlinkSync(path.join(dir, f));
+      for (const f of toPrune(base, fs.readdirSync(dir))) fs.unlinkSync(path.join(dir, f));
     }
   }
   const tmp = `${p}.tmp`;

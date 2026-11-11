@@ -35,6 +35,45 @@ export function classify(e: Classifiable): string | null {
 /** Focal treatment: the orange stroke on a shape; the fill keeps the kind color. */
 export const isFocal = (e: Classifiable) => SHAPE_TYPES.includes(e.type) && lc(e.strokeColor) === FOCAL;
 
+type Lintable = Classifiable & { id: string; text?: string; width?: number; height?: number; endArrowhead?: string | null; startArrowhead?: string | null; strokeStyle?: string; strokeWidth?: number; fillStyle?: string; roundness?: unknown; groupIds?: string[]; isDeleted?: boolean; elbowed?: boolean; x?: number; y?: number; points?: number[][] };
+/**
+ * Notation warnings for a converted batch: the same feedback for every agent, whatever its client shows it.
+ * `complete`: the batch is a new diagram (3+ shapes), so it needs the frame param.
+ * ponytail: checks fill, shape, label rules, counts and diagonals; spacing quality stays with the layout warnings.
+ */
+export function notationWarnings(els: Lintable[], opts: { framed?: boolean } = {}): string[] {
+  const out: string[] = [];
+  const live = els.filter((e) => !e.isDeleted && !(e.groupIds?.[0] ?? "").startsWith(NOTATION.legendGroup));
+  const label = (id: string) => live.find((t) => t.type === "text" && t.containerId === id)?.text?.trim() ?? "";
+  // a marker dot (merge point, timeline tick) is <= 24 px and free in color
+  const shapes = live.filter((e) => ["rectangle", "ellipse", "diamond"].includes(e.type) && Math.max(e.width ?? 99, e.height ?? 99) > 24);
+  for (const e of shapes) {
+    const fill = lc(e.backgroundColor);
+    if (!fill || fill === "transparent" || fill === NOTATION.section.color) continue;
+    const k = KINDS.find((k) => k.color === fill);
+    if (!k) { out.push(`${e.type} ${e.id}: fill ${fill} is not in the notation`); continue; }
+    if (e.type !== k.type) out.push(`${e.type} ${e.id}: ${k.label} must be a ${k.type}`);
+    if (e.fillStyle && e.fillStyle !== "solid") out.push(`${e.type} ${e.id}: fillStyle must be "solid"`);
+    if (k.strokeStyle && e.strokeStyle !== k.strokeStyle) out.push(`${e.type} ${e.id}: ${k.label} must be ${k.strokeStyle}`);
+    if (k.rounded && !e.roundness) out.push(`${e.type} ${e.id}: ${k.label} needs roundness {type: 3}`);
+    if (k.strokeWidth && (e.strokeWidth ?? 1) < k.strokeWidth) out.push(`${e.type} ${e.id}: ${k.label} needs strokeWidth ${k.strokeWidth}`);
+    if (k.label === "Decision" && !label(e.id).endsWith("?")) out.push(`diamond ${e.id}: a decision label ends with "?"`);
+    if (k.label === "Database" && !label(e.id).startsWith("DB: ")) out.push(`${e.type} ${e.id}: a database label starts with "DB: "`);
+  }
+  const focal = shapes.filter(isFocal).length;
+  if (focal > 2) out.push(`${focal} focal elements; max 2`);
+  const notes = live.filter((e) => classify(e) === "note").length;
+  if (notes > 2) out.push(`${notes} notes; max 2`);
+  for (const a of live) {
+    if (a.type !== "arrow" || a.elbowed || !a.points) continue;
+    if (a.endArrowhead === "dot" || a.startArrowhead === "dot") continue; // a note's leader may slant
+    // ponytail: a slope under 24 px on the short axis reads as straight (shapes of different heights on one row)
+    if (a.points.slice(1).some((p, i) => Math.min(Math.abs(p[0] - a.points![i][0]), Math.abs(p[1] - a.points![i][1])) > 24)) out.push(`arrow ${a.id} is diagonal: put its ends on one row or column, or use elbowed: true`);
+  }
+  if (!opts.framed && shapes.length >= 3) out.push(`a complete diagram (${shapes.length} shapes) needs the frame param`);
+  return out;
+}
+
 const kindLine = (k: (typeof KINDS)[number]) => {
   const extra = k.strokeStyle ? `, ${k.strokeStyle}` : k.rounded ? ", roundness {type: 3}" : k.strokeWidth ? `, strokeWidth ${k.strokeWidth}` : "";
   return `- ${k.prompt}: ${k.type} ${k.color}${extra}${k.hint ? `, ${k.hint}` : ""}`;
@@ -46,9 +85,9 @@ const MERMAID_MAP = `Mermaid mapping: ([User action]) stadium, [System step] rec
  * Sent in the MCP initialize result: the only channel that reaches every agent since the in-app sidebar was removed.
  * Claude Code silently cuts server instructions at 2048 chars (test/notation.test.mjs guards the length).
  */
-export const agentInstructions = (skillFile: string) => `Explainer canvas: you answer by drawing; chat gets one status line.
+export const agentInstructions = () => `Explainer canvas: you answer by drawing; chat gets one status line.
 DRAWINGS: when the user names a canvas, pass it as \`drawing\` on every call; the app opens it. open_drawing lists names.
-Before a new complete diagram, Read ${skillFile} and the type reference it names. Skip for small edits.
+Before a new complete diagram, call get_diagram_rules, then get_diagram_rules with the type it names. Skip for small edits.
 TEXT: labels 1-6 words, notes 1-2 lines. Boxes, arrows, grouping carry meaning, not sentences. Shorten words, never drop a fact the reader needs.
 ICONS: one emoji at the start of a label when it names the thing faster (👤 user, 🗄️ DB, ☁️ cloud, 🔒 auth, ⚙️ job, 📄 file, 🌐 web). The label words stay. Real logos or screenshots: draw_image.
 NOTATION (mandatory, every diagram; fillStyle "solid"):
@@ -59,6 +98,7 @@ ${KINDS.map(kindLine).join("\n")}
 - Frame: exactly one per diagram via the frame param. Never nested, never per lane.
 - Arrows: solid = flow/call, dashed = async/optional/event; short verb labels; no diagonals.
 - Legend: the app adds it. Never draw a legend.
+- The app checks this notation: fix every notation warning too.
 - Fix every overlap listed in "warnings" before you answer.`;
 
 const skeletonDoc = `Element skeleton (Excalidraw convertToExcalidrawElements format). Types: rectangle, ellipse, diamond, text, arrow, line, frame.
@@ -73,7 +113,7 @@ Bind arrows to shapes in the SAME call (bindings need the shape in the same batc
 export const TOOLS = [
   {
     name: "draw_elements",
-    description: `Draw new elements on the shared Excalidraw canvas. Coordinates in your batch are relative to the batch; by default the app places the whole batch in the nearest free space (right of or below existing content, or next to the user's attached selection). ${skeletonDoc}`,
+    description: `Draw new elements on the shared Excalidraw canvas. Before a new complete diagram, call get_diagram_rules (it returns the notation and the layout rules). Coordinates in your batch are relative to the batch; by default the app places the whole batch in the nearest free space (right of or below existing content, or next to the user's attached selection). ${skeletonDoc}`,
     inputSchema: {
       type: "object",
       properties: {
@@ -169,9 +209,16 @@ export const TOOLS = [
     description: "Without name: list every drawing (folder/name) and what is on screen. With name: show that drawing, like a tab click; split: true opens it beside the drawing shown alone. You rarely need it to open: every other tool takes `drawing` and opens it itself.",
     inputSchema: { type: "object", properties: { name: { type: "string", description: "Drawing name, folder/name, or full path" }, split: { type: "boolean" } } },
   },
+  {
+    name: "get_diagram_rules",
+    description: "The diagram-design rules. Without name: the notation (shape and color per kind), how to pick a diagram type, the layout rules for all types, and the names of the type references. With name (e.g. \"flowchart\", \"architecture\", \"semantic-patterns\"): that reference. Call it before a new complete diagram.",
+    inputSchema: { type: "object", properties: { name: { type: "string", description: "A type or reference name from the list" } } },
+  },
 ];
+/** Tools the main process answers itself; every other tool runs in the canvas. */
+export const MAIN_TOOLS = new Set(["get_diagram_rules"]);
 // every canvas tool can name its drawing; not on screen, the app opens it first. Without it the call goes to the focused pane
-for (const t of TOOLS) if (t.name !== "open_drawing") (t.inputSchema.properties as Record<string, unknown>).drawing = {
+for (const t of TOOLS) if (t.name !== "open_drawing" && !MAIN_TOOLS.has(t.name)) (t.inputSchema.properties as Record<string, unknown>).drawing = {
   type: "string",
   description: "The drawing to act on: name, folder/name or path (open_drawing lists them). Not on screen: the app opens it first. Omit for the focused drawing.",
 };

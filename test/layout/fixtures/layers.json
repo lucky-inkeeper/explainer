@@ -87,6 +87,7 @@
   {
    "type": "rectangle",
    "id": "l1",
+   "roundness": { "type": 3 },
    "x": 200,
    "y": 320,
    "width": 720,

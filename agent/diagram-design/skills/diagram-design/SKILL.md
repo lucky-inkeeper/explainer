@@ -6,7 +6,7 @@ license: MIT, ported from cathrynlavery/diagram-design (see UPSTREAM.md)
 
 # Diagram design for the Explainer canvas
 
-Output is NOT an HTML or SVG file. Output is one `mcp__canvas__draw_elements` batch (or `mcp__canvas__draw_mermaid` for auto layout). The NOTATION in the MCP server instructions (shape + color per kind, one frame per diagram, section containers) always applies. This skill adds three things: which type to draw, how to lay it out, what to leave out.
+Output is NOT an HTML or SVG file. Output is one `draw_elements` batch (or `draw_mermaid` for auto layout). The NOTATION in the MCP server instructions (shape + color per kind, one frame per diagram, section containers) always applies. This skill adds three things: which type to draw, how to lay it out, what to leave out.
 
 ## 1. Philosophy
 
@@ -46,7 +46,7 @@ Rules of thumb:
 - If a 3-column table says the same thing, answer with the table in chat.
 - If two types fit, pick the dominant axis. A semantic pattern adds primitives, never a second layout grammar.
 - A type not in the table (bar, line, scatter, radar, treemap, sankey, venn, pyramid, gantt, mind map...): draw it free-form with `draw_elements` and the shared grammar in section 4. For numbers, prefer a table in chat.
-- A screenshot, mockup or photo (a UI state, a before/after, evidence next to a diagram): `mcp__canvas__draw_image` with a PNG/JPEG path on disk and a short caption. It is a picture, not a diagram: no notation applies, and it never replaces a diagram the reader must understand.
+- A screenshot, mockup or photo (a UI state, a before/after, evidence next to a diagram): `draw_image` with a PNG/JPEG path on disk and a short caption. It is a picture, not a diagram: no notation applies, and it never replaces a diagram the reader must understand.
 
 Read the chosen reference before drawing. Then draw at once. Do not ask for approval first. After drawing, write one line in chat with the type and the count, for example: "Drew a swimlane (3 lanes, 9 steps)."
 

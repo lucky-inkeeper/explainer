@@ -41,10 +41,11 @@ type Props = {
   onHome: () => void;
   onNew: () => void;
   onOpen: () => void;
+  onSettings: () => void;
 };
 
 /** One drawing in one Excalidraw: load, autosave, wheel zoom, minimap, cloud-sync reload. The app shows one pane, or two side by side. */
-export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, focused, onFocus, onMoved, onDark, onHome, onNew, onOpen }, ref) {
+export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, focused, onFocus, onMoved, onDark, onHome, onNew, onOpen, onSettings }, ref) {
   const [xapi, setXapi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [initial, setInitial] = useState<ExcalidrawInitialDataState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -243,6 +244,7 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
             {sharedUrl && <MainMenu.Item onSelect={() => { navigator.clipboard.writeText(viewLink(sharedUrl)); xapiRef.current?.setToast({ message: "Link copied (the last update; use Update shared link to send newer edits)", duration: 5000, closable: true }); }}>Copy shared link</MainMenu.Item>}
             {sharedUrl && <MainMenu.Item onSelect={unpublish}>Stop sharing</MainMenu.Item>}
             <MainMenu.Item onSelect={() => { const x = xapiRef.current; if (x) share(x.getSceneElements(), x.getAppState(), x.getFiles()); }}>Copy excalidraw.com link</MainMenu.Item>
+            <MainMenu.Item onSelect={onSettings}>MCP settings…</MainMenu.Item>
             <MainMenu.Separator />
             <MainMenu.DefaultItems.Export />
             <MainMenu.DefaultItems.SaveAsImage />

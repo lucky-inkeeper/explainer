@@ -4,6 +4,8 @@ export interface AppState {
   created?: Record<string, number>;
   /** drawing file path -> its public blob URL, for the drawings the user shared (ADR-0008) */
   shared?: Record<string, string>;
+  /** true: the MCP bridge stays off (menu > Agent) */
+  mcpOff?: boolean;
 }
 
 export interface DrawingInfo {
@@ -27,6 +29,14 @@ export interface CanvasCall {
   args: any;
 }
 
+/** The localhost MCP bridge that Claude Code calls (menu > Agent, Settings page) */
+export interface McpStatus {
+  on: boolean;
+  port: number;
+  /** why the bridge did not start, e.g. the port is taken */
+  error: string | null;
+}
+
 export interface Api {
   invoke(ch: "state:get"): Promise<AppState>;
   invoke(ch: "state:set", patch: Partial<AppState>): Promise<AppState>;
@@ -48,9 +58,13 @@ export interface Api {
   invoke(ch: "share:post", json: string): Promise<{ url: string } | { error: string }>;
   invoke(ch: "share:publish", path: string, json: string): Promise<string>;
   invoke(ch: "share:unpublish", path: string): Promise<void>;
+  invoke(ch: "mcp:get"): Promise<McpStatus>;
+  invoke(ch: "mcp:set", on: boolean): Promise<McpStatus>;
   send(ch: "canvas:result", payload: { callId: string; result?: any; error?: string }): void;
   send(ch: "log:stall", where: string, ms: number): void;
   on(ch: "canvas:call", cb: (call: CanvasCall) => void): () => void;
+  on(ch: "mcp:status", cb: (s: McpStatus) => void): () => void;
+  on(ch: "settings:open", cb: () => void): () => void;
 }
 
 declare global {

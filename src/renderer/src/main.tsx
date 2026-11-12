@@ -7,6 +7,9 @@ import { Viewer } from "./Viewer";
 // ?view=<blob URL>: the read-only page for a shared drawing, opened in any browser (no window.api there)
 const view = new URLSearchParams(location.search).get("view");
 
+// the app window keeps an offline copy of the UI; a shared-drawing viewer in another browser does not
+if (!view && !import.meta.env.DEV && "serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+
 let beat = Date.now();
 if (!view) setInterval(() => { const now = Date.now(), lag = now - beat - 1000; if (lag > 300) window.api.send("log:stall", "renderer", lag); beat = now; }, 1000);
 

@@ -1,6 +1,7 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+import fs from "node:fs";
 
 export default defineConfig({
   main: {
@@ -10,7 +11,15 @@ export default defineConfig({
   },
   preload: { plugins: [externalizeDepsPlugin()] },
   renderer: {
-    plugins: [react()],
+    plugins: [react(), {
+      // the offline worker gets this build's file list, so the UI opens without internet (ADR-0009)
+      name: "sw", apply: "build",
+      generateBundle(_, bundle) {
+        const files = Object.keys(bundle).filter((f) => f !== "index.html").map((f) => "/" + f);
+        const source = fs.readFileSync(path.resolve("src/renderer/sw.js"), "utf8").replace("__BUILD__", String(Date.now())).replace("__FILES__", JSON.stringify(files));
+        this.emitFile({ type: "asset", fileName: "sw.js", source });
+      },
+    }],
     define: { "process.env.IS_PREACT": JSON.stringify("false") },
   },
 });

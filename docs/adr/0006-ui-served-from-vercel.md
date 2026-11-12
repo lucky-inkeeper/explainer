@@ -1,6 +1,6 @@
 # ADR-0006: The UI is served from Vercel; the .app is a shell that needs the internet
 
-Date: 2026-10-09. Status: accepted. Changes ADR-0001 (local only) for the UI code; data stays local.
+Date: 2026-10-09. Status: accepted. ADR-0009 adds an offline copy of the UI. Changes ADR-0001 (local only) for the UI code; data stays local.
 
 ## Decision
 - The renderer build (`out/renderer`) is deployed to the Vercel project `explainer` (team `wildanathok-6769s-projects`) with `pnpm deploy:web`. Production URL: https://explainer-pearl.vercel.app.

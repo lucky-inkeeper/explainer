@@ -6,7 +6,7 @@
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
-    "build": "electron-vite build && electron-builder --mac --dir",
+    "build": "electron-vite build && electron-builder --mac --dir && rsync -a --delete dist/mac-arm64/Explainer.app/ /Applications/Explainer.app/",
     "typecheck": "tsc --noEmit",
     "check": "node --test test/*.test.mjs",
     "sync:setup": "node build/sync-setup.mjs",

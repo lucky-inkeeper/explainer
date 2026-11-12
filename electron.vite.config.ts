@@ -12,13 +12,9 @@ export default defineConfig({
   preload: { plugins: [externalizeDepsPlugin()] },
   renderer: {
     plugins: [react(), {
-      // the offline worker gets this build's file list, so the UI opens without internet (ADR-0009)
-      name: "sw", apply: "build",
-      generateBundle(_, bundle) {
-        const files = Object.keys(bundle).filter((f) => f !== "index.html").map((f) => "/" + f);
-        const source = fs.readFileSync(path.resolve("src/renderer/sw.js"), "utf8").replace("__BUILD__", String(Date.now())).replace("__FILES__", JSON.stringify(files));
-        this.emitFile({ type: "asset", fileName: "sw.js", source });
-      },
+      // Excalidraw's fonts ship in the app (index.html sets EXCALIDRAW_ASSET_PATH), so the canvas text is right offline (ADR-0010)
+      name: "excalidraw-fonts", apply: "build",
+      writeBundle(o) { fs.cpSync(path.resolve("node_modules/@excalidraw/excalidraw/dist/prod/fonts"), path.join(o.dir!, "fonts"), { recursive: true }); },
     }],
     define: { "process.env.IS_PREACT": JSON.stringify("false") },
   },

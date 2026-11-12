@@ -1,7 +1,7 @@
 // Self-check: the IPC guards that keep a remote UI inside data/drawings and on its own origin.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { insideDir, sameOrigin } from "../src/main/guard.ts";
+import { insideDir, originOf, sameOrigin } from "../src/main/guard.ts";
 
 test("insideDir", () => {
   const d = "/data/drawings";
@@ -23,4 +23,7 @@ test("sameOrigin", () => {
   assert.ok(!sameOrigin("http://explainer-pearl.vercel.app/", o));
   assert.ok(!sameOrigin("data:text/html,hi", o));
   assert.ok(!sameOrigin("not a url", o));
+  assert.equal(originOf("app://explainer/"), "app://explainer");
+  assert.ok(sameOrigin("app://explainer/index.html?x", "app://explainer"));
+  assert.ok(!sameOrigin("app://evil/", "app://explainer"));
 });

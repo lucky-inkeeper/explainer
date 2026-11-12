@@ -13,8 +13,8 @@ export const THEME_KEY = "explainer-theme"; // "light" | "dark", app-wide, wins 
 const sceneSig = (elements: readonly any[], appState: any) => `${getSceneVersion(elements as any)}|${appState.theme}|${appState.viewBackgroundColor}|${appState.gridModeEnabled}`;
 // per-drawing pan/zoom: a pane remounts when its drawing changes (key={file}), so the view is kept here and restored on open
 export const views = new Map<string, { scrollX: number; scrollY: number; zoom: any }>();
-/** The read-only page for a shared drawing: the UI with ?view=<blob URL> (Viewer.tsx). */
-const viewLink = (blobUrl: string) => `${location.origin}/?view=${encodeURIComponent(blobUrl)}`;
+/** The read-only page for a shared drawing: the UI deployed to Vercel with ?view=<blob URL> (Viewer.tsx), so anyone can open it. */
+const viewLink = (blobUrl: string) => `https://explainer-pearl.vercel.app/?view=${encodeURIComponent(blobUrl)}`;
 let toastNext: string | null = null; // shown by the next pane that mounts (a failed load hands its pane a fresh drawing)
 
 /** CSS-scale the canvases (and the DOM frame titles, fixed font size, anchored bottom-left) by k about the container origin, then shift by tx, ty. */

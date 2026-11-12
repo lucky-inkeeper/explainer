@@ -1,8 +1,9 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell, type IpcMainEvent, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, shell, type IpcMainEvent, type IpcMainInvokeEvent } from "electron";
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { insideDir, sameOrigin } from "./guard";
+import { pathToFileURL } from "node:url";
+import { insideDir, originOf, sameOrigin } from "./guard";
 import { serveMcp } from "./mcp";
 import { agentInstructions } from "../shared/tools";
 import { diagramRules } from "./rules";
@@ -22,9 +23,17 @@ const readState = (): AppState => { try { return { ...DEFAULTS, ...JSON.parse(fs
 const writeState = (s: AppState) => fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 const MCP_PORT = Number(process.env.EXPLAINER_MCP_PORT ?? 7331); // `claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user`
 const FILTERS = [{ name: "Excalidraw", extensions: ["excalidraw", "json"] }];
-// the UI is served from Vercel (`pnpm deploy:web`); the .app is a shell around it and needs the internet to open
-const UI_URL = process.env.ELECTRON_RENDERER_URL ?? process.env.EXPLAINER_UI_URL ?? "https://explainer-pearl.vercel.app";
-const UI_ORIGIN = new URL(UI_URL).origin;
+// the UI ships in the app (out/renderer) at app://explainer, so it opens offline (ADR-0010); dev uses the Vite server
+const UI_DIR = path.join(__dirname, "../renderer");
+const UI_URL = process.env.ELECTRON_RENDERER_URL ?? process.env.EXPLAINER_UI_URL ?? "app://explainer/";
+const UI_ORIGIN = originOf(UI_URL);
+// standard + secure: the page gets a real origin (localStorage, fetch, CSP 'self') like an https site
+protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, codeCache: true } }]);
+app.whenReady().then(() => protocol.handle("app", (req) => {
+  const p = path.join(UI_DIR, decodeURIComponent(new URL(req.url).pathname));
+  const file = p === UI_DIR + path.sep ? path.join(UI_DIR, "index.html") : p;
+  return insideDir(UI_DIR, file) ? net.fetch(pathToFileURL(file).toString()) : new Response("not found", { status: 404 });
+}));
 
 app.setName("Explainer"); // menu bar and About; the Dock label of the dev binary stays "Electron" until the app is packaged
 app.whenReady().then(() => { try { app.dock?.setIcon(path.join(__dirname, "../../build/icon.png")); } catch { /* packaged: the bundle has its own icon */ } }); // dev Dock icon
@@ -43,19 +52,13 @@ function createWindow() {
   // page zoom stays fixed: pinch and Cmd+wheel must zoom the canvas (Excalidraw), not the UI
   win.webContents.setVisualZoomLevelLimits(1, 1);
   win.webContents.on("did-finish-load", () => win.webContents.setZoomFactor(1));
-  // the page may only be the UI, or the offline page that links back to it; every other link opens in the browser
+  // the page may only be the UI; every other link opens in the browser
   win.webContents.on("will-navigate", (e, url) => { if (!sameOrigin(url, UI_ORIGIN)) { e.preventDefault(); if (url.startsWith("https://")) shell.openExternal(url); } });
   win.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith("https://")) shell.openExternal(url); return { action: "deny" }; });
-  win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
-    if (!isMainFrame || code === -3) return; // -3: aborted by a newer load
-    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(offlinePage(desc))}`);
-  });
   win.loadURL(UI_URL);
 }
-const offlinePage = (why: string) => `<!doctype html><title>Explainer</title><body style="font:15px -apple-system,sans-serif;display:grid;place-items:center;height:90vh;margin:0;color:#333">
-<div style="text-align:center"><h2>Explainer needs the internet to open</h2><p style="color:#777">${why.replace(/[<>&]/g, "")}</p><p>Your drawings are safe on this Mac.</p><a href="${UI_URL}">Try again</a></div>`;
 
-// ---- ipc: every call must come from the UI origin (the UI is web content, see guard.ts)
+// ---- ipc: every call must come from the UI origin (see guard.ts)
 type Handler = (e: IpcMainInvokeEvent, ...args: any[]) => unknown;
 const handle = (ch: string, fn: Handler) => ipcMain.handle(ch, (e, ...args) => {
   if (!sameOrigin(e.senderFrame?.url, UI_ORIGIN)) throw new Error(`${ch}: blocked, the caller is not the Explainer UI`);

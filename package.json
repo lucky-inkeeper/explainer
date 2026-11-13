@@ -2,6 +2,7 @@
   "name": "explainer",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Excalidraw with a Claude agent that explains by drawing",
   "main": "./out/main/index.js",
   "scripts": {

@@ -1,5 +1,5 @@
 // Layout fixtures replayed in the running dev app over CDP (ADR-0005). Needs `EXPLAINER_DEBUG_PORT=9222 npx electron-vite dev`; skips otherwise.
-// Fixtures: test/layout/fixtures/<type>.json, harvested by test/layout/harvest.mjs. Each asserts: no warnings, every element inside the frame, legend present.
+// Fixtures: test/layout/fixtures/<type>.json, harvested by test/layout/harvest.mjs. Optional `then`: a second batch drawn at exact positions onto the first (canvas frame upkeep). Each asserts: no warnings, every element inside the frame and in it (frameId), legend present and below all content.
 // Mark a fixture that still warns: node test/layout/harvest.mjs --todo (writes its current warnings into `todo`).
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -26,17 +26,24 @@ test("layout fixtures", async (t) => {
       await t.test(f.replace(".json", ""), { todo: fx.todo ? `${fx.todo.length} known warnings` : false }, async () => {
         const r = await run(`(() => {
           const o = window.__layout.layout(${JSON.stringify(fx.elements)}, { frame: ${JSON.stringify(fx.frame)} });
+          // \`then\`: a later batch drawn at exact positions onto the framed diagram, as the canvas writes it
+          if (${JSON.stringify(fx.then ?? null)}) { const o2 = window.__layout.layout(${JSON.stringify(fx.then ?? [])}); o.warnings.push(...o2.warnings); o.elements = window.__layout.settleFrames([...o.elements, ...o2.elements], new Set(o2.elements.map((e) => e.id))); }
           const fr = o.elements.find((e) => e.type === "frame");
           // an arrow's points may run left or up from x,y: take the point extents, not width/height
           const bb = (e) => e.points ? [e.x + Math.min(...e.points.map((p) => p[0])), e.y + Math.min(...e.points.map((p) => p[1])), e.x + Math.max(...e.points.map((p) => p[0])), e.y + Math.max(...e.points.map((p) => p[1]))] : [e.x, e.y, e.x + e.width, e.y + e.height];
           const inside = (e) => { const [x1, y1, x2, y2] = bb(e); return x1 >= fr.x && y1 >= fr.y && x2 <= fr.x + fr.width && y2 <= fr.y + fr.height; };
-          return { warnings: o.warnings, outside: o.elements.filter((e) => e.type !== "frame" && !inside(e)).map((e) => e.id), legend: o.elements.some((e) => (e.groupIds?.[0] ?? "").startsWith(window.__layout.NOTATION.legendGroup)), count: o.elements.length };
+          const isLegend = (e) => (e.groupIds?.[0] ?? "").startsWith(window.__layout.NOTATION.legendGroup);
+          const content = o.elements.filter((e) => e.type !== "frame" && !isLegend(e));
+          const legendTop = Math.min(...o.elements.filter(isLegend).map((e) => bb(e)[1]));
+          return { warnings: o.warnings, outside: o.elements.filter((e) => e.type !== "frame" && !inside(e)).map((e) => e.id), unframed: o.elements.filter((e) => e.type !== "frame" && e.frameId !== fr.id).map((e) => e.id), underLegend: content.filter((e) => bb(e)[3] > legendTop).map((e) => e.id), legend: o.elements.some(isLegend), count: o.elements.length };
         })()`);
         if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
         const v = r.result.value;
         assert.deepEqual(v.warnings, [], "warnings");
         assert.deepEqual(v.outside, [], "elements outside the frame");
         assert.equal(v.legend, true, "legend strip present");
+        assert.deepEqual(v.unframed, [], "elements without the frame's frameId");
+        assert.deepEqual(v.underLegend, [], "elements that reach below the legend top");
       });
     }
   } finally {

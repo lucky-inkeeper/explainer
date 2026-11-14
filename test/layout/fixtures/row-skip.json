@@ -1,0 +1,77 @@
+{
+ "prompt": "hand-written: an elbowed arrow from the first to the third box of a row must route around the middle box",
+ "frame": "Row skip",
+ "elements": [
+  {
+   "id": "a",
+   "type": "rectangle",
+   "x": 0,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Client"
+   }
+  },
+  {
+   "id": "b",
+   "type": "rectangle",
+   "x": 240,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Gateway"
+   }
+  },
+  {
+   "id": "c",
+   "type": "rectangle",
+   "x": 480,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Service"
+   }
+  },
+  {
+   "id": "ab",
+   "type": "arrow",
+   "start": {
+    "id": "a"
+   },
+   "end": {
+    "id": "b"
+   }
+  },
+  {
+   "id": "bc",
+   "type": "arrow",
+   "start": {
+    "id": "b"
+   },
+   "end": {
+    "id": "c"
+   }
+  },
+  {
+   "id": "ac",
+   "type": "arrow",
+   "elbowed": true,
+   "strokeStyle": "dashed",
+   "start": {
+    "id": "a"
+   },
+   "end": {
+    "id": "c"
+   }
+  }
+ ]
+}

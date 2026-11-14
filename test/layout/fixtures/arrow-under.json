@@ -1,0 +1,71 @@
+{
+ "prompt": "hand-written: a later batch adds an arrow under the boxes (points run left and up from x,y); the legend moves below it",
+ "frame": "Arrow under",
+ "elements": [
+  {
+   "id": "a",
+   "type": "rectangle",
+   "x": 0,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Client"
+   }
+  },
+  {
+   "id": "b",
+   "type": "rectangle",
+   "x": 240,
+   "y": 0,
+   "width": 160,
+   "height": 60,
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "label": {
+    "text": "Gateway"
+   }
+  },
+  {
+   "id": "ab",
+   "type": "arrow",
+   "start": {
+    "id": "a"
+   },
+   "end": {
+    "id": "b"
+   }
+  }
+ ],
+ "then": [
+  {
+   "id": "under",
+   "type": "arrow",
+   "x": 320,
+   "y": 66,
+   "width": 240,
+   "height": 60,
+   "elbowed": true,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     60
+    ],
+    [
+     -240,
+     60
+    ],
+    [
+     -240,
+     0
+    ]
+   ]
+  }
+ ]
+}

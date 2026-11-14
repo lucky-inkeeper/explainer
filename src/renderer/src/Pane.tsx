@@ -3,7 +3,7 @@ import { Excalidraw, MainMenu, WelcomeScreen, getSceneVersion, loadFromBlob, ser
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 import { api } from "./api";
 import { runCanvasTool } from "./canvas";
-import { DEFAULT_FONT, FONTS, inspect, layout } from "./layout";
+import { DEFAULT_FONT, FONTS, inspect, layout, settleFrames } from "./layout";
 import { NOTATION, classify, isFocal } from "../../shared/tools";
 import { Minimap, type MinimapHandle } from "./Minimap";
 
@@ -147,7 +147,7 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
   // hooks for CDP drivers (test/eval, Claude Code) in dev and in the packaged app alike: they drive the focused pane
   useEffect(() => {
     if (!focused || !xapi) return;
-    Object.assign(window as any, { __xapi: xapi, __canvas: (tool: string, args: any) => runCanvasTool(xapi, tool, args, selected.current), __layout: { layout, inspect, classify, isFocal, NOTATION } });
+    Object.assign(window as any, { __xapi: xapi, __canvas: (tool: string, args: any) => runCanvasTool(xapi, tool, args, selected.current), __layout: { layout, inspect, settleFrames, classify, isFocal, NOTATION } });
   }, [focused, xapi]);
 
   const onChange = useCallback((elements: readonly any[], appState: any, files: any) => {

@@ -63,7 +63,8 @@ function edgePoint(e: El, cx: number, cy: number, ox: number, oy: number, gapPx 
   return [cx + dx * (t + gap), cy + dy * (t + gap)];
 }
 
-type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh"; frac?: number; elbowed?: boolean };
+/** `at`: absolute x (zh) or y (zv) of the middle leg; a U-route puts it outside both ends. */
+type Route = { p1: [number, number]; p2: [number, number]; kind: "straight" | "zh" | "zv" | "lv" | "lh"; frac?: number; at?: number; elbowed?: boolean };
 
 /** Free space between two boxes on each axis (negative when their ranges overlap). Decides sideways vs up/down. */
 const gaps = (s: El, t: El) => ({
@@ -74,8 +75,11 @@ const gaps = (s: El, t: El) => ({
 /** Skeleton geometry for a route: z = one bend pair halfway, l = one bend, straight otherwise. */
 function geometry(r: Route) {
   const dx = r.p2[0] - r.p1[0], dy = r.p2[1] - r.p1[1], f = r.frac ?? 0.5;
-  const mid = r.kind === "zh" ? [[dx * f, 0], [dx * f, dy]] : r.kind === "zv" ? [[0, dy * f], [dx, dy * f]] : r.kind === "lv" ? [[0, dy]] : r.kind === "lh" ? [[dx, 0]] : [];
-  return { x: r.p1[0], y: r.p1[1], width: Math.abs(dx), height: Math.abs(dy), points: [[0, 0], ...mid.filter((m, i, all) => i === 0 || m[0] !== all[i - 1][0] || m[1] !== all[i - 1][1]), [dx, dy]] };
+  const mx = r.at != null ? r.at - r.p1[0] : dx * f, my = r.at != null ? r.at - r.p1[1] : dy * f;
+  const mid = r.kind === "zh" ? [[mx, 0], [mx, dy]] : r.kind === "zv" ? [[0, my], [dx, my]] : r.kind === "lv" ? [[0, dy]] : r.kind === "lh" ? [[dx, 0]] : [];
+  const points = [[0, 0], ...mid.filter((m, i, all) => i === 0 || m[0] !== all[i - 1][0] || m[1] !== all[i - 1][1]), [dx, dy]];
+  const xs = points.map((p) => p[0]), ys = points.map((p) => p[1]); // a U-route runs past both ends: size from the point extents
+  return { x: r.p1[0], y: r.p1[1], width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys), points };
 }
 
 const isSection = (e: El) => classify(e) === "section";
@@ -144,7 +148,9 @@ function edgeOf(a: El, byId: Map<string, El>, labels: Map<string, El>): Edge | n
  * Attach points and shape of a bound arrow. Straight edge to edge unless elbowed; ends whose centers are off on both axes are elbowed
  * (no diagonals). An elbow tries a z-route on the dominant axis, the two single-bend routes and the other z-route, and takes the cheapest
  * (shapes it runs through, then arrows it runs along or crosses, then where its label lands); ties go to the first.
- * ponytail: four candidates, no channel routing; Excalidraw re-routes on the first drag.
+ * When each of those runs through a node (ends in one row or column with a node between), four U-routes join: below, above, right, left of
+ * both ends and of the nodes between them. A straight arrow that runs through a node takes one of the elbows when that is cheaper.
+ * ponytail: fixed candidates, no channel routing; Excalidraw re-routes on the first drag.
  */
 function routeEdge(edge: Edge, f: Field): Route {
   const { s, t, dotEnd, label } = edge;
@@ -159,6 +165,7 @@ function routeEdge(edge: Edge, f: Field): Route {
     const ddx = cx(o) - cx(e), ddy = cy(o) - cy(e), { gx, gy } = gaps(e, o);
     return gx >= gy ? [ddx > 0 ? e.x + w(e) + g : e.x - g, cy(e)] : [cx(e), ddy > 0 ? e.y + h(e) + g : e.y - g];
   };
+  let straightBest: Route | null = null, straightCost = Infinity;
   if (!elbowed) {
     const p1 = s.type === "text" ? textPort(s, t, gap) : edgePoint(s, cx(s), cy(s), cx(t), cy(t), gap);
     const p2 = t.type === "text" ? textPort(t, s, endGap) : edgePoint(t, cx(t), cy(t), cx(s), cy(s), endGap);
@@ -169,7 +176,9 @@ function routeEdge(edge: Edge, f: Field): Route {
     const slid: Route[] = Math.abs(ldy) <= 2 ? [{ ...straight, kind: "zh", frac: 0.3 }, { ...straight, kind: "zh", frac: 0.7 }] : Math.abs(ldx) <= 2 ? [{ ...straight, kind: "zv", frac: 0.3 }, { ...straight, kind: "zv", frac: 0.7 }] : [];
     const cands = [straight, ...slid];
     const costs = cands.map((r) => routeCost(r, others, f.placed, label, f.sections));
-    return cands[costs.indexOf(Math.min(...costs))];
+    straightCost = Math.min(...costs);
+    straightBest = cands[costs.indexOf(straightCost)];
+    if (straightCost < 100) return straightBest; // runs through no node
   }
   const sx = Math.sign(dx) || 1, sy = Math.sign(dy) || 1;
   const sideX = (e: El, sign: number, g: number): number => (sign > 0 ? e.x + w(e) + g : e.x - g);
@@ -180,9 +189,21 @@ function routeEdge(edge: Edge, f: Field): Route {
   const lh: Route = { p1: [sideX(s, sx, gap), cy(s)], p2: [cx(t), sideY(t, -sy, endGap)], kind: "lh", elbowed: true }; // sideways, then into top or bottom
   const bends = (z: Route) => [z, { ...z, frac: 0.3 }, { ...z, frac: 0.7 }]; // a z-route can bend early or late to dodge another arrow
   const { gx, gy } = gaps(s, t);
-  const order = gx >= gy ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
-  const costs = order.map((r) => routeCost(r, others, f.placed, label, f.sections));
-  return order[costs.indexOf(Math.min(...costs))];
+  // U-routes: the middle leg runs 24 px past both ends and every node in the corridor between their centers
+  const [lo, hi] = [Math.min(cx(s), cx(t)), Math.max(cx(s), cx(t))], [top, bot] = [Math.min(cy(s), cy(t)), Math.max(cy(s), cy(t))];
+  const inRow = [s, t, ...others.filter((o) => o.x < hi && o.x + w(o) > lo && o.y < bot && o.y + h(o) > top)];
+  const inCol = [s, t, ...others.filter((o) => o.y < bot && o.y + h(o) > top && o.x < hi && o.x + w(o) > lo)];
+  const us: Route[] = [
+    { p1: [cx(s), sideY(s, 1, gap)], p2: [cx(t), sideY(t, 1, endGap)], kind: "zv", at: Math.max(...inRow.map((o) => o.y + h(o))) + 24, elbowed: true },
+    { p1: [cx(s), sideY(s, -1, gap)], p2: [cx(t), sideY(t, -1, endGap)], kind: "zv", at: Math.min(...inRow.map((o) => o.y)) - 24, elbowed: true },
+    { p1: [sideX(s, 1, gap), cy(s)], p2: [sideX(t, 1, endGap), cy(t)], kind: "zh", at: Math.max(...inCol.map((o) => o.x + w(o))) + 24, elbowed: true },
+    { p1: [sideX(s, -1, gap), cy(s)], p2: [sideX(t, -1, endGap), cy(t)], kind: "zh", at: Math.min(...inCol.map((o) => o.x)) - 24, elbowed: true },
+  ];
+  let order = gx >= gy ? [...bends(zh), lh, lv, ...bends(zv)] : [...bends(zv), lv, lh, ...bends(zh)];
+  let costs = order.map((r) => routeCost(r, others, f.placed, label, f.sections));
+  if (Math.min(...costs) >= 100) { order = [...order, ...us]; costs = [...costs, ...us.map((r) => routeCost(r, others, f.placed, label, f.sections))]; } // only when every other route runs through a node
+  const best = Math.min(...costs);
+  return straightBest && straightCost <= best ? straightBest : order[costs.indexOf(best)];
 }
 
 /** Arrows that attach to the same side of one shape are spread 24 px apart along that side, so heads and labels do not stack. */
@@ -267,6 +288,48 @@ export function labelsFollowFrames(els: El[]): El[] {
     return c && (c.frameId ?? null) !== (t.frameId ?? null) ? newElementWith(t, { frameId: c.frameId ?? null }) : t;
   });
 }
+
+/** A frame clips its children; when the agent moves or adds a child past the edge, grow the frame (never shrink). */
+function growFrames(els: El[]): El[] {
+  const grown = new Map<string, El>();
+  for (const f of els) {
+    if (f.type !== "frame" || f.isDeleted) continue;
+    const kids = els.filter((e) => e.frameId === f.id && !e.isDeleted);
+    if (!kids.length) continue;
+    const [x1, y1, x2, y2] = getCommonBounds(kids);
+    const pad = 32, nx = Math.min(f.x, x1 - pad), ny = Math.min(f.y, y1 - pad), nx2 = Math.max(f.x + f.width, x2 + pad), ny2 = Math.max(f.y + f.height, y2 + pad);
+    if (nx !== f.x || ny !== f.y || nx2 !== f.x + f.width || ny2 !== f.y + f.height) grown.set(f.id, newElementWith(f, { x: nx, y: ny, width: nx2 - nx, height: ny2 - ny }));
+  }
+  return grown.size ? els.map((e) => grown.get(e.id) ?? e) : els;
+}
+
+/** A top-level element of a later batch that lands on a frame joins it (Excalidraw does this for a user's drawing, not for updateScene). */
+function joinFrames(els: El[], fresh: Set<string>): El[] {
+  const frames = els.filter((f) => f.type === "frame" && !f.isDeleted);
+  if (!frames.length) return els;
+  return els.map((e) => {
+    if (!fresh.has(e.id) || e.frameId || e.containerId || e.type === "frame" || e.isDeleted) return e;
+    const f = frames.find((f) => hit(box(f), (([x1, y1, x2, y2]) => ({ x: x1, y: y1, w: x2 - x1, h: y2 - y1 }))(getCommonBounds([e])), 0));
+    return f ? { ...e, frameId: f.id } : e;
+  });
+}
+
+/** The legend strip stays 28 px below the lowest element of its frame (point extents for arrows), so an arrow added or moved under the content does not run through it. */
+function legendsBelow(els: El[]): El[] {
+  const shift = new Map<string, number>();
+  const isLegend = (e: El) => (e.groupIds?.[0] ?? "").startsWith(NOTATION.legendGroup);
+  for (const f of els) {
+    if (f.type !== "frame" || f.isDeleted) continue;
+    const kids = els.filter((e) => e.frameId === f.id && !e.isDeleted), legend = kids.filter(isLegend), content = kids.filter((e) => !isLegend(e));
+    if (!legend.length || !content.length) continue;
+    const d = getCommonBounds(content)[3] + 28 - getCommonBounds(legend)[1];
+    if (d > 0) for (const e of legend) shift.set(e.id, d);
+  }
+  return shift.size ? els.map((e) => (shift.has(e.id) ? newElementWith(e, { y: e.y + shift.get(e.id)! }) : e)) : els;
+}
+
+/** Frame upkeep after every scene write: new elements join the frame they land on, labels follow, the legend stays below, the frame grows. */
+export const settleFrames = (els: El[], fresh: Set<string> = new Set()): El[] => growFrames(legendsBelow(labelsFollowFrames(joinFrames(els, fresh))));
 
 function spaceForLabels(skeleton: El[]): El[] {
   // convertToExcalidrawElements may touch its input and random ids differ per run: pin ids, rebuild from a clone each pass

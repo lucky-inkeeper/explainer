@@ -1,8 +1,19 @@
 // Export one transparent SVG per animation step; exportingFrame keeps one shared viewport.
 import fs from "node:fs";
-const FRAME = "TvjYz708Cb4kNPsC2oHKn";
 const LEGEND = (e) => e.groupIds?.some((g) => g.startsWith("legend-"));
-const STEPS = {
+// PHONE=1: the portrait cover (frame "Explainer case study cover (phone)") into layers-phone/, no legend step.
+const PHONE = !!process.env.PHONE;
+const FRAME = PHONE ? "KOc8QHIWDhHl8JgMgnm-5" : "TvjYz708Cb4kNPsC2oHKn";
+const OUT = PHONE ? "layers-phone" : "layers";
+const STEPS = PHONE ? {
+  you: ["p-you"],
+  claude: ["p-a1", "p-claude"],
+  mcp: ["p-a2", "p-sec", "p-secT", "p-mcp"],
+  check: ["p-a3", "p-check"],
+  layout: ["p-a4", "p-layout"],
+  canvas: ["p-a5", "p-canvas"],
+  back: ["p-back"],
+} : {
   you: ["you-2"],
   claude: ["a1-2", "claude"],
   mcp: ["a2-2", "sec-2", "secT-2", "mcp"],
@@ -12,6 +23,7 @@ const STEPS = {
   back: ["back"],
   legend: "legend",
 };
+fs.mkdirSync(OUT, { recursive: true });
 const pages = await (await fetch("http://127.0.0.1:9222/json/list")).json();
 const page = pages.find((p) => p.type === "page" && p.url.includes("localhost:5173"));
 const ws = new WebSocket(page.webSocketDebuggerUrl);
@@ -31,7 +43,7 @@ for (const [name, ids] of Object.entries(STEPS)) {
     const s = await mod.exportToSvg({ elements: [frame, ...pick.map(e => ({ ...e }))], appState: { exportBackground: false, exportWithDarkMode: false, frameRendering: { enabled: false } }, files: window.__xapi.getFiles(), exportingFrame: frame, exportPadding: 24, renderEmbeddables: false });
     return s.outerHTML;
   })()`);
-  fs.writeFileSync(`layers/${name}.svg`, svg);
+  fs.writeFileSync(`${OUT}/${name}.svg`, svg);
   console.log(name, Math.round(svg.length / 1024) + "KB");
 }
 process.exit(0);

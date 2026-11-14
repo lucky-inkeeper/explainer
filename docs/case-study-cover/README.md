@@ -13,3 +13,12 @@ The 8 s cover loop for the portfolio case study (`/projects/explainer-excalidraw
    `ffmpeg -framerate 30 -i frames/%04d.png -vf scale=1600:-2 -c:v libx264 -pix_fmt yuv420p -crf 26 -movflags +faststart explainer-cover.mp4`
    `ffmpeg -i frames/0235.png -vf scale=1200:630 -q:v 3 explainer-og.jpg`
 7. Upload both in the CMS: the MP4 as Cover, the JPG as SEO > Image.
+
+## Phone cover
+
+A portrait version (540×960, 9:16) for screens under 600 px. The diagram is the frame "Explainer case study cover (phone)" in the same drawing: one column, no legend.
+
+1. `PHONE=1 MOD_URL=... node export-layers.mjs` writes `layers-phone/`. Paste the SVGs into `index-phone.html`.
+2. Serve this folder, then `PHONE=1 PORT=<port> node record.mjs` writes `frames-phone/`.
+3. `ffmpeg -framerate 30 -i frames-phone/%04d.png -vf scale=800:-2 -c:v libx264 -pix_fmt yuv420p -crf 26 -movflags +faststart explainer-cover-phone.mp4`
+4. Upload it in the CMS as Cover (phone).

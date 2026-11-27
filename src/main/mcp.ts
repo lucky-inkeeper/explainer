@@ -30,7 +30,7 @@ export async function handleMcp(msg: any, onCanvas: CanvasCall, instructions?: s
 }
 
 /** Streamable HTTP MCP endpoint on localhost so other Claude Code clients (Zed, CLI, VS Code) can use the canvas tools. Explainer must be running. */
-export function serveMcp(port: number, onCanvas: CanvasCall, instructions?: string) {
+export function serveMcp(port: number, onCanvas: CanvasCall, instructions?: string, onInit?: (client: string) => void) {
   const srv = http.createServer((req, res) => {
     if (req.url !== "/mcp") { res.writeHead(404).end(); return; }
     if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }).end(); return; } // no server-push stream: request/reply only
@@ -41,6 +41,7 @@ export function serveMcp(port: number, onCanvas: CanvasCall, instructions?: stri
     req.on("end", async () => {
       let msg: any;
       try { msg = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
+      if (msg.method === "initialize") onInit?.(String(msg.params?.clientInfo?.name ?? "MCP client"));
       const out = await handleMcp(msg, onCanvas, instructions);
       if (msg.id === undefined) { res.writeHead(202).end(); return; }
       res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(out));

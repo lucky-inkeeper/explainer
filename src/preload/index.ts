@@ -1,8 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 // the UI is web content: it gets these channels and no others (the main process also checks the sender's origin)
-const INVOKE = new Set(["state:get", "state:set", "file:read", "image:read", "file:write", "file:new", "drawings:list", "drawings:rename", "drawings:move", "drawings:delete", "drawings:newFolder", "drawings:renameFolder", "drawings:deleteFolder", "drawings:thumb", "drawings:thumbSet", "file:openDialog", "file:saveAsDialog", "share:post", "share:publish", "share:unpublish", "mcp:get", "mcp:set"]);
-const SEND = new Set(["canvas:result", "log:stall"]);
+const INVOKE = new Set(["state:get", "state:set", "file:read", "image:read", "file:write", "file:new", "drawings:list", "drawings:rename", "drawings:move", "drawings:delete", "drawings:newFolder", "drawings:renameFolder", "drawings:deleteFolder", "drawings:thumb", "drawings:thumbSet", "file:openDialog", "file:saveAsDialog", "share:post", "share:publish", "share:unpublish", "share:enabled", "mcp:get", "mcp:set"]);
+const SEND = new Set(["canvas:result", "log:stall", "theme:set"]);
 const ON = new Set(["canvas:call", "mcp:status", "settings:open"]);
 const allow = (set: Set<string>, ch: string) => { if (!set.has(ch)) throw new Error(`channel not allowed: ${ch}`); };
 

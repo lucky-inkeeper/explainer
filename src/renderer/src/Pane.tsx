@@ -50,6 +50,8 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
   const [initial, setInitial] = useState<ExcalidrawInitialDataState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sharedUrl, setSharedUrl] = useState<string | null>(null); // the drawing's public blob, when the user shared it (ADR-0008)
+  const [sharing, setSharing] = useState(false); // Share with link needs a Blob token on this computer (pnpm sync:setup)
+  useEffect(() => { api.invoke("share:enabled").then(setSharing, () => setSharing(true)); }, []); // older shell: no channel, keep the item
   const xapiRef = useRef(xapi); xapiRef.current = xapi;
   const selected = useRef<string[]>([]);
   const wrap = useRef<HTMLDivElement>(null);
@@ -204,7 +206,7 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
   const unpublish = async () => {
     await api.invoke("share:unpublish", file);
     setSharedUrl(null);
-    xapiRef.current?.setToast({ message: "Stopped sharing: the link no longer opens. The drawing stays on this Mac.", duration: 6000, closable: true });
+    xapiRef.current?.setToast({ message: "Stopped sharing: the link no longer opens. The drawing stays on this computer.", duration: 6000, closable: true });
   };
   const saveAs = async () => {
     const x = xapiRef.current, p = await api.invoke("file:saveAsDialog", file);
@@ -232,7 +234,7 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
           onChange={onChange}
           onLibraryChange={onLibraryChange}
           UIOptions={uiOptions}
-          name={file.split("/").pop()?.replace(/\.excalidraw$/, "")}
+          name={file.split(/[\\/]/).pop()?.replace(/\.excalidraw$/, "")}
         >
           <WelcomeScreen />
           <MainMenu>
@@ -240,7 +242,7 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
             <MainMenu.Item onSelect={onNew}>New drawing</MainMenu.Item>
             <MainMenu.Item onSelect={onOpen}>Open…</MainMenu.Item>
             <MainMenu.Item onSelect={saveAs}>Save as…</MainMenu.Item>
-            <MainMenu.Item onSelect={publish}>{sharedUrl ? "Update shared link" : "Share with link"}</MainMenu.Item>
+            {(sharing || sharedUrl) && <MainMenu.Item onSelect={publish}>{sharedUrl ? "Update shared link" : "Share with link"}</MainMenu.Item>}
             {sharedUrl && <MainMenu.Item onSelect={() => { navigator.clipboard.writeText(viewLink(sharedUrl)); xapiRef.current?.setToast({ message: "Link copied (the last update; use Update shared link to send newer edits)", duration: 5000, closable: true }); }}>Copy shared link</MainMenu.Item>}
             {sharedUrl && <MainMenu.Item onSelect={unpublish}>Stop sharing</MainMenu.Item>}
             <MainMenu.Item onSelect={() => { const x = xapiRef.current; if (x) share(x.getSceneElements(), x.getAppState(), x.getFiles()); }}>Copy excalidraw.com link</MainMenu.Item>

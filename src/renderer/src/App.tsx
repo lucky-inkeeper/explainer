@@ -4,6 +4,7 @@ import { runCanvasTool } from "./canvas";
 import { Gallery } from "./Gallery";
 import { Pane, THEME_KEY, type PaneHandle } from "./Pane";
 import { Settings } from "./Settings";
+import { ConnectBanner, Onboarding, useMcp } from "./Onboarding";
 import type { DrawingInfo } from "../../shared/types";
 
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), pairs: [string, string][] }
@@ -11,7 +12,7 @@ type SavedTabs = { tabs: string[]; active: string | null; pairs: string[][]; pai
 const readTabs = (): SavedTabs => { try { return { tabs: [], active: null, pairs: [], ...JSON.parse(localStorage.getItem(TABS_KEY) ?? "{}") }; } catch { return { tabs: [], active: null, pairs: [] }; } };
 /** The tab strip fades out at an edge only while more tabs hide past it. ponytail: no resize listener; the next scroll or tab change updates it. */
 const fade = (l: HTMLElement) => { l.classList.toggle("fade-l", l.scrollLeft > 0); l.classList.toggle("fade-r", l.scrollLeft + l.clientWidth < l.scrollWidth - 1); };
-const shortName = (p: string) => p.split("/").pop()?.replace(/\.excalidraw$/, "") ?? p;
+const shortName = (p: string) => p.split(/[\\/]/).pop()?.replace(/\.excalidraw$/, "") ?? p;
 
 export function App() {
   const [dark, setDark] = useState(false);
@@ -24,6 +25,8 @@ export function App() {
   const [focus, setFocus] = useState(0); // the pane the user touched last: tab clicks, the gallery and the agent's canvas calls go to it
   const [menu, setMenu] = useState<{ tab: string; x: number; y: number } | null>(null);
   const [settings, setSettings] = useState(false); // the Settings page covers the canvas like the gallery
+  const [onboard, setOnboard] = useState<boolean | null>(null); // first launch: MCP onboarding; null = state not read yet
+  const mcp = useMcp();
   const panesRef = useRef(panes); panesRef.current = panes;
   const focusRef = useRef(focus); focusRef.current = focus;
   const pairsRef = useRef(pairs); pairsRef.current = pairs;
@@ -35,6 +38,7 @@ export function App() {
   useEffect(() => {
     (async () => {
       const s = await api.invoke("state:get");
+      setOnboard(!s.onboarded);
       const saved = readTabs();
       const alive: string[] = [];
       for (const t of saved.tabs) if ((await api.invoke("file:read", t)) !== null) alive.push(t);
@@ -163,12 +167,14 @@ export function App() {
   const newFile = useCallback(async () => openTab(await api.invoke("file:new")), [openTab]);
   const open = useCallback(async () => { const p = await api.invoke("file:openDialog"); if (p) openTab(p); }, [openTab]);
   const openSettings = useCallback(() => setSettings(true), []);
+  const closeOnboard = useCallback(() => { setOnboard(false); api.invoke("state:set", { onboarded: true }); }, []);
   const goHome = useCallback(() => { setSettings(false); setHome(true); }, []);
   const toggleTheme = useCallback(() => {
     const next = dark ? "light" : "dark";
     localStorage.setItem(THEME_KEY, next);
     setDark(next === "dark"); // each pane follows
   }, [dark]);
+  useEffect(() => { api.send("theme:set", dark); }, [dark]); // Dock icon follows the theme
   useEffect(() => {
     if (!menu) return;
     const close = () => setMenu(null);
@@ -227,7 +233,7 @@ export function App() {
     );
   };
   return (
-    <div className={"app" + (dark ? " dark" : "")}>
+    <div className={"app" + (dark ? " dark" : "") + (navigator.userAgent.includes("Windows") ? " win" : "")}>
       <div className="tabs" role="tablist">
         <button className={"tab home" + (home ? " on" : "")} role="tab" aria-selected={home} onClick={goHome} title="Drawings">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>
@@ -276,6 +282,8 @@ export function App() {
         {home && <Gallery current={panes[focus]} onOpen={openTab} onRelocate={relocate} />}
         {settings && <Settings />}
       </div>
+      {onboard && <Onboarding s={mcp} onClose={closeOnboard} />}
+      {onboard === false && !settings && mcp && (!mcp.on || !mcp.client) && <ConnectBanner s={mcp} onConnect={() => setOnboard(true)} />}
     </div>
   );
 }

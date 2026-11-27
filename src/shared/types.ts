@@ -6,6 +6,10 @@ export interface AppState {
   shared?: Record<string, string>;
   /** true: the MCP bridge stays off (menu > Agent) */
   mcpOff?: boolean;
+  /** true: the first-launch MCP onboarding was finished or skipped */
+  onboarded?: boolean;
+  /** name of the last MCP client that connected (its initialize clientInfo); unset = no client ever connected */
+  mcpClient?: string;
 }
 
 export interface DrawingInfo {
@@ -35,6 +39,8 @@ export interface McpStatus {
   port: number;
   /** why the bridge did not start, e.g. the port is taken */
   error: string | null;
+  /** the last MCP client that connected, e.g. "claude-code"; null = none yet */
+  client: string | null;
 }
 
 export interface Api {
@@ -58,10 +64,12 @@ export interface Api {
   invoke(ch: "share:post", json: string): Promise<{ url: string } | { error: string }>;
   invoke(ch: "share:publish", path: string, json: string): Promise<string>;
   invoke(ch: "share:unpublish", path: string): Promise<void>;
+  invoke(ch: "share:enabled"): Promise<boolean>;
   invoke(ch: "mcp:get"): Promise<McpStatus>;
   invoke(ch: "mcp:set", on: boolean): Promise<McpStatus>;
   send(ch: "canvas:result", payload: { callId: string; result?: any; error?: string }): void;
   send(ch: "log:stall", where: string, ms: number): void;
+  send(ch: "theme:set", dark: boolean): void;
   on(ch: "canvas:call", cb: (call: CanvasCall) => void): () => void;
   on(ch: "mcp:status", cb: (s: McpStatus) => void): () => void;
   on(ch: "settings:open", cb: () => void): () => void;

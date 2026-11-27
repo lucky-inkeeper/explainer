@@ -21,7 +21,7 @@ export function Settings() {
       {error && <div className="gerror">{error}</div>}
       <section className="sset">
         <h2>MCP server</h2>
-        <p className="sdim">Let AI agents (Claude Code, Cursor, Codex, Gemini and other MCP clients) draw on this canvas. The server listens on this Mac only, and refuses requests from web pages.</p>
+        <p className="sdim">Let AI agents (Claude Code, Cursor, Codex, Gemini and other MCP clients) draw on this canvas. The server listens on this computer only, and refuses requests from web pages.</p>
         <label className="srow">
           <span>
             <b>MCP Bridge</b>
@@ -48,16 +48,17 @@ export function Settings() {
 
 const json = (o: unknown) => JSON.stringify(o, null, 2);
 /** Setup per MCP client: where the config goes, and the text to paste. */
-const CLIENTS: { name: string; where: string; config: (url: string) => string }[] = [
+export const CLIENTS: { name: string; where: string; config: (url: string) => string }[] = [
   { name: "Claude Code", where: "Run in a terminal. Works in the CLI, Zed and VS Code.", config: (url) => `claude mcp add --transport http explainer ${url} --scope user` },
-  { name: "Cursor", where: "Add to ~/.cursor/mcp.json. Windsurf uses the same shape.", config: (url) => json({ mcpServers: { explainer: { url } } }) },
+  { name: "Cursor", where: "Add to ~/.cursor/mcp.json.", config: (url) => json({ mcpServers: { explainer: { url } } }) },
   { name: "VS Code", where: "Add to .vscode/mcp.json, or run MCP: Open User Configuration.", config: (url) => json({ servers: { explainer: { type: "http", url } } }) },
-  { name: "Codex", where: "Add to ~/.codex/config.toml.", config: (url) => `[mcp_servers.explainer]\nurl = "${url}"` },
+  // ponytail: stdio through mcp-remote, because Codex 0.40 rejects `url` ("missing field `command`"); newer Codex takes `url = "..."`
+  { name: "Codex", where: "Add to ~/.codex/config.toml. Needs Node.js (npx).", config: (url) => `[mcp_servers.explainer]\ncommand = "npx"\nargs = ["-y", "mcp-remote", "${url}"]` },
   { name: "Gemini CLI", where: "Add to ~/.gemini/settings.json.", config: (url) => json({ mcpServers: { explainer: { httpUrl: url } } }) },
   { name: "Other", where: "For a client that runs only local (stdio) servers: mcp-remote bridges stdio to this URL.", config: (url) => json({ mcpServers: { explainer: { command: "npx", args: ["-y", "mcp-remote", url] } } }) },
 ];
 
-function Code({ text }: { text: string }) {
+export function Code({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
   return (

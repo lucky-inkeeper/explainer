@@ -6,8 +6,8 @@ import fs from "node:fs";
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
-    // data and agent dirs are baked at build time so the packaged .app finds the repo's folders
-    define: { __DATA_DIR__: JSON.stringify(path.resolve("data")), __AGENT_DIR__: JSON.stringify(path.resolve("agent")) },
+    // local builds (pnpm dev/build) keep drawings in the repo's data/; release builds (pnpm dist:*) bake "" and use the user's app data folder
+    define: { __DATA_DIR__: JSON.stringify(process.env.npm_lifecycle_event?.startsWith("dist") ? "" : path.resolve("data")) },
   },
   preload: { plugins: [externalizeDepsPlugin()] },
   renderer: {

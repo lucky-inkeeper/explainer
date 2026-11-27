@@ -10,6 +10,7 @@ html, body, #root { height: 100%; margin: 0; }
 .gmenu button:disabled { color: #b0b1b8; cursor: default; background: transparent; }
 /* ---- tab bar (outside .excalidraw: no CSS vars). Tabs are rounded containers (Firefox style), not full-height cells */
 .tabs { display: flex; align-items: stretch; gap: 4px; height: 40px; flex: none; padding: 0 6px 0 80px; background: #f1f1f4; border-bottom: 1px solid #d5d6dd; font: 13px system-ui, sans-serif; color: #4a4b52; overflow: hidden; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
+.app.win .tabs { padding: 0 144px 0 6px; } /* Windows: no traffic lights on the left; min/max/close (titleBarOverlay) cover ~138px on the right */
 .tab, .tab-x { -webkit-app-region: no-drag; }
 .tab-list { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; -webkit-app-region: no-drag; }
 .tab-list::-webkit-scrollbar { display: none; }
@@ -189,3 +190,18 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .stabs button:focus { outline: none; } .stabs button:focus-visible { outline: 2px solid #6965db; outline-offset: 1px; }
 .shint { font-size: 12.5px; margin: 0 0 6px; } .scode + .shint { margin-top: 8px; }
 .app.dark .stabs button { background: #26262d; color: #b9b9c2; } .app.dark .stabs button:hover { background: #2e2e36; } .app.dark .stabs button.on { background: #3a3a44; color: #fff; box-shadow: none; }
+
+/* ---- first-launch MCP onboarding (reuses the settings pieces) and the connect banner */
+.onb-back { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(20,20,28,.35); font: 14px system-ui, sans-serif; }
+.onb { width: min(560px, calc(100vw - 48px)); max-height: calc(100vh - 48px); overflow: auto; padding: 24px; border-radius: 14px; background: #f7f7fa; color: #1b1b1f; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+.onb h2 { font-size: 18px; margin: 0 0 6px; }
+.onb-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; }
+.onb-foot .sdim { margin: 0; font-size: 12.5px; }
+.onb-wait { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; color: #6b6c75; font-size: 13px; }
+.onb-dot { width: 8px; height: 8px; border-radius: 50%; background: #6965db; animation: onb-pulse 1.2s ease-in-out infinite; }
+@keyframes onb-pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .onb-dot { animation: none; } }
+.onb-banner { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 15; display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 16px; border: 1px solid #d5d6dd; border-radius: 12px; background: #fff; color: #1b1b1f; font: 13.5px system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,.12); white-space: nowrap; }
+.onb-banner .gprimary { padding: 5px 12px; }
+.app.dark .onb { background: #18181d; color: #e3e3e8; }
+.app.dark .onb-banner { background: #232329; color: #e3e3e8; border-color: #3a3a44; }

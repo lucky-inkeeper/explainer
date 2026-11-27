@@ -13,8 +13,10 @@ import { del, put } from "@vercel/blob";
 import type { AppState, DrawingInfo, DrawingList, McpStatus } from "../shared/types";
 
 declare const __DATA_DIR__: string;
-declare const __AGENT_DIR__: string;
-const DATA = process.env.EXPLAINER_DATA ?? __DATA_DIR__;
+const isMac = process.platform === "darwin";
+const DATA = process.env.EXPLAINER_DATA ?? (__DATA_DIR__ || path.join(app.getPath("userData"), "data"));
+// the diagram rules ship with the app (electron-builder.yml extraResources); dev reads the repo's agent/
+const AGENT_DIR = app.isPackaged ? path.join(process.resourcesPath, "agent") : path.join(__dirname, "../../agent");
 const DIRS = { drawings: path.join(DATA, "drawings"), app: path.join(DATA, "app") };
 for (const d of Object.values(DIRS)) fs.mkdirSync(d, { recursive: true });
 const STATE_FILE = path.join(DIRS.app, "state.json");
@@ -36,16 +38,22 @@ app.whenReady().then(() => protocol.handle("app", (req) => {
 }));
 
 app.setName("Explainer"); // menu bar and About; the Dock label of the dev binary stays "Electron" until the app is packaged
-app.whenReady().then(() => { try { app.dock?.setIcon(path.join(__dirname, "../../build/icon.png")); } catch { /* packaged: the bundle has its own icon */ } }); // dev Dock icon
+// Dock icon follows the app theme (light/dark toggle). Packaged: icons ship as extraResources (electron-builder.yml).
+// ponytail: only the running Dock icon changes; Finder/Launchpad keep the bundle icon (light)
+const dockIcon = (dark: boolean) => { try { app.dock?.setIcon(path.join(app.isPackaged ? path.join(process.resourcesPath, "icons") : path.join(__dirname, "../../build"), dark ? "icon-dark.png" : "icon.png")); } catch { /* keep the current icon */ } };
+app.whenReady().then(() => { if (!app.isPackaged) dockIcon(false); }); // dev binary has the Electron icon
 if (process.env.EXPLAINER_DEBUG_PORT) app.commandLine.appendSwitch("remote-debugging-port", process.env.EXPLAINER_DEBUG_PORT);
 
 let win: BrowserWindow;
+/** Windows caption buttons: colors follow the tab bar (style.css .tabs), height = tab bar height. */
+const overlay = (dark: boolean) => ({ color: dark ? "#1b1b21" : "#f1f1f4", symbolColor: dark ? "#b9b9c2" : "#4a4b52", height: 40 });
 const pendingCanvas = new Map<string, { resolve: (v: any) => void; reject: (e: Error) => void }>();
 
 function createWindow() {
   win = new BrowserWindow({
     width: 1440, height: 920, title: "Explainer",
-    titleBarStyle: "hiddenInset", trafficLightPosition: { x: 14, y: 12 }, // the tab bar is the title bar, Figma style
+    // the tab bar is the title bar, Figma style. Windows: the system draws min/max/close over its right end (titleBarOverlay)
+    ...(isMac ? { titleBarStyle: "hiddenInset" as const, trafficLightPosition: { x: 14, y: 12 } } : { titleBarStyle: "hidden" as const, titleBarOverlay: overlay(false) }),
     webPreferences: { preload: path.join(__dirname, "../preload/index.js"), contextIsolation: true, sandbox: true },
   });
   win.maximize(); // Excalidraw docks the sidebar only above ~1229px editor width
@@ -71,6 +79,7 @@ const pick = (p: string | null | undefined) => { if (p) picked.add(path.resolve(
 const mayUse = (p: unknown) => insideDir(DIRS.drawings, p) || (typeof p === "string" && picked.has(path.resolve(p)));
 const mustBeDrawing = (p: unknown) => { if (!insideDir(DIRS.drawings, p)) throw new Error(`not a drawing in ${DIRS.drawings}`); };
 
+listen("theme:set", (_e, dark: unknown) => { dockIcon(dark === true); if (!isMac) win?.setTitleBarOverlay(overlay(dark === true)); });
 handle("state:get", () => readState());
 handle("state:set", (_e, patch: Partial<AppState>) => {
   const cur = readState();
@@ -243,13 +252,15 @@ const unpublish = (url: string) => { const token = blobToken(); if (token) del(u
 handle("share:publish", async (_e, p: string, text: string) => {
   if (!mayUse(p)) throw new Error(`share: ${p} is not a drawing`);
   const token = blobToken();
-  if (!token) throw new Error("Sharing is off: run `pnpm sync:setup` once on this Mac, then restart Explainer.");
+  if (!token) throw new Error("Sharing is off: run `pnpm sync:setup` once on this computer, then restart Explainer.");
   const st = readState(), old = st.shared?.[p];
   const id = old ? /\/shared\/([\w-]+)\.excalidraw$/.exec(new URL(old).pathname)?.[1] ?? randomUUID() : randomUUID(); // random: the URL is public but not guessable
   const r = await put(`shared/${id}.excalidraw`, text, { token, access: "public", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 });
   writeState({ ...readState(), shared: { ...(readState().shared ?? {}), [p]: r.url } });
   return r.url;
 });
+/** Share with link needs a Blob token (pnpm sync:setup); without one the menu item is hidden. */
+handle("share:enabled", () => !!blobToken());
 handle("share:unpublish", (_e, p: string) => {
   const st = readState(), url = st.shared?.[p];
   if (!url) return;
@@ -277,13 +288,15 @@ handle("share:post", (_e, json: string) => shareScene(json));
 // MCP bridge: on by default; menu > Agent and the Settings page turn it off and on, and the choice persists in state.json
 let mcp: ReturnType<typeof serveMcp> | null = null;
 let mcpError: string | null = null;
-const mcpStatus = (): McpStatus => ({ on: !!mcp, port: MCP_PORT, error: mcpError });
+const mcpStatus = (): McpStatus => ({ on: !!mcp, port: MCP_PORT, error: mcpError, client: readState().mcpClient ?? null });
+/** A client sent initialize: remember it, so the onboarding and the connect banner know a client is set up. */
+const clientSeen = (client: string) => { if (readState().mcpClient !== client) writeState({ ...readState(), mcpClient: client }); buildMenu(); };
 function setMcp(on: boolean) {
   mcp?.close(); mcp = null; mcpError = null;
   if (on) {
     mcp = serveMcp(MCP_PORT, async (tool, args) =>
-      tool === "get_diagram_rules" ? diagramRules(path.join(__AGENT_DIR__, "diagram-design/skills/diagram-design"), args?.name, agentInstructions())
-      : callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions());
+      tool === "get_diagram_rules" ? diagramRules(path.join(AGENT_DIR, "diagram-design/skills/diagram-design"), args?.name, agentInstructions())
+      : callCanvas(tool, tool === "draw_image" ? withImageData(args) : args), agentInstructions(), clientSeen);
     mcp.on("error", (e: Error) => { mcp = null; mcpError = e.message; buildMenu(); });
   }
   buildMenu();
@@ -295,7 +308,7 @@ function buildMenu() {
   if (win && !win.isDestroyed()) win.webContents.send("mcp:status", mcpStatus()); // the Settings page follows the menu
   const status = mcp ? `MCP: on, 127.0.0.1:${MCP_PORT}` : mcpError ? `MCP: failed (${mcpError})` : "MCP: off";
   Menu.setApplicationMenu(Menu.buildFromTemplate([
-    { role: "appMenu" },
+    ...(isMac ? [{ role: "appMenu" as const }] : []),
     { role: "fileMenu" },
     { role: "editMenu" },
     { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }, { type: "separator" }, { role: "togglefullscreen" }] },

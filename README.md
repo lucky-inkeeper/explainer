@@ -11,9 +11,18 @@ Claude explains by drawing. Ask a question in Claude Code, and the answer lands 
 - **Any MCP client:** Claude Code (CLI, Zed, VS Code), Cursor, Codex, Gemini CLI, stdio clients through `mcp-remote`.
 - **Local first.** A Mac app (Electron). Drawings stay on your Mac; only a drawing you share goes to the cloud.
 
+## Download
+
+Get the Mac (`.dmg`, Apple silicon `arm64` or Intel `x64`) or Windows (`.exe`) app from [Releases](https://github.com/lucky-inkeeper/explainer/releases). The apps are unsigned:
+
+- **macOS:** right-click the app > Open the first time. If macOS says the app is damaged, run `xattr -cr /Applications/Explainer.app`.
+- **Windows:** in the SmartScreen dialog, click More info > Run anyway.
+
+A release is built by GitHub Actions when you push a tag: `git tag v0.2.0 && git push origin v0.2.0` (set `version` in package.json to match first).
+
 ## Quick start
 
-1. Build and open the app (below).
+1. Download the app (above), or build it (below).
 2. Connect Claude Code:
    ```
    claude mcp add --transport http explainer http://127.0.0.1:7331/mcp --scope user

@@ -5,7 +5,34 @@ directories:
 files:
   - out/**
   - package.json
+extraResources:
+  - from: build/icon.png
+    to: icons/icon.png
+  - from: build/icon-dark.png
+    to: icons/icon-dark.png
+  # diagram rules for get_diagram_rules (src/main/index.ts AGENT_DIR)
+  - from: agent
+    to: agent
 mac:
-  target: dir
+  # `pnpm build` passes --dir (local .app only); `pnpm dist:mac` makes these
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
   category: public.app-category.developer-tools
+win:
+  target:
+    # x64 only: Windows on ARM runs it emulated; two archs add a third 370 MB combined installer
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+publish:
+  provider: github
+  owner: lucky-inkeeper
+  repo: explainer
+  releaseType: release
 npmRebuild: false

@@ -205,3 +205,7 @@ input.gname { font: inherit; padding: 2px 6px; border-radius: 6px; border: 1px s
 .onb-banner .gprimary { padding: 5px 12px; }
 .app.dark .onb { background: #18181d; color: #e3e3e8; }
 .app.dark .onb-banner { background: #232329; color: #e3e3e8; border-color: #3a3a44; }
+.onb-banner.ok { border-color: #8ce99a; }
+.onb-banner.ok .gsecondary { padding: 5px 12px; }
+.app.dark .onb-banner.ok { border-color: #2b8a3e; }
+.sclient { margin: 12px 0 0; }

@@ -59,3 +59,13 @@ export function ConnectBanner({ s, onConnect }: { s: McpStatus; onConnect: () =>
     </div>
   );
 }
+
+/** Short notice when an agent connects outside the onboarding (the banner just disappears otherwise). */
+export function ConnectedToast({ client, onClose }: { client: string; onClose: () => void }) {
+  return (
+    <div className="onb-banner ok" role="status">
+      <span><b>{client}</b> connected. Ask it to draw something.</span>
+      <button className="gsecondary" onClick={onClose}>OK</button>
+    </div>
+  );
+}

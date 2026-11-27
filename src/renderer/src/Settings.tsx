@@ -31,9 +31,10 @@ export function Settings() {
             onChange={(e) => api.invoke("mcp:set", e.target.checked).then(setS, (err) => setError(String(err?.message ?? err)))} />
         </label>
         {s?.on && (<>
+          <p className="sdim shint sclient">{s.client ? <>Connected agent: <b>{s.client}</b></> : "No agent has connected yet. Set one up below."}</p>
           <p className="slabel">Server URL</p>
           <Code text={url} />
-          <p className="slabel">Connect a client (once per Mac)</p>
+          <p className="slabel">Connect a client (once per computer)</p>
           <div className="stabs" role="tablist">
             {CLIENTS.map((c, i) => <button key={c.name} role="tab" aria-selected={i === client} className={i === client ? "on" : ""} onClick={() => setClient(i)}>{c.name}</button>)}
           </div>

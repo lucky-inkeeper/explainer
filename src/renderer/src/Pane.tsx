@@ -236,7 +236,19 @@ export const Pane = forwardRef<PaneHandle, Props>(function Pane({ file, dark, fo
           UIOptions={uiOptions}
           name={file.split(/[\\/]/).pop()?.replace(/\.excalidraw$/, "")}
         >
-          <WelcomeScreen />
+          <WelcomeScreen>
+            <WelcomeScreen.Hints.MenuHint />
+            <WelcomeScreen.Hints.ToolbarHint />
+            <WelcomeScreen.Hints.HelpHint />
+            {/* drawings come from the agent: point the user to it, not to the tools */}
+            <WelcomeScreen.Center>
+              <WelcomeScreen.Center.Logo />
+              <WelcomeScreen.Center.Heading>Ask your AI agent to draw here, for example:<br />“How does login work in this repo? Draw it.”</WelcomeScreen.Center.Heading>
+              <WelcomeScreen.Center.Menu>
+                <WelcomeScreen.Center.MenuItemHelp />
+              </WelcomeScreen.Center.Menu>
+            </WelcomeScreen.Center>
+          </WelcomeScreen>
           <MainMenu>
             <MainMenu.Item onSelect={onHome}>Drawings…</MainMenu.Item>
             <MainMenu.Item onSelect={onNew}>New drawing</MainMenu.Item>

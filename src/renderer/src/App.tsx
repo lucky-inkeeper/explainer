@@ -4,7 +4,7 @@ import { runCanvasTool } from "./canvas";
 import { Gallery } from "./Gallery";
 import { Pane, THEME_KEY, type PaneHandle } from "./Pane";
 import { Settings } from "./Settings";
-import { ConnectBanner, Onboarding, useMcp } from "./Onboarding";
+import { ConnectBanner, ConnectedToast, Onboarding, useMcp } from "./Onboarding";
 import type { DrawingInfo } from "../../shared/types";
 
 const TABS_KEY = "explainer-tabs"; // { tabs: string[], active: string | null (null = Home), pairs: [string, string][] }
@@ -27,6 +27,19 @@ export function App() {
   const [settings, setSettings] = useState(false); // the Settings page covers the canvas like the gallery
   const [onboard, setOnboard] = useState<boolean | null>(null); // first launch: MCP onboarding; null = state not read yet
   const mcp = useMcp();
+  // an agent connected while the onboarding is closed (after Skip, or a new client): say so for a few seconds
+  const [connected, setConnected] = useState<string | null>(null);
+  const lastClient = useRef<string | null | undefined>(undefined); // undefined = first status not seen yet
+  const onboardRef = useRef(onboard); onboardRef.current = onboard;
+  useEffect(() => {
+    if (!mcp) return;
+    const was = lastClient.current;
+    lastClient.current = mcp.client;
+    if (was === undefined || !mcp.client || mcp.client === was || onboardRef.current) return; // the onboarding shows its own Connected step
+    setConnected(mcp.client);
+    const t = setTimeout(() => setConnected(null), 6000);
+    return () => clearTimeout(t);
+  }, [mcp]);
   const panesRef = useRef(panes); panesRef.current = panes;
   const focusRef = useRef(focus); focusRef.current = focus;
   const pairsRef = useRef(pairs); pairsRef.current = pairs;
@@ -284,6 +297,7 @@ export function App() {
       </div>
       {onboard && <Onboarding s={mcp} onClose={closeOnboard} />}
       {onboard === false && !settings && mcp && (!mcp.on || !mcp.client) && <ConnectBanner s={mcp} onConnect={() => setOnboard(true)} />}
+      {connected && !onboard && <ConnectedToast client={connected} onClose={() => setConnected(null)} />}
     </div>
   );
 }
